@@ -46,27 +46,14 @@ const OnBoardingScreen = () => {
           name="chevron-forward"
           size={20}
           color={Colors.WHITE}
-          style={{ position: "absolute", right: 40, top: 17 }}
+          style={{ position: "absolute", right: 24, top: 15 }}
         />
       </View>
     );
   };
 
   const skipPrevButton = (label: string) => {
-    return (
-      <Text
-        style={{
-          fontFamily: "inter-medium",
-          fontSize: 16,
-          color: Colors.BLACK,
-          textAlign: "center",
-          marginTop: "5%",
-          marginBottom: "30%",
-        }}
-      >
-        {label}
-      </Text>
-    );
+    return <Text style={styles.skipPrevButton}>{label}</Text>;
   };
 
   if (!showHomePage) {
@@ -75,41 +62,12 @@ const OnBoardingScreen = () => {
         data={slides}
         renderItem={({ item }) => {
           return (
-            <View>
-              <Image
-                style={{
-                  width: "100%",
-                  height: 300,
-                  resizeMode: "contain",
-                  marginTop: "50%",
-                }}
-                source={item.image}
-              />
-
-              <Text
-                style={{
-                  fontFamily: "inter-bold",
-                  fontSize: 24,
-                  marginTop: 40,
-                  textAlign: "center",
-                  color: Colors.BLACK,
-                }}
-              >
-                {item.title}
-              </Text>
-
-              <Text
-                style={{
-                  fontFamily: "inter-regular",
-                  fontSize: 14,
-                  marginTop: 20,
-                  marginHorizontal: 30,
-                  textAlign: "center",
-                  color: Colors.GRAY,
-                }}
-              >
-                {item.description}
-              </Text>
+            <View style={styles.slideContainer}>
+              <View style={styles.contentContainer}>
+                <Image style={styles.image} source={item.image} />
+                <Text style={styles.title}>{item.title}</Text>
+                <Text style={styles.description}>{item.description}</Text>
+              </View>
             </View>
           );
         }}
@@ -122,6 +80,7 @@ const OnBoardingScreen = () => {
         renderPrevButton={() => skipPrevButton("Back")}
         renderDoneButton={() => nextDoneButton("Sign In")}
         onDone={() => router.push({ pathname: "/auth/sign-in" })}
+        contentContainerStyle={styles.sliderContentContainer}
       />
     );
   }
@@ -136,11 +95,61 @@ const OnBoardingScreen = () => {
 export default OnBoardingScreen;
 
 const styles = StyleSheet.create({
+  slideContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingTop: 0,
+    paddingBottom: 0,
+  },
+  contentContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+  },
+  image: {
+    width: "100%",
+    height: 260,
+    resizeMode: "contain",
+    marginBottom: 32,
+  },
+  title: {
+    fontFamily: "inter-bold",
+    fontSize: 24,
+    textAlign: "center",
+    color: Colors.BLACK,
+    marginBottom: 16,
+  },
+  description: {
+    fontFamily: "inter-regular",
+    fontSize: 14,
+    marginHorizontal: 16,
+    textAlign: "center",
+    color: Colors.GRAY,
+  },
   button: {
     backgroundColor: Colors.GREEN,
     padding: 15,
     borderRadius: 10,
     marginTop: 5,
     marginHorizontal: 100,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    position: "relative",
+  },
+  skipPrevButton: {
+    fontFamily: "inter-medium",
+    fontSize: 16,
+    color: Colors.BLACK,
+    textAlign: "center",
+    marginTop: 20,
+    marginBottom: 25,
+  },
+  sliderContentContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
   },
 });
