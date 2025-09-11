@@ -1,6 +1,6 @@
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import AppIntroSlider from "react-native-app-intro-slider";
@@ -27,6 +27,7 @@ const slides = [
 ];
 
 const OnBoardingScreen = () => {
+  const router = useRouter();
   const [showHomePage, setShowHomePage] = useState(false);
 
   const nextDoneButton = (label: string) => {
@@ -79,7 +80,7 @@ const OnBoardingScreen = () => {
         renderSkipButton={() => skipPrevButton("Skip for now")}
         renderPrevButton={() => skipPrevButton("Back")}
         renderDoneButton={() => nextDoneButton("Sign In")}
-        onDone={() => router.push({ pathname: "/auth/sign-in" })}
+        onDone={() => router.push("/auth/sign-in")}
         contentContainerStyle={styles.sliderContentContainer}
       />
     );
