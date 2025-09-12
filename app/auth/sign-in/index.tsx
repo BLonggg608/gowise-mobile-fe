@@ -47,7 +47,7 @@ const SignIn = () => {
 
       <View style={styles.loginFormContainer}>
         {/* Email */}
-        <Text style={styles.label}>Email</Text>
+        <Text style={styles.label}>Email Address</Text>
         <View style={styles.input}>
           <Ionicons
             style={{ marginVertical: "auto" }}
@@ -150,7 +150,7 @@ const SignIn = () => {
         >
           <Text
             style={{
-              fontFamily: "inter-regular",
+              fontFamily: "inter-medium",
               fontSize: 16,
               color: Colors.LIGHT_GREEN,
             }}
