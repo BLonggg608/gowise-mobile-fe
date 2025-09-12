@@ -4,13 +4,16 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Image,
+  KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 
 const SignUp = () => {
@@ -35,207 +38,227 @@ const SignUp = () => {
     router.replace("../auth/sign-in");
   };
   return (
-    <View style={styles.container}>
-      <Image
-        style={styles.logo}
-        source={require("../../../assets/images/gowise_logo.png")}
-      />
-
-      <Text style={styles.title}>Create Account</Text>
-      <Text style={styles.description}>
-        Start planning your perfect trips with AI
-      </Text>
-
-      <View style={styles.loginFormContainer}>
-        {/* Full Name */}
-        <Text style={styles.label}>Full Name</Text>
-        <View style={styles.input}>
-          <Ionicons
-            style={{ marginVertical: "auto" }}
-            name="person-outline"
-            size={24}
-            color={"#9CA3AF"}
-          />
-          <TextInput
-            style={styles.inputText}
-            placeholder="Enter your full name"
-            placeholderTextColor={"#9CA3AF"}
-            autoCapitalize="words"
-            onChangeText={(value) => setFullName(value)}
-          />
-        </View>
-
-        {/* Email */}
-        <Text style={[styles.label, { marginTop: 16 }]}>Email Address</Text>
-        <View style={styles.input}>
-          <Ionicons
-            style={{ marginVertical: "auto" }}
-            name="mail-outline"
-            size={24}
-            color={"#9CA3AF"}
-          />
-          <TextInput
-            style={styles.inputText}
-            placeholder="Enter your email"
-            placeholderTextColor={"#9CA3AF"}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            onChangeText={(value) => setEmail(value)}
-          />
-        </View>
-
-        {/* Password */}
-        <Text style={[styles.label, { marginTop: 16 }]}>Password</Text>
-        <View style={styles.input}>
-          <Ionicons
-            style={{ marginVertical: "auto" }}
-            name="lock-closed-outline"
-            size={24}
-            color={"#9CA3AF"}
-          />
-          <TextInput
-            style={styles.inputText}
-            placeholder="Enter your password"
-            placeholderTextColor={"#9CA3AF"}
-            secureTextEntry={unhidePassword}
-            autoCapitalize="none"
-            onChangeText={(value) => setPassword(value)}
-          />
-          <TouchableOpacity onPress={() => setUnhidePassword(!unhidePassword)}>
-            <Ionicons
-              style={{ marginVertical: "auto" }}
-              name={unhidePassword ? "eye-outline" : "eye-off-outline"}
-              size={24}
-              color={"#9CA3AF"}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.container}>
+            <Image
+              style={styles.logo}
+              source={require("../../../assets/images/gowise_logo.png")}
             />
-          </TouchableOpacity>
-        </View>
 
-        {/* Confirm Password */}
-        <Text style={[styles.label, { marginTop: 16 }]}>Confirm Password</Text>
-        <View style={styles.input}>
-          <Ionicons
-            style={{ marginVertical: "auto" }}
-            name="lock-closed-outline"
-            size={24}
-            color={"#9CA3AF"}
-          />
-          <TextInput
-            style={styles.inputText}
-            placeholder="Enter your password"
-            placeholderTextColor={"#9CA3AF"}
-            secureTextEntry={unhidePassword}
-            autoCapitalize="none"
-            onChangeText={(value) => setConfirmPassword(value)}
-          />
-          <TouchableOpacity onPress={() => setUnhidePassword(!unhidePassword)}>
-            <Ionicons
-              style={{ marginVertical: "auto" }}
-              name={unhidePassword ? "eye-outline" : "eye-off-outline"}
-              size={24}
-              color={"#9CA3AF"}
-            />
-          </TouchableOpacity>
-        </View>
+            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.description}>
+              Start planning your perfect trips with AI
+            </Text>
 
-        {/* Create Account Button */}
-        <TouchableOpacity style={styles.button} onPress={onSignUp}>
-          <Text
-            style={{
-              fontFamily: "inter-medium",
-              fontSize: 18,
-              color: Colors.WHITE,
-            }}
-          >
-            Create Account
-          </Text>
-        </TouchableOpacity>
-      </View>
+            <View style={styles.loginFormContainer}>
+              {/* Full Name */}
+              <Text style={styles.label}>Full Name</Text>
+              <View style={styles.input}>
+                <Ionicons
+                  style={{ marginVertical: "auto" }}
+                  name="person-outline"
+                  size={24}
+                  color={"#9CA3AF"}
+                />
+                <TextInput
+                  style={styles.inputText}
+                  placeholder="Enter your full name"
+                  placeholderTextColor={"#9CA3AF"}
+                  autoCapitalize="words"
+                  onChangeText={(value) => setFullName(value)}
+                />
+              </View>
 
-      {/* Sign In */}
-      <View style={{ flexDirection: "row", marginTop: 24 }}>
-        <Text
-          style={{
-            fontFamily: "inter-regular",
-            fontSize: 16,
-            color: Colors.BLACK,
-          }}
-        >
-          Already have an account?
-        </Text>
-        <TouchableOpacity
-          style={{ marginLeft: 5 }}
-          onPress={() => router.replace("../auth/sign-in")}
-        >
-          <Text
-            style={{
-              fontFamily: "inter-medium",
-              fontSize: 16,
-              color: Colors.LIGHT_GREEN,
-            }}
-          >
-            Sign In
-          </Text>
-        </TouchableOpacity>
-      </View>
+              {/* Email */}
+              <Text style={[styles.label, { marginTop: 16 }]}>
+                Email Address
+              </Text>
+              <View style={styles.input}>
+                <Ionicons
+                  style={{ marginVertical: "auto" }}
+                  name="mail-outline"
+                  size={24}
+                  color={"#9CA3AF"}
+                />
+                <TextInput
+                  style={styles.inputText}
+                  placeholder="Enter your email"
+                  placeholderTextColor={"#9CA3AF"}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  onChangeText={(value) => setEmail(value)}
+                />
+              </View>
 
-      {/* Term of Service and Privacy Policy */}
-      <View
-        style={{
-          flexDirection: "row",
-          flexWrap: "wrap",
-          justifyContent: "center",
-          alignItems: "center",
-          marginTop: 24,
-          width: "80%",
-        }}
-      >
-        <Text
-          style={{
-            fontFamily: "inter-regular",
-            fontSize: 12,
-            color: Colors.GRAY,
-          }}
-        >
-          By creating an account, you agree to our
-        </Text>
+              {/* Password */}
+              <Text style={[styles.label, { marginTop: 16 }]}>Password</Text>
+              <View style={styles.input}>
+                <Ionicons
+                  style={{ marginVertical: "auto" }}
+                  name="lock-closed-outline"
+                  size={24}
+                  color={"#9CA3AF"}
+                />
+                <TextInput
+                  style={styles.inputText}
+                  placeholder="Enter your password"
+                  placeholderTextColor={"#9CA3AF"}
+                  secureTextEntry={unhidePassword}
+                  autoCapitalize="none"
+                  onChangeText={(value) => setPassword(value)}
+                />
+                <TouchableOpacity
+                  onPress={() => setUnhidePassword(!unhidePassword)}
+                >
+                  <Ionicons
+                    style={{ marginVertical: "auto" }}
+                    name={unhidePassword ? "eye-outline" : "eye-off-outline"}
+                    size={24}
+                    color={"#9CA3AF"}
+                  />
+                </TouchableOpacity>
+              </View>
 
-        <TouchableOpacity style={{ marginLeft: 4 }} onPress={() => {}}>
-          <Text
-            style={{
-              fontFamily: "inter-medium",
-              fontSize: 12,
-              color: Colors.LIGHT_GREEN,
-            }}
-          >
-            Term of Service
-          </Text>
-        </TouchableOpacity>
+              {/* Confirm Password */}
+              <Text style={[styles.label, { marginTop: 16 }]}>
+                Confirm Password
+              </Text>
+              <View style={styles.input}>
+                <Ionicons
+                  style={{ marginVertical: "auto" }}
+                  name="lock-closed-outline"
+                  size={24}
+                  color={"#9CA3AF"}
+                />
+                <TextInput
+                  style={styles.inputText}
+                  placeholder="Enter your password"
+                  placeholderTextColor={"#9CA3AF"}
+                  secureTextEntry={unhidePassword}
+                  autoCapitalize="none"
+                  onChangeText={(value) => setConfirmPassword(value)}
+                />
+                <TouchableOpacity
+                  onPress={() => setUnhidePassword(!unhidePassword)}
+                >
+                  <Ionicons
+                    style={{ marginVertical: "auto" }}
+                    name={unhidePassword ? "eye-outline" : "eye-off-outline"}
+                    size={24}
+                    color={"#9CA3AF"}
+                  />
+                </TouchableOpacity>
+              </View>
 
-        <Text
-          style={{
-            fontFamily: "inter-regular",
-            fontSize: 12,
-            color: Colors.GRAY,
-            marginLeft: 4,
-          }}
-        >
-          and
-        </Text>
+              {/* Create Account Button */}
+              <TouchableOpacity style={styles.button} onPress={onSignUp}>
+                <Text
+                  style={{
+                    fontFamily: "inter-medium",
+                    fontSize: 18,
+                    color: Colors.WHITE,
+                  }}
+                >
+                  Create Account
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-        <TouchableOpacity style={{ marginLeft: 4 }} onPress={() => {}}>
-          <Text
-            style={{
-              fontFamily: "inter-medium",
-              fontSize: 12,
-              color: Colors.LIGHT_GREEN,
-            }}
-          >
-            Privacy Policy
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+            {/* Sign In */}
+            <View style={{ flexDirection: "row", marginTop: 24 }}>
+              <Text
+                style={{
+                  fontFamily: "inter-regular",
+                  fontSize: 16,
+                  color: Colors.BLACK,
+                }}
+              >
+                Already have an account?
+              </Text>
+              <TouchableOpacity
+                style={{ marginLeft: 5 }}
+                onPress={() => router.replace("../auth/sign-in")}
+              >
+                <Text
+                  style={{
+                    fontFamily: "inter-medium",
+                    fontSize: 16,
+                    color: Colors.LIGHT_GREEN,
+                  }}
+                >
+                  Sign In
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Term of Service and Privacy Policy */}
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                alignItems: "center",
+                marginTop: 24,
+                width: "80%",
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "inter-regular",
+                  fontSize: 12,
+                  color: Colors.GRAY,
+                }}
+              >
+                By creating an account, you agree to our
+              </Text>
+
+              <TouchableOpacity style={{ marginLeft: 4 }} onPress={() => {}}>
+                <Text
+                  style={{
+                    fontFamily: "inter-medium",
+                    fontSize: 12,
+                    color: Colors.LIGHT_GREEN,
+                  }}
+                >
+                  Term of Service
+                </Text>
+              </TouchableOpacity>
+
+              <Text
+                style={{
+                  fontFamily: "inter-regular",
+                  fontSize: 12,
+                  color: Colors.GRAY,
+                  marginLeft: 4,
+                }}
+              >
+                and
+              </Text>
+
+              <TouchableOpacity style={{ marginLeft: 4 }} onPress={() => {}}>
+                <Text
+                  style={{
+                    fontFamily: "inter-medium",
+                    fontSize: 12,
+                    color: Colors.LIGHT_GREEN,
+                  }}
+                >
+                  Privacy Policy
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -253,7 +276,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 120,
     resizeMode: "contain",
-    marginTop: "20%",
+    marginTop: "10%",
   },
   title: {
     fontFamily: "inter-bold",

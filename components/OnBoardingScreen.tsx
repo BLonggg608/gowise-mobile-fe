@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import AppIntroSlider from "react-native-app-intro-slider";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const slides = [
   {
@@ -63,13 +64,15 @@ const OnBoardingScreen = () => {
         data={slides}
         renderItem={({ item }) => {
           return (
-            <View style={styles.slideContainer}>
-              <View style={styles.contentContainer}>
-                <Image style={styles.image} source={item.image} />
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.description}>{item.description}</Text>
+            <SafeAreaView style={{ flex: 1 }}>
+              <View style={styles.slideContainer}>
+                <View style={styles.contentContainer}>
+                  <Image style={styles.image} source={item.image} />
+                  <Text style={styles.title}>{item.title}</Text>
+                  <Text style={styles.description}>{item.description}</Text>
+                </View>
               </View>
-            </View>
+            </SafeAreaView>
           );
         }}
         activeDotStyle={{ backgroundColor: Colors.GREEN, width: 30 }}
@@ -147,7 +150,7 @@ const styles = StyleSheet.create({
     color: Colors.BLACK,
     textAlign: "center",
     marginTop: 20,
-    marginBottom: 25,
+    marginBottom: "15%",
   },
   sliderContentContainer: {
     flexGrow: 1,

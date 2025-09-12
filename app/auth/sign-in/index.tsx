@@ -5,13 +5,16 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Image,
+  KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 
 const SignIn = () => {
@@ -34,132 +37,143 @@ const SignIn = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Image
-        style={styles.logo}
-        source={require("../../../assets/images/gowise_logo.png")}
-      />
-
-      <Text style={styles.title}>Welcome Back</Text>
-      <Text style={styles.description}>
-        Sign in to continue your travel planning
-      </Text>
-
-      <View style={styles.loginFormContainer}>
-        {/* Email */}
-        <Text style={styles.label}>Email Address</Text>
-        <View style={styles.input}>
-          <Ionicons
-            style={{ marginVertical: "auto" }}
-            name="mail-outline"
-            size={24}
-            color={"#9CA3AF"}
-          />
-          <TextInput
-            style={styles.inputText}
-            placeholder="Enter your email"
-            placeholderTextColor={"#9CA3AF"}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            onChangeText={(value) => setEmail(value)}
-          />
-        </View>
-
-        {/* Password */}
-        <Text style={[styles.label, { marginTop: 16 }]}>Password</Text>
-        <View style={styles.input}>
-          <Ionicons
-            style={{ marginVertical: "auto" }}
-            name="lock-closed-outline"
-            size={24}
-            color={"#9CA3AF"}
-          />
-          <TextInput
-            style={styles.inputText}
-            placeholder="Enter your password"
-            placeholderTextColor={"#9CA3AF"}
-            secureTextEntry={unhidePassword}
-            autoCapitalize="none"
-            onChangeText={(value) => setPassword(value)}
-          />
-          <TouchableOpacity onPress={() => setUnhidePassword(!unhidePassword)}>
-            <Ionicons
-              style={{ marginVertical: "auto" }}
-              name={unhidePassword ? "eye-outline" : "eye-off-outline"}
-              size={24}
-              color={"#9CA3AF"}
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.container}>
+            <Image
+              style={styles.logo}
+              source={require("../../../assets/images/gowise_logo.png")}
             />
-          </TouchableOpacity>
-        </View>
 
-        {/* Remember me and Forgot password? */}
-        <View style={{ flexDirection: "row", marginTop: 16 }}>
-          <Checkbox
-            value={isChecked}
-            onValueChange={setChecked}
-            color={isChecked ? Colors.LIGHT_GREEN : Colors.BLACK}
-            style={{
-              marginVertical: "auto",
-              borderRadius: 4,
-              borderWidth: 1,
-            }}
-          />
-          <TouchableOpacity
-            style={{ marginLeft: 8, flex: 1 }}
-            onPress={() => setChecked(!isChecked)}
-          >
-            <Text style={styles.label}>Remember me</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.push("../auth/forgot-password")}
-          >
-            <Text style={[styles.label, { color: "#0284C7" }]}>
-              Forgot password?
+            <Text style={styles.title}>Welcome Back</Text>
+            <Text style={styles.description}>
+              Sign in to continue your travel planning
             </Text>
-          </TouchableOpacity>
-        </View>
 
-        {/* Sign In Button */}
-        <TouchableOpacity style={styles.button} onPress={onSignIn}>
-          <Text
-            style={{
-              fontFamily: "inter-medium",
-              fontSize: 18,
-              color: Colors.WHITE,
-            }}
-          >
-            Sign In
-          </Text>
-        </TouchableOpacity>
-      </View>
+            <View style={styles.loginFormContainer}>
+              {/* Email */}
+              <Text style={styles.label}>Email Address</Text>
+              <View style={styles.input}>
+                <Ionicons
+                  style={{ marginVertical: "auto" }}
+                  name="mail-outline"
+                  size={24}
+                  color={"#9CA3AF"}
+                />
+                <TextInput
+                  style={styles.inputText}
+                  placeholder="Enter your email"
+                  placeholderTextColor={"#9CA3AF"}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  onChangeText={(value) => setEmail(value)}
+                />
+              </View>
 
-      {/* Sign Up */}
-      <View style={{ flexDirection: "row", marginTop: 24 }}>
-        <Text
-          style={{
-            fontFamily: "inter-regular",
-            fontSize: 16,
-            color: Colors.BLACK,
-          }}
-        >
-          Don&apos;t have an account?
-        </Text>
-        <TouchableOpacity
-          style={{ marginLeft: 5 }}
-          onPress={() => router.replace("../auth/sign-up")}
-        >
-          <Text
-            style={{
-              fontFamily: "inter-medium",
-              fontSize: 16,
-              color: Colors.LIGHT_GREEN,
-            }}
-          >
-            Sign Up
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+              {/* Password */}
+              <Text style={[styles.label, { marginTop: 16 }]}>Password</Text>
+              <View style={styles.input}>
+                <Ionicons
+                  style={{ marginVertical: "auto" }}
+                  name="lock-closed-outline"
+                  size={24}
+                  color={"#9CA3AF"}
+                />
+                <TextInput
+                  style={styles.inputText}
+                  placeholder="Enter your password"
+                  placeholderTextColor={"#9CA3AF"}
+                  secureTextEntry={unhidePassword}
+                  autoCapitalize="none"
+                  onChangeText={(value) => setPassword(value)}
+                />
+                <TouchableOpacity
+                  onPress={() => setUnhidePassword(!unhidePassword)}
+                >
+                  <Ionicons
+                    style={{ marginVertical: "auto" }}
+                    name={unhidePassword ? "eye-outline" : "eye-off-outline"}
+                    size={24}
+                    color={"#9CA3AF"}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {/* Remember me and Forgot password? */}
+              <View style={{ flexDirection: "row", marginTop: 16 }}>
+                <Checkbox
+                  value={isChecked}
+                  onValueChange={setChecked}
+                  color={isChecked ? Colors.LIGHT_GREEN : Colors.BLACK}
+                  style={{
+                    marginVertical: "auto",
+                    borderRadius: 4,
+                    borderWidth: 1,
+                  }}
+                />
+                <TouchableOpacity
+                  style={{ marginLeft: 8, flex: 1 }}
+                  onPress={() => setChecked(!isChecked)}
+                >
+                  <Text style={styles.label}>Remember me</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => router.push("../auth/forgot-password")}
+                >
+                  <Text style={[styles.label, { color: "#0284C7" }]}>
+                    Forgot password?
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Sign In Button */}
+              <TouchableOpacity style={styles.button} onPress={onSignIn}>
+                <Text
+                  style={{
+                    fontFamily: "inter-medium",
+                    fontSize: 18,
+                    color: Colors.WHITE,
+                  }}
+                >
+                  Sign In
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Sign Up */}
+            <View style={{ flexDirection: "row", marginTop: 24 }}>
+              <Text
+                style={{
+                  fontFamily: "inter-regular",
+                  fontSize: 16,
+                  color: Colors.BLACK,
+                }}
+              >
+                Don&apos;t have an account?
+              </Text>
+              <TouchableOpacity
+                style={{ marginLeft: 5 }}
+                onPress={() => router.replace("../auth/sign-up")}
+              >
+                <Text
+                  style={{
+                    fontFamily: "inter-medium",
+                    fontSize: 16,
+                    color: Colors.LIGHT_GREEN,
+                  }}
+                >
+                  Sign Up
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -177,7 +191,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 120,
     resizeMode: "contain",
-    marginTop: "20%",
+    marginTop: "10%",
   },
   title: {
     fontFamily: "inter-bold",
