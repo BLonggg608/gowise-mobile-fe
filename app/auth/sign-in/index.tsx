@@ -33,7 +33,10 @@ const SignIn = () => {
         text1: "Login Failed",
         text2: "Email and password are required",
       });
+      return;
     }
+    router.replace("/dashboard");
+    // router.push("/dashboard");
   };
 
   return (
