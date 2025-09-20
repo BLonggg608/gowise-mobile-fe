@@ -20,21 +20,21 @@ const plans = [
     subtitle: "Japan • 7 days",
     status: "Active",
     progress: 0.85,
-    image: require("@/assets/images/DashBoard/1.jpg"),
+    image: require("@/assets/images/PlanImage/1.jpg"),
   },
   {
     title: "European Explorer",
     subtitle: "Europe • 14 days",
     status: "Draft",
     progress: 0.6,
-    image: require("@/assets/images/DashBoard/2.jpg"),
+    image: require("@/assets/images/PlanImage/2.jpg"),
   },
   {
     title: "Bali Retreat",
     subtitle: "Indonesia • 10 days",
     status: "Completed",
     progress: 1,
-    image: require("@/assets/images/DashBoard/3.jpg"),
+    image: require("@/assets/images/PlanImage/3.jpg"),
   },
 ];
 
@@ -190,7 +190,7 @@ const Dashboard = () => {
           style={{ marginBottom: 8, padding: 4 }}
         >
           {plans.map((plan, idx) => (
-            <View key={idx} style={styles.planCard}>
+            <TouchableOpacity key={idx} style={styles.planCard}>
               <View style={styles.planImageWrap}>
                 {!plan.image ? (
                   <Ionicons
@@ -213,11 +213,19 @@ const Dashboard = () => {
               </View>
               <View style={{ padding: 12 }}>
                 <View style={styles.planHeader}>
-                  <Text style={styles.planTitle}>{plan.title}</Text>
+                  <Text
+                    style={styles.planTitle}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {plan.title}
+                  </Text>
                   <View
                     style={[
                       styles.planStatus,
-                      { backgroundColor: planStatusColors[plan.status] },
+                      {
+                        backgroundColor: planStatusColors[plan.status],
+                      },
                     ]}
                   >
                     <Text style={styles.planStatusText}>{plan.status}</Text>
@@ -239,7 +247,7 @@ const Dashboard = () => {
                   {Math.round(plan.progress * 100)}%
                 </Text>
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
         </ScrollView>
 
@@ -424,7 +432,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginLeft: 18,
     marginRight: 8,
-    shadowColor: "#000",
+    shadowColor: Colors.BLACK,
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 2,
@@ -440,6 +448,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: "inter-medium",
     color: Colors.BLACK,
+    flex: 1,
+    maxWidth: "70%",
   },
   planSubtitle: {
     fontSize: 13,
@@ -448,10 +458,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   planStatus: {
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 2,
     marginLeft: 6,
+    alignSelf: "flex-start",
   },
   planStatusText: {
     color: Colors.WHITE,
@@ -473,6 +484,7 @@ const styles = StyleSheet.create({
   progressPercent: {
     fontSize: 11,
     color: Colors.GRAY,
+    fontFamily: "inter-regular",
     marginTop: 2,
     textAlign: "right",
   },
@@ -489,7 +501,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginHorizontal: 4,
     alignItems: "flex-start",
-    shadowColor: "#000",
+    shadowColor: Colors.BLACK,
     shadowOpacity: 0.03,
     shadowRadius: 6,
     elevation: 1,
@@ -518,6 +530,7 @@ const styles = StyleSheet.create({
   },
   weatherStat: {
     fontSize: 11,
+    fontFamily: "inter-regular",
     color: Colors.GRAY,
     marginRight: 10,
   },
