@@ -93,7 +93,7 @@ const Plan = () => {
         renderItem={({ item }) => (
           <PlanCard plan={item} planStatusColors={planStatusColors} />
         )}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 18 }}
         showsVerticalScrollIndicator={false}
       />
       <View style={{ position: "absolute", right: 10, bottom: 10 }}>
@@ -113,14 +113,18 @@ export default Plan;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 12,
-    paddingTop: statusBarHeight + 12,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 18,
+    paddingTop: statusBarHeight + 10,
+    paddingBottom: 16,
+    paddingHorizontal: 18,
+    backgroundColor: Colors.WHITE,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
   headerTitle: {
     fontSize: 22,

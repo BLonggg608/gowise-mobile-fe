@@ -187,7 +187,7 @@ const Dashboard = () => {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={{ marginBottom: 8, padding: 4 }}
+          contentContainerStyle={{ marginBottom: 8, padding: 4 }}
         >
           {plans.map((plan, idx) => (
             <TouchableOpacity key={idx} style={styles.planCard}>
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: statusBarHeight + 12,
+    paddingTop: statusBarHeight + 10,
   },
   headerLeft: {
     flexDirection: "row",
@@ -431,7 +431,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.WHITE,
     borderRadius: 16,
     marginLeft: 18,
-    marginRight: 8,
     shadowColor: Colors.BLACK,
     shadowOpacity: 0.03,
     shadowRadius: 6,
