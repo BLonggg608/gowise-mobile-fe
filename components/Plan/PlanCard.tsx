@@ -2,7 +2,7 @@ import { Colors } from "@/constant/Colors";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-type initialPlans = {
+type PlansType = {
   id: string;
   title: string;
   subtitle: string;
@@ -15,13 +15,17 @@ const PlanCard = ({
   plan,
   planStatusColors,
 }: {
-  plan: initialPlans;
+  plan: PlansType;
   planStatusColors: { [key: string]: string };
 }) => {
   return (
     <TouchableOpacity style={styles.card}>
+      {/* Plan Image */}
       <Image source={plan.image} style={styles.cardImage} />
+
+      {/* Plan Content */}
       <View style={styles.cardContent}>
+        {/* Plan Header */}
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle} numberOfLines={1} ellipsizeMode="tail">
             {plan.title}
@@ -36,6 +40,8 @@ const PlanCard = ({
           </View>
         </View>
         <Text style={styles.cardSubtitle}>{plan.subtitle}</Text>
+
+        {/* Progress Bar */}
         <View style={styles.progressBarContainer}>
           <View
             style={[styles.progressBar, { width: `${plan.progress * 100}%` }]}

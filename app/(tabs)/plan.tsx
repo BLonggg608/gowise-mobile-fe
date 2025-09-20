@@ -56,6 +56,8 @@ const planStatusColors: { [key: string]: string } = {
 };
 
 const Plan = () => {
+  // const [plans, setPlans] = React.useState(initialPlans);
+
   // Example API call function
   // const fetchPlans = async () => {
   //   const response = await fetch('API_URL');
@@ -65,6 +67,7 @@ const Plan = () => {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Manage Plans</Text>
         <View style={styles.headerIcons}>
@@ -87,15 +90,23 @@ const Plan = () => {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Plans List */}
       <FlatList
         data={initialPlans}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <PlanCard plan={item} planStatusColors={planStatusColors} />
         )}
-        contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 18 }}
+        contentContainerStyle={{
+          paddingBottom: 100,
+          paddingHorizontal: 18,
+          marginTop: 18,
+        }}
         showsVerticalScrollIndicator={false}
       />
+
+      {/* Floating Action Buttons */}
       <View style={{ position: "absolute", right: 10, bottom: 10 }}>
         <TouchableOpacity style={styles.fab}>
           <Ionicons name="settings-outline" size={24} color={Colors.WHITE} />
@@ -118,7 +129,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 18,
+
     paddingTop: statusBarHeight + 10,
     paddingBottom: 16,
     paddingHorizontal: 18,
@@ -128,7 +139,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 22,
-    fontWeight: "bold",
+    fontFamily: "inter-medium",
     color: Colors.BLACK,
   },
   headerIcons: {
