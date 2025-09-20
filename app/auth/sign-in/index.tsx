@@ -1,7 +1,7 @@
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { Checkbox } from "expo-checkbox";
-import { useRouter } from "expo-router";
+import { RelativePathString, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Image,
@@ -35,7 +35,7 @@ const SignIn = () => {
       });
       return;
     }
-    router.replace("/dashboard");
+    router.replace("/dashboard" as RelativePathString);
     // router.push("/dashboard");
   };
 

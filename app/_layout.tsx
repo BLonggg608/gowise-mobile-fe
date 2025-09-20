@@ -1,9 +1,13 @@
 import ToastNotification from "@/components/utils/ToastNotification";
 import { useFonts } from "expo-font";
+import * as NavigationBar from "expo-navigation-bar";
 import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { Platform } from "react-native";
 import ToastManager from "toastify-react-native";
 import { ToastShowParams } from "toastify-react-native/utils/interfaces";
 
+Platform.OS === "android" && NavigationBar.setButtonStyleAsync("dark"); // màu dark
 // Custom toast configuration
 const toastConfig = {
   success: (props: ToastShowParams) => (
@@ -23,6 +27,7 @@ export default function RootLayout() {
 
   return (
     <>
+      <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
       </Stack>
