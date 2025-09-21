@@ -1,7 +1,7 @@
 import ChatInput from "@/components/Assistant/ChatInput";
 import ChatList from "@/components/Assistant/ChatList";
-import Header from "@/components/Assistant/Header";
-import SliderMenu from "@/components/Assistant/SliderMenu";
+import Header from "@/components/Assistant/ChatHeader";
+import SliderMenu from "@/components/Assistant/ChatSliderMenu";
 import React, { useState } from "react";
 import {
   Animated,

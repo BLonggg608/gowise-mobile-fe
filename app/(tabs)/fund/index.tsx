@@ -2,6 +2,7 @@ import FundCard, { FundType } from "@/components/Fund/FundCard";
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
+import { RelativePathString, useRouter } from "expo-router";
 import React from "react";
 import {
   FlatList,
@@ -45,6 +46,7 @@ const initialFunds: FundType[] = [
 ];
 
 const Fund = () => {
+  const router = useRouter();
   // Example API call function
   // const [funds, setFunds] = React.useState(initialFunds);
   // const fetchFunds = async () => {
@@ -79,7 +81,11 @@ const Fund = () => {
 
       {/* Floating Action Button */}
       <View style={{ position: "absolute", right: 10, bottom: 10 }}>
-        <TouchableOpacity style={styles.fab}>
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => router.push("/setting" as RelativePathString)}
+          activeOpacity={0.7}
+        >
           <Ionicons name="settings-outline" size={24} color={Colors.WHITE} />
         </TouchableOpacity>
       </View>

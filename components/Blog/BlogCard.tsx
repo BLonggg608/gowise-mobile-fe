@@ -16,7 +16,7 @@ type BlogType = {
 
 const BlogCard = ({ blog }: { blog: BlogType }) => {
   return (
-    <TouchableOpacity style={styles.card}>
+    <TouchableOpacity style={styles.card} activeOpacity={0.7}>
       {/* Blog Image */}
       <Image source={blog.image} style={styles.cardImage} />
 

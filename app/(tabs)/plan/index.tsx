@@ -2,6 +2,7 @@ import PlanCard from "@/components/Plan/PlanCard";
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
+import { RelativePathString, useRouter } from "expo-router";
 import React from "react";
 import {
   FlatList,
@@ -56,6 +57,7 @@ const planStatusColors: { [key: string]: string } = {
 };
 
 const Plan = () => {
+  const router = useRouter();
   // const [plans, setPlans] = React.useState(initialPlans);
 
   // Example API call function
@@ -108,10 +110,14 @@ const Plan = () => {
 
       {/* Floating Action Buttons */}
       <View style={{ position: "absolute", right: 10, bottom: 10 }}>
-        <TouchableOpacity style={styles.fab}>
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => router.push("/setting" as RelativePathString)}
+          activeOpacity={0.7}
+        >
           <Ionicons name="settings-outline" size={24} color={Colors.WHITE} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.fab}>
+        <TouchableOpacity style={styles.fab} activeOpacity={0.7}>
           <Ionicons name="add" size={24} color={Colors.WHITE} />
         </TouchableOpacity>
       </View>

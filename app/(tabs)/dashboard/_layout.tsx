@@ -1,13 +1,14 @@
 import { Colors } from "@/constant/Colors";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import Constants from "expo-constants";
-import { Stack } from "expo-router";
+import { RelativePathString, Stack, useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const statusBarHeight = Constants.statusBarHeight;
 
 const StackLayout = () => {
+  const router = useRouter();
   return (
     <Stack
       screenOptions={{
@@ -40,7 +41,12 @@ const StackLayout = () => {
                       color={Colors.BLACK}
                     />
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.headerActionIcon}>
+                  <TouchableOpacity
+                    style={styles.headerActionIcon}
+                    onPress={() =>
+                      router.push("/setting" as RelativePathString)
+                    }
+                  >
                     <Ionicons
                       name="settings-outline"
                       size={22}

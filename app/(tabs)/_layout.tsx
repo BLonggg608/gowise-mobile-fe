@@ -58,6 +58,16 @@ const TabLayout = () => {
           ),
         }}
       />
+      <Tabs.Screen
+        name="setting"
+        options={{
+          tabBarLabel: "Setting",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings-outline" color={color} size={size} />
+          ),
+          href: null,
+        }}
+      />
     </Tabs>
   );
 };

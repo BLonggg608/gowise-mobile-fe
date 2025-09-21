@@ -19,7 +19,7 @@ const PlanCard = ({
   planStatusColors: { [key: string]: string };
 }) => {
   return (
-    <TouchableOpacity style={styles.card}>
+    <TouchableOpacity style={styles.card} activeOpacity={0.7}>
       {/* Plan Image */}
       <Image source={plan.image} style={styles.cardImage} />
 

@@ -1,7 +1,6 @@
 import { Colors } from "@/constant/Colors";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import Constants from "expo-constants";
-import { StatusBar } from "expo-status-bar";
 import React from "react";
 import {
   Image,
@@ -138,7 +137,11 @@ const Dashboard = () => {
           contentContainerStyle={{ marginBottom: 8, padding: 4 }}
         >
           {plans.map((plan, idx) => (
-            <TouchableOpacity key={idx} style={styles.planCard}>
+            <TouchableOpacity
+              key={idx}
+              style={styles.planCard}
+              activeOpacity={0.7}
+            >
               <View style={styles.planImageWrap}>
                 {!plan.image ? (
                   <Ionicons
