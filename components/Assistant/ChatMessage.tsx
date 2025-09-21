@@ -20,8 +20,9 @@ const ChatMessage = ({ sender, text, time }: ChatMessageProps) => {
       >
         <Text
           style={[
-            styles.msgText,
-            { color: sender === "assistant" ? Colors.BLACK : Colors.WHITE },
+            sender === "assistant"
+              ? styles.assistantMsgText
+              : styles.userMsgText,
           ]}
         >
           {text}
@@ -59,9 +60,15 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
   },
-  msgText: {
+  userMsgText: {
     fontSize: 15,
     fontFamily: "inter-regular",
+    color: Colors.WHITE,
+  },
+  assistantMsgText: {
+    fontSize: 15,
+    fontFamily: "inter-regular",
+    color: Colors.BLACK,
   },
   msgTime: {
     fontSize: 11,

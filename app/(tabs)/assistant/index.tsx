@@ -11,65 +11,21 @@ const initialChats = [
     id: "general",
     title: "General Chat",
     subtitle: "General travel assistance",
-    messages: [
-      {
-        id: "m1",
-        sender: "assistant",
-        text: "Hello! I'm your AI Travel Assistant. How can I help you plan your next adventure?",
-        time: "10:30 AM",
-      },
-    ],
   },
   {
     id: "tokyo",
     title: "Tokyo Adventure",
     subtitle: "Japan",
-    messages: [
-      {
-        id: "m1",
-        sender: "assistant",
-        text: "Hello! I'm your AI Travel Assistant. How can I help you plan your next adventure?",
-        time: "10:30 AM",
-      },
-      {
-        id: "m2",
-        sender: "user",
-        text: "I want to plan a trip to Tokyo for 7 days. What are the must-visit places?",
-        time: "10:32 AM",
-      },
-      {
-        id: "m3",
-        sender: "assistant",
-        text: "Great choice! For a 7-day Tokyo trip, I recommend visiting:\n\n• Senso-ji Temple in Asakusa\n• Shibuya Crossing\n• Tokyo Skytree\n• Meiji Shrine\n• Tsukiji Fish Market\n• Harajuku District\n• Imperial Palace Gardens\n\nWould you like me to create a detailed itinerary for each day?",
-        time: "10:33 AM",
-      },
-    ],
   },
   {
     id: "europe",
     title: "European Explorer",
     subtitle: "Europe",
-    messages: [
-      {
-        id: "m1",
-        sender: "assistant",
-        text: "Hello! I'm your AI Travel Assistant. How can I help you plan your next adventure?",
-        time: "10:30 AM",
-      },
-    ],
   },
   {
     id: "bali",
     title: "Bali Retreat",
     subtitle: "Indonesia",
-    messages: [
-      {
-        id: "m1",
-        sender: "assistant",
-        text: "Hello! I'm your AI Travel Assistant. How can I help you plan your next adventure?",
-        time: "10:30 AM",
-      },
-    ],
   },
 ];
 
@@ -77,7 +33,62 @@ const Assistant = () => {
   const [sliderOpen, setSliderOpen] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState("general");
   const [input, setInput] = useState("");
-  const [chats, setChats] = useState(initialChats);
+  const [chats] = useState(initialChats);
+  type Message = {
+    id: string;
+    sender: "assistant" | "user";
+    text: string;
+    time: string;
+  };
+  type MessagesByChat = {
+    [chatId: string]: Message[];
+  };
+  const [messagesByChat, setMessagesByChat] = useState<MessagesByChat>({
+    general: [
+      {
+        id: "m1",
+        sender: "assistant" as "assistant",
+        text: "Hello! I'm your AI Travel Assistant. How can I help you plan your next adventure?",
+        time: "10:30 AM",
+      },
+    ],
+    tokyo: [
+      {
+        id: "m1",
+        sender: "assistant" as "assistant",
+        text: "Hello! I'm your AI Travel Assistant. How can I help you plan your next adventure?",
+        time: "10:30 AM",
+      },
+      {
+        id: "m2",
+        sender: "user" as "user",
+        text: "I want to plan a trip to Tokyo for 7 days. What are the must-visit places?",
+        time: "10:32 AM",
+      },
+      {
+        id: "m3",
+        sender: "assistant" as "assistant",
+        text: "Great choice! For a 7-day Tokyo trip, I recommend visiting:\n\n• Senso-ji Temple in Asakusa\n• Shibuya Crossing\n• Tokyo Skytree\n• Meiji Shrine\n• Tsukiji Fish Market\n• Harajuku District\n• Imperial Palace Gardens\n\nWould you like me to create a detailed itinerary for each day?",
+        time: "10:33 AM",
+      },
+    ],
+    europe: [
+      {
+        id: "m1",
+        sender: "assistant" as "assistant",
+        text: "Hello! I'm your AI Travel Assistant. How can I help you plan your next adventure?",
+        time: "10:30 AM",
+      },
+    ],
+    bali: [
+      {
+        id: "m1",
+        sender: "assistant" as "assistant",
+        text: "Hello! I'm your AI Travel Assistant. How can I help you plan your next adventure?",
+        time: "10:30 AM",
+      },
+    ],
+  });
   const sliderAnim = React.useRef(new Animated.Value(0)).current;
 
   // Handle slider animation
@@ -97,13 +108,14 @@ const Assistant = () => {
     }).start(() => setSliderOpen(false));
   };
 
-  // Get current chat
+  // Get current chat info
   const currentChat = chats.find((c) => c.id === selectedChatId) || chats[0];
+  const currentMessages = messagesByChat[selectedChatId] || [];
 
   // Send message (dummy, replace with API)
   const sendMessage = () => {
     if (!input.trim()) return;
-    const newMsg = {
+    const newMsg: Message = {
       id: `m${Date.now()}`,
       sender: "user",
       text: input,
@@ -112,13 +124,10 @@ const Assistant = () => {
         minute: "2-digit",
       }),
     };
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === selectedChatId
-          ? { ...chat, messages: [...chat.messages, newMsg] }
-          : chat
-      )
-    );
+    setMessagesByChat((prev) => ({
+      ...prev,
+      [selectedChatId]: [...(prev[selectedChatId] || []), newMsg],
+    }));
     setInput("");
     // Call API here if needed
   };
@@ -135,15 +144,10 @@ const Assistant = () => {
         onClose={closeSlider}
       />
 
-      {/* Main chat area without KeyboardAvoidingView */}
+      {/* Main chat area */}
       <Animated.View style={styles.chatArea}>
         <Header subtitle={currentChat.subtitle} onMenuPress={openSlider} />
-        <ChatList
-          messages={currentChat.messages.map(({ sender, ...rest }) => ({
-            sender: sender === "assistant" ? "assistant" : "user",
-            ...rest,
-          }))}
-        />
+        <ChatList messages={currentMessages} />
         <ChatInput value={input} onChange={setInput} onSend={sendMessage} />
       </Animated.View>
     </View>
