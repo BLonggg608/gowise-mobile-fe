@@ -18,38 +18,38 @@ const settingsList = [
     id: "profile",
     icon: "person-outline",
     label: "Profile",
-    route: "/profile",
+    route: "/setting/profile",
   },
   {
-    id: "account_security",
+    id: "account-security",
     icon: "shield-outline",
     label: "Account & Security",
-    route: "/account-security",
+    route: "/setting/account-security",
   },
   {
     id: "preferences",
     icon: "settings-outline",
     label: "Preferences",
-    route: "/preferences",
+    route: "/setting/preferences",
   },
   {
-    id: "payment_methods",
+    id: "payment-methods",
     icon: "card-outline",
     label: "Payment Methods",
-    route: "/payment-methods",
+    route: "/setting/payment-methods",
   },
   {
-    id: "help_support",
+    id: "help-support",
     icon: "help-outline",
     label: "Help & Support",
-    route: "/help-support",
+    route: "/setting/help-support",
   },
 ];
 
 const Setting = () => {
   const router = useRouter();
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1 }}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Settings</Text>
@@ -98,9 +98,6 @@ const Setting = () => {
 export default Setting;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   header: {
     flexDirection: "row",
     alignItems: "center",
