@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#eee",
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontFamily: "inter-medium",
     color: Colors.BLACK,
   },
