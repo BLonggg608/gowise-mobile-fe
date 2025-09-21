@@ -1,7 +1,7 @@
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import AppIntroSlider from "react-native-app-intro-slider";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -29,7 +29,6 @@ const slides = [
 
 const OnBoardingScreen = () => {
   const router = useRouter();
-  const [showHomePage, setShowHomePage] = useState(false);
 
   const nextDoneButton = (label: string) => {
     return (
@@ -58,41 +57,33 @@ const OnBoardingScreen = () => {
     return <Text style={styles.skipPrevButton}>{label}</Text>;
   };
 
-  if (!showHomePage) {
-    return (
-      <AppIntroSlider
-        data={slides}
-        renderItem={({ item }) => {
-          return (
-            <SafeAreaView style={{ flex: 1 }}>
-              <View style={styles.slideContainer}>
-                <View style={styles.contentContainer}>
-                  <Image style={styles.image} source={item.image} />
-                  <Text style={styles.title}>{item.title}</Text>
-                  <Text style={styles.description}>{item.description}</Text>
-                </View>
-              </View>
-            </SafeAreaView>
-          );
-        }}
-        activeDotStyle={{ backgroundColor: Colors.GREEN, width: 30 }}
-        bottomButton={true}
-        showSkipButton={true}
-        showPrevButton={true}
-        renderNextButton={() => nextDoneButton("Continue")}
-        renderSkipButton={() => skipPrevButton("Skip for now")}
-        renderPrevButton={() => skipPrevButton("Back")}
-        renderDoneButton={() => nextDoneButton("Sign In")}
-        onDone={() => router.push("/auth/sign-in")}
-        contentContainerStyle={styles.sliderContentContainer}
-      />
-    );
-  }
-
   return (
-    <View
-      style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-    ></View>
+    <AppIntroSlider
+      data={slides}
+      renderItem={({ item }) => {
+        return (
+          <SafeAreaView style={{ flex: 1 }}>
+            <View style={styles.slideContainer}>
+              <View style={styles.contentContainer}>
+                <Image style={styles.image} source={item.image} />
+                <Text style={styles.title}>{item.title}</Text>
+                <Text style={styles.description}>{item.description}</Text>
+              </View>
+            </View>
+          </SafeAreaView>
+        );
+      }}
+      activeDotStyle={{ backgroundColor: Colors.GREEN, width: 30 }}
+      bottomButton={true}
+      showSkipButton={true}
+      showPrevButton={true}
+      renderNextButton={() => nextDoneButton("Continue")}
+      renderSkipButton={() => skipPrevButton("Skip for now")}
+      renderPrevButton={() => skipPrevButton("Back")}
+      renderDoneButton={() => nextDoneButton("Sign In")}
+      onDone={() => router.push("/auth/sign-in")}
+      contentContainerStyle={styles.sliderContentContainer}
+    />
   );
 };
 
