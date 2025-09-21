@@ -97,19 +97,36 @@ const FundCard = ({ fund }: { fund: FundType }) => {
       {/* Stats */}
       <View style={styles.statsRow}>
         <View style={styles.statBox}>
+          <Ionicons
+            name="card-outline"
+            size={16}
+            color={Colors.GREEN}
+            style={styles.statIcon}
+          />
           <Text style={styles.statValue}>
-            ${fund.raised.toLocaleString("en-US")}
+            {fund.raised.toLocaleString("en-US")}
           </Text>
           <Text style={styles.statLabel}>Raised</Text>
         </View>
         <View style={styles.statBox}>
+          <Ionicons
+            name="wallet-outline"
+            size={16}
+            color={Colors.GREEN}
+            style={styles.statIcon}
+          />
           <Text style={styles.statValue}>
-            ${fund.target.toLocaleString("en-US")}
+            {fund.target.toLocaleString("en-US")}
           </Text>
           <Text style={styles.statLabel}>Target</Text>
         </View>
         <View style={styles.statBox}>
-          <Ionicons name="people-outline" size={16} color={Colors.GREEN} />
+          <Ionicons
+            name="people-outline"
+            size={16}
+            color={Colors.GREEN}
+            style={styles.statIcon}
+          />
           <Text style={styles.statValue}>{fund.contributors}</Text>
           <Text style={styles.statLabel}>Contributors</Text>
         </View>
@@ -210,6 +227,12 @@ const styles = StyleSheet.create({
   statBox: {
     alignItems: "center",
     flex: 1,
+  },
+  statIcon: {
+    borderRadius: 12,
+    backgroundColor: "#eafaf3",
+    padding: 4,
+    marginBottom: 4,
   },
   statValue: {
     fontSize: 15,
