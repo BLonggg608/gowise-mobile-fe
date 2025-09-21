@@ -3,7 +3,13 @@ import ChatList from "@/components/Assistant/ChatList";
 import Header from "@/components/Assistant/Header";
 import SliderMenu from "@/components/Assistant/SliderMenu";
 import React, { useState } from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import {
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  View,
+} from "react-native";
 
 // Dummy chat data, replace with API later
 const initialChats = [
@@ -134,6 +140,9 @@ const Assistant = () => {
 
   return (
     <View style={styles.container}>
+      {/* Header with menu button */}
+      <Header subtitle={currentChat.subtitle} onMenuPress={openSlider} />
+
       {/* Slider menu for chat selection */}
       <SliderMenu
         open={sliderOpen}
@@ -144,12 +153,14 @@ const Assistant = () => {
         onClose={closeSlider}
       />
 
-      {/* Main chat area */}
-      <Animated.View style={styles.chatArea}>
-        <Header subtitle={currentChat.subtitle} onMenuPress={openSlider} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        {/* Main chat area */}
         <ChatList messages={currentMessages} />
         <ChatInput value={input} onChange={setInput} onSend={sendMessage} />
-      </Animated.View>
+      </KeyboardAvoidingView>
     </View>
   );
 };

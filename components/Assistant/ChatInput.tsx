@@ -1,14 +1,7 @@
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 
 export type ChatInputProps = {
   value: string;
@@ -17,24 +10,19 @@ export type ChatInputProps = {
 };
 
 const ChatInput = ({ value, onChange, onSend }: ChatInputProps) => (
-  <KeyboardAvoidingView
-    behavior={Platform.OS === "ios" ? "padding" : "height"}
-    style={{ width: "100%" }}
-  >
-    <View style={styles.inputRow}>
-      <TextInput
-        style={styles.input}
-        value={value}
-        onChangeText={onChange}
-        placeholder="Type your message..."
-        placeholderTextColor={Colors.GRAY}
-        multiline
-      />
-      <TouchableOpacity style={styles.sendBtn} onPress={onSend}>
-        <Ionicons name="send" size={22} color="#fff" />
-      </TouchableOpacity>
-    </View>
-  </KeyboardAvoidingView>
+  <View style={styles.inputRow}>
+    <TextInput
+      style={styles.input}
+      value={value}
+      onChangeText={onChange}
+      placeholder="Type your message..."
+      placeholderTextColor={Colors.GRAY}
+      multiline
+    />
+    <TouchableOpacity style={styles.sendBtn} onPress={onSend}>
+      <Ionicons name="send" size={22} color="#fff" />
+    </TouchableOpacity>
+  </View>
 );
 
 export default ChatInput;

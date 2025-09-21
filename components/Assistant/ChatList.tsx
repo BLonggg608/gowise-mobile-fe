@@ -16,6 +16,7 @@ const ChatList = ({ messages }: ChatListProps) => {
         paddingBottom: 100,
         paddingHorizontal: 18,
         marginTop: 18,
+        flexGrow: 1,
       }}
       showsVerticalScrollIndicator={false}
     />

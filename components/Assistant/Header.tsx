@@ -1,7 +1,10 @@
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
+import constants from "expo-constants";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+
+const STATUSBAR_HEIGHT = constants.statusBarHeight;
 
 export type HeaderProps = {
   subtitle?: string;
@@ -27,7 +30,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
-    paddingTop: 44,
+    paddingTop: STATUSBAR_HEIGHT + 12,
     paddingBottom: 16,
     paddingHorizontal: 18,
     backgroundColor: Colors.WHITE,
