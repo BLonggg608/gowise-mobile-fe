@@ -1,6 +1,7 @@
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Modal,
@@ -30,6 +31,7 @@ const themeOptions = [
 ];
 
 const Preferences = () => {
+  const router = useRouter();
   // State for preferences data
   const [prefs, setPrefs] = useState(initialPreferences);
   // State for dropdowns
@@ -88,6 +90,12 @@ const Preferences = () => {
     <View style={{ flex: 1 }}>
       {/* Header row with title */}
       <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.headerBackBtn}
+        >
+          <Ionicons name="arrow-back" size={22} color={Colors.BLACK} />
+        </TouchableOpacity>
         <Text style={styles.cardTitle}>Preferences</Text>
       </View>
 
@@ -312,8 +320,8 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    // alignItems: "center",
+    // justifyContent: "space-between",
     paddingHorizontal: 18,
     paddingTop: statusBarHeight + 12,
     paddingBottom: 16,
@@ -321,7 +329,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
+  headerBackBtn: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    backgroundColor: "#9c9c9c1e",
+  },
   cardTitle: {
+    marginLeft: 12,
     fontSize: 22,
     fontFamily: "inter-medium",
     color: Colors.BLACK,

@@ -64,12 +64,12 @@ const StackLayout = () => {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.userName}>John Doe</Text>
                   <Text style={styles.userStatus}>
+                    Premium Member{" "}
                     <MaterialCommunityIcons
                       name="crown-outline"
                       size={13}
                       color={Colors.YELLOW}
-                    />{" "}
-                    Premium Member
+                    />
                   </Text>
                 </View>
                 {/* <Ionicons name="shield-checkmark" size={22} color={Colors.GREEN} /> */}

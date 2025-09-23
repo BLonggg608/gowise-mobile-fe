@@ -1,8 +1,9 @@
 import { Colors } from "@/constant/Colors";
+import { useRouter } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-type PlansType = {
+export type PlansType = {
   id: string;
   title: string;
   subtitle: string;
@@ -18,8 +19,13 @@ const PlanCard = ({
   plan: PlansType;
   planStatusColors: { [key: string]: string };
 }) => {
+  const router = useRouter();
   return (
-    <TouchableOpacity style={styles.card} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.7}
+      onPress={() => router.push(`/plan/${plan.id}`)}
+    >
       {/* Plan Image */}
       <Image source={plan.image} style={styles.cardImage} />
 

@@ -61,7 +61,7 @@ const AddMethodModal: React.FC<AddMethodModalProps> = ({
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType="fade"
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>

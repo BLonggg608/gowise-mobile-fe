@@ -11,6 +11,7 @@ const TabLayout = () => {
         headerShown: false,
         tabBarActiveTintColor: Colors.GREEN,
         tabBarActiveBackgroundColor: "#F0FDFA",
+        tabBarLabelStyle: { fontFamily: "inter-medium" },
       }}
     >
       <Tabs.Screen

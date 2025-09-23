@@ -3,6 +3,7 @@ import EditMethodModal from "@/components/Setting/PaymentMethod/EditMethodModal"
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   ScrollView,
@@ -35,6 +36,7 @@ const initialPaymentMethods = [
 
 // Main Payment Methods screen
 const PaymentMethods = () => {
+  const router = useRouter();
   // State quản lý danh sách phương thức thanh toán
   const [methods, setMethods] = React.useState(initialPaymentMethods);
   // State điều khiển modal thêm mới
@@ -135,7 +137,15 @@ const PaymentMethods = () => {
     <View style={{ flex: 1 }}>
       {/* Header row with title and Add button */}
       <View style={styles.headerContainer}>
-        <Text style={styles.headerTitle}>Payment Methods</Text>
+        <View style={{ flexDirection: "row" }}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.headerBackBtn}
+          >
+            <Ionicons name="arrow-back" size={22} color={Colors.BLACK} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Pay Options</Text>
+        </View>
         <TouchableOpacity style={styles.addBtn} onPress={handleAddMethod}>
           <Ionicons
             name="add"
@@ -234,7 +244,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
+  headerBackBtn: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    backgroundColor: "#9c9c9c1e",
+  },
   headerTitle: {
+    marginLeft: 12,
     fontSize: 22,
     fontFamily: "inter-medium",
     color: Colors.BLACK,

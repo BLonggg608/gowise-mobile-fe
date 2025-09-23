@@ -1,7 +1,8 @@
 // Profile screen for user information and editing
 import { Colors } from "@/constant/Colors";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import Constants from "expo-constants";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ScrollView,
@@ -21,9 +22,12 @@ const initialProfile = {
   email: "john.doe@email.com",
   phone: "",
   bio: "",
+  membership: "Premium",
+  memberSince: "January 2024",
 };
 
 const Profile = () => {
+  const router = useRouter();
   // State for profile data
   const [profile, setProfile] = useState(initialProfile);
   // State for edit mode
@@ -44,7 +48,15 @@ const Profile = () => {
     <View style={{ flex: 1 }}>
       {/* Header row with title and edit/cancel button */}
       <View style={styles.header}>
-        <Text style={styles.cardTitle}>Profile</Text>
+        <View style={{ flexDirection: "row" }}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.headerBackBtn}
+          >
+            <Ionicons name="arrow-back" size={22} color={Colors.BLACK} />
+          </TouchableOpacity>
+          <Text style={styles.cardTitle}>Profile</Text>
+        </View>
         <TouchableOpacity onPress={() => setEditing((e) => !e)}>
           <View style={styles.editBtn}>
             <Ionicons name="create-outline" size={18} color={Colors.GREEN} />
@@ -71,8 +83,17 @@ const Profile = () => {
               <Text style={styles.nameText}>
                 {profile.firstName} {profile.lastName}
               </Text>
-              <Text style={styles.memberText}>Premium Member</Text>
-              <Text style={styles.memberSince}>Member since January 2024</Text>
+              <Text style={styles.memberText}>
+                {profile.membership} Member{" "}
+                <MaterialCommunityIcons
+                  name="crown-outline"
+                  size={13}
+                  color={Colors.YELLOW}
+                />
+              </Text>
+              <Text style={styles.memberSince}>
+                Member since {profile.memberSince}
+              </Text>
             </View>
           </View>
         </View>
@@ -193,7 +214,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
+  headerBackBtn: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    backgroundColor: "#9c9c9c1e",
+  },
   cardTitle: {
+    marginLeft: 12,
     fontSize: 22,
     fontFamily: "inter-medium",
     color: Colors.BLACK,
@@ -239,7 +269,7 @@ const styles = StyleSheet.create({
   memberText: {
     fontSize: 14,
     fontFamily: "inter-regular",
-    color: Colors.GREEN,
+    color: Colors.YELLOW,
     marginBottom: 2,
   },
   memberSince: {
@@ -267,7 +297,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   input: {
-    backgroundColor: "#f2fef7ff",
+    backgroundColor: "#f0f0f0ff",
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -279,7 +309,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   inputBio: {
-    backgroundColor: "#f2fef7ff",
+    backgroundColor: "#f0f0f0ff",
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 12,

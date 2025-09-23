@@ -1,6 +1,6 @@
 import { Colors } from "@/constant/Colors";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import Constants from "expo-constants";
+import { RelativePathString, useRouter } from "expo-router";
 import React from "react";
 import {
   Image,
@@ -11,10 +11,9 @@ import {
   View,
 } from "react-native";
 
-const statusBarHeight = Constants.statusBarHeight;
-
 const plans = [
   {
+    id: "1",
     title: "Tokyo Adventure",
     subtitle: "Japan • 7 days",
     status: "Active",
@@ -22,6 +21,7 @@ const plans = [
     image: require("@/assets/images/PlanImage/1.jpg"),
   },
   {
+    id: "2",
     title: "European Explorer",
     subtitle: "Europe • 14 days",
     status: "Draft",
@@ -29,6 +29,7 @@ const plans = [
     image: require("@/assets/images/PlanImage/2.jpg"),
   },
   {
+    id: "3",
     title: "Bali Retreat",
     subtitle: "Indonesia • 10 days",
     status: "Completed",
@@ -80,6 +81,7 @@ const weatherStatusColors: { [key: string]: string } = {
 };
 
 const Dashboard = () => {
+  const router = useRouter();
   return (
     <View style={styles.container}>
       {/* <StatusBar style="dark" /> */}
@@ -141,6 +143,9 @@ const Dashboard = () => {
               key={idx}
               style={styles.planCard}
               activeOpacity={0.7}
+              onPress={() => {
+                router.push(`/plan/${plan.id}` as RelativePathString);
+              }}
             >
               <View style={styles.planImageWrap}>
                 {!plan.image ? (

@@ -1,6 +1,7 @@
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
   ScrollView,
@@ -42,10 +43,17 @@ const securityOptions = [
 
 // Main Account Security screen
 const AccountSecurity = () => {
+  const router = useRouter();
   return (
     <View style={{ flex: 1 }}>
       {/* Header */}
       <View style={styles.headerContainer}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.headerBackBtn}
+        >
+          <Ionicons name="arrow-back" size={22} color={Colors.BLACK} />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Account & Security</Text>
       </View>
 
@@ -129,8 +137,8 @@ export default AccountSecurity;
 const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    // alignItems: "center",
+    // justifyContent: "space-between",
     paddingTop: statusBarHeight + 12,
     paddingBottom: 16,
     paddingHorizontal: 18,
@@ -138,7 +146,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
+  headerBackBtn: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    backgroundColor: "#9c9c9c1e",
+  },
   headerTitle: {
+    marginLeft: 12,
     fontSize: 22,
     fontFamily: "inter-medium",
     color: Colors.BLACK,
