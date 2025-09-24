@@ -58,7 +58,7 @@ const planStatusColors: { [key: string]: string } = {
 
 const Plan = () => {
   const router = useRouter();
-  // const [plans, setPlans] = React.useState(initialPlans);
+  const [plans, setPlans] = React.useState(initialPlans);
 
   // Example API call function
   // const fetchPlans = async () => {
@@ -95,7 +95,7 @@ const Plan = () => {
 
       {/* Plans List */}
       <FlatList
-        data={initialPlans}
+        data={plans}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <PlanCard plan={item} planStatusColors={planStatusColors} />

@@ -4,7 +4,7 @@ import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -38,13 +38,13 @@ const initialPaymentMethods = [
 const PaymentMethods = () => {
   const router = useRouter();
   // State quản lý danh sách phương thức thanh toán
-  const [methods, setMethods] = React.useState(initialPaymentMethods);
+  const [methods, setMethods] = useState(initialPaymentMethods);
   // State điều khiển modal thêm mới
-  const [showAddModal, setShowAddModal] = React.useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   // State điều khiển modal sửa
-  const [showEditModal, setShowEditModal] = React.useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   // State lưu phương thức đang sửa
-  const [editingMethod, setEditingMethod] = React.useState<
+  const [editingMethod, setEditingMethod] = useState<
     | {
         id: string;
         type: string;

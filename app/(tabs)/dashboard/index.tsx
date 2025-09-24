@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 
-const plans = [
+const initialPlans = [
   {
     id: "1",
     title: "Tokyo Adventure",
@@ -38,7 +38,7 @@ const plans = [
   },
 ];
 
-const weather = [
+const initialWeather = [
   {
     city: "Tokyo, Japan",
     temp: "22°C",
@@ -82,6 +82,9 @@ const weatherStatusColors: { [key: string]: string } = {
 
 const Dashboard = () => {
   const router = useRouter();
+  const [plans, setPlans] = React.useState(initialPlans);
+  const [weather, setWeather] = React.useState(initialWeather);
+
   return (
     <View style={styles.container}>
       {/* <StatusBar style="dark" /> */}
