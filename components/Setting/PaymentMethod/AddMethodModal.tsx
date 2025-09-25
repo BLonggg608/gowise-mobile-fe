@@ -1,6 +1,6 @@
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   Platform,
@@ -41,7 +41,7 @@ const AddMethodModal: React.FC<AddMethodModalProps> = ({
   const expires = month && year ? `${month}/${year}` : "";
 
   // Reset lại các trường khi đóng modal
-  React.useEffect(() => {
+  useEffect(() => {
     if (!visible) {
       setType("");
       setCardNumber("");
@@ -52,7 +52,7 @@ const AddMethodModal: React.FC<AddMethodModalProps> = ({
 
   // Xử lý khi bấm nút xác nhận
   const handleSubmit = () => {
-    if (!type || !cardNumber || !month || !year) return;
+    if (!type || !cardNumber || !month || !year) return; // Kiểm tra đầy đủ thông tin
     onSubmit({ type, cardNumber, expires });
     onClose();
   };

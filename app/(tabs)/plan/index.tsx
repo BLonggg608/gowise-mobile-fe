@@ -1,9 +1,10 @@
+import CreateNewPlanModel from "@/components/Plan/CreateNewPlan/CreateNewPlanModel";
 import PlanCard from "@/components/Plan/PlanCard";
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { RelativePathString, useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -58,7 +59,9 @@ const planStatusColors: { [key: string]: string } = {
 
 const Plan = () => {
   const router = useRouter();
-  const [plans, setPlans] = React.useState(initialPlans);
+  const [plans, setPlans] = useState(initialPlans);
+  const [isCreatePlanModalVisible, setIsCreatePlanModalVisible] =
+    useState(false);
 
   // Example API call function
   // const fetchPlans = async () => {
@@ -66,6 +69,20 @@ const Plan = () => {
   //   const data = await response.json();
   //   setPlans(data);
   // };
+
+  const handleSubmitCreateNewPlan = (data: {
+    type: string;
+    NumberOfDays: number;
+    Budget: number;
+    Destination: string;
+  }) => {
+    // Call API or update state to add the new plan
+    // Handle the submitted data from the CreateNewPlanModel
+    console.log("New Plan Data:", data);
+
+    // You can add logic here to save the new plan to your backend or state
+    setIsCreatePlanModalVisible(false); // Close the modal after submission
+  };
 
   return (
     <View style={styles.container}>
@@ -117,10 +134,21 @@ const Plan = () => {
         >
           <Ionicons name="settings-outline" size={24} color={Colors.WHITE} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.fab} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => setIsCreatePlanModalVisible(true)}
+          activeOpacity={0.7}
+        >
           <Ionicons name="add" size={24} color={Colors.WHITE} />
         </TouchableOpacity>
       </View>
+
+      {/* Create New Plan Modal */}
+      <CreateNewPlanModel
+        visible={isCreatePlanModalVisible}
+        onClose={() => setIsCreatePlanModalVisible(false)}
+        onSubmit={handleSubmitCreateNewPlan}
+      />
     </View>
   );
 };
