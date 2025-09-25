@@ -72,8 +72,8 @@ const Plan = () => {
 
   const handleSubmitCreateNewPlan = (data: {
     type: string;
-    NumberOfDays: number;
-    Budget: number;
+    NumberOfDays: string;
+    Budget: string;
     Destination: string;
   }) => {
     // Call API or update state to add the new plan
