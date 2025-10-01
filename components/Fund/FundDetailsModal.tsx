@@ -40,7 +40,7 @@ const FundDetailsModal = ({
   totalContributors,
 }: FundDetailsModalProps) => {
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal visible={visible} animationType="fade" transparent>
       <View style={styles.overlay}>
         <View style={styles.modal}>
           {/* Header modal: tên quỹ và nút đóng */}
