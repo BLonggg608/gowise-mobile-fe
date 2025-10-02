@@ -1,7 +1,11 @@
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import { RelativePathString, useRouter } from "expo-router";
-import React from "react";
+import {
+  RelativePathString,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
+import React, { useState } from "react";
 import {
   Image,
   Keyboard,
@@ -10,30 +14,29 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { OtpInput } from "react-native-otp-entry";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const ForgotPassword = () => {
+const VerifyOTP = () => {
   const router = useRouter();
 
-  const [email, setEmail] = React.useState("");
+  const { email } = useLocalSearchParams();
+  const [otp, setOtp] = useState("");
+  const otpMaxLength = 6;
 
-  const handleResetPassword = () => {
+  const handleVerifyOtp = () => {
     // turn off keyboard before navigating
     Keyboard.dismiss();
 
-    // Handle password reset logic here
-    // For example, send a password reset email to the user
-    console.log("Reset password for email:", email);
-
-    // After handling, navigate to the OTP verification screen
-    // delay 100ms to allow keyboard to dismiss
+    // Handle OTP verification logic here
+    console.log("Verifying OTP:", otp, "for email:", email);
+    // After verification, navigate to the reset password screen
     setTimeout(() => {
       router.push({
-        pathname: "/auth/verify-otp" as RelativePathString,
+        pathname: "/auth/reset-password" as RelativePathString,
         params: { email },
       });
     }, 100);
@@ -67,36 +70,34 @@ const ForgotPassword = () => {
               source={require("../../../assets/images/gowise_logo.png")}
             />
 
-            <Text style={styles.title}>Forgot Password</Text>
+            <Text style={styles.title}>Verify OTP</Text>
             <Text style={styles.description}>
-              Please enter your email to reset the password
+              Please enter the OTP sent to your email
             </Text>
 
             <View style={styles.loginFormContainer}>
-              {/* Email Input */}
-              <Text style={styles.label}>Email Address</Text>
-              <View style={styles.input}>
-                <Ionicons
-                  style={{ marginVertical: "auto" }}
-                  name="mail-outline"
-                  size={24}
-                  color={"#9CA3AF"}
-                />
-                <TextInput
-                  style={styles.inputText}
-                  placeholder="Enter your email"
-                  placeholderTextColor={"#9CA3AF"}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  onChangeText={(value) => setEmail(value)}
-                />
-              </View>
+              {/* OTP Input */}
+              <OtpInput
+                numberOfDigits={otpMaxLength}
+                onTextChange={(text) => setOtp(text)}
+                focusColor={Colors.GREEN}
+                type="numeric"
+                theme={{
+                  pinCodeTextStyle: {
+                    fontFamily: "inter-regular",
+                    color: Colors.BLACK,
+                  },
+                }}
+              />
 
-              {/* Reset Password Button */}
+              {/* Verify Code Button */}
               <TouchableOpacity
-                disabled={!email}
-                style={[styles.button, { opacity: email ? 1 : 0.5 }]}
-                onPress={handleResetPassword}
+                disabled={otp.length !== otpMaxLength}
+                style={[
+                  styles.button,
+                  { opacity: otp.length === otpMaxLength ? 1 : 0.5 },
+                ]}
+                onPress={handleVerifyOtp}
               >
                 <Text
                   style={{
@@ -105,7 +106,7 @@ const ForgotPassword = () => {
                     color: Colors.WHITE,
                   }}
                 >
-                  Reset Password
+                  Verify Code
                 </Text>
               </TouchableOpacity>
             </View>
@@ -116,7 +117,7 @@ const ForgotPassword = () => {
   );
 };
 
-export default ForgotPassword;
+export default VerifyOTP;
 
 const styles = StyleSheet.create({
   container: {
@@ -165,23 +166,6 @@ const styles = StyleSheet.create({
     fontFamily: "inter-medium",
     fontSize: 15,
     color: Colors.BLACK,
-  },
-  input: {
-    // if android padding vertical: 0, ios padding vertical: 10
-    paddingVertical: Platform.OS === "android" ? 0 : 10,
-    paddingHorizontal: 10,
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: "#D7DAE0",
-    borderRadius: 8,
-    flexDirection: "row",
-  },
-  inputText: {
-    fontFamily: "inter-regular",
-    fontSize: 16,
-    color: Colors.BLACK,
-    marginLeft: 6,
-    flex: 1,
   },
   button: {
     backgroundColor: Colors.GREEN,

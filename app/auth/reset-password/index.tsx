@@ -17,46 +17,52 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 
-const SignUp = () => {
+const ResetPassword = () => {
   const router = useRouter();
 
   const [unhidePassword, setUnhidePassword] = useState(true);
 
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const onSignUp = () => {
-    if (!fullName || !email || !password || !confirmPassword) {
-      Toast.show({
-        type: "error",
-        text1: "Sign Up Failed",
-        text2: "All fields are required",
-      });
-      return;
-    }
+  const handleUpdatePassword = () => {
+    Keyboard.dismiss();
+
+    // Handle password update logic here
     if (password !== confirmPassword) {
       Toast.show({
         type: "error",
-        text1: "Sign Up Failed",
+        text1: "Update Failed",
         text2: "Passwords do not match",
       });
       return;
     }
-
-    // turn off keyboard before navigating
-    Keyboard.dismiss();
+    console.log("Updating password to:", password);
+    
+    // After updating, navigate to the sign-in screen
     setTimeout(() => {
-      router.replace("../auth/sign-in");
+      router.replace("/auth/sign-in");
     }, 100);
   };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <SafeAreaView style={{ flex: 1 }}>
+        {/* Back Button */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={styles.headerBackBtn}
+          onPress={() => router.back()}
+        >
+          <Ionicons
+            name="chevron-back-outline"
+            size={28}
+            color={Colors.BLACK}
+          />
+        </TouchableOpacity>
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
@@ -67,51 +73,12 @@ const SignUp = () => {
               source={require("../../../assets/images/gowise_logo.png")}
             />
 
-            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.title}>Set New Password</Text>
             <Text style={styles.description}>
-              Start planning your perfect trips with AI
+              Create a new password. Ensure it differs from previous ones
             </Text>
 
             <View style={styles.loginFormContainer}>
-              {/* Full Name */}
-              <Text style={styles.label}>Full Name</Text>
-              <View style={styles.input}>
-                <Ionicons
-                  style={{ marginVertical: "auto" }}
-                  name="person-outline"
-                  size={24}
-                  color={"#9CA3AF"}
-                />
-                <TextInput
-                  style={styles.inputText}
-                  placeholder="Enter your full name"
-                  placeholderTextColor={"#9CA3AF"}
-                  autoCapitalize="words"
-                  onChangeText={(value) => setFullName(value)}
-                />
-              </View>
-
-              {/* Email */}
-              <Text style={[styles.label, { marginTop: 16 }]}>
-                Email Address
-              </Text>
-              <View style={styles.input}>
-                <Ionicons
-                  style={{ marginVertical: "auto" }}
-                  name="mail-outline"
-                  size={24}
-                  color={"#9CA3AF"}
-                />
-                <TextInput
-                  style={styles.inputText}
-                  placeholder="Enter your email"
-                  placeholderTextColor={"#9CA3AF"}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  onChangeText={(value) => setEmail(value)}
-                />
-              </View>
-
               {/* Password */}
               <Text style={[styles.label, { marginTop: 16 }]}>Password</Text>
               <View style={styles.input}>
@@ -172,8 +139,15 @@ const SignUp = () => {
                 </TouchableOpacity>
               </View>
 
-              {/* Create Account Button */}
-              <TouchableOpacity style={styles.button} onPress={onSignUp}>
+              {/* Update Password Button */}
+              <TouchableOpacity
+                disabled={!password || !confirmPassword}
+                style={[
+                  styles.button,
+                  { opacity: password && confirmPassword ? 1 : 0.5 },
+                ]}
+                onPress={handleUpdatePassword}
+              >
                 <Text
                   style={{
                     fontFamily: "inter-medium",
@@ -181,96 +155,7 @@ const SignUp = () => {
                     color: Colors.WHITE,
                   }}
                 >
-                  Create Account
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Sign In */}
-            <View style={{ flexDirection: "row", marginTop: 24 }}>
-              <Text
-                style={{
-                  fontFamily: "inter-regular",
-                  fontSize: 16,
-                  color: Colors.BLACK,
-                }}
-              >
-                Already have an account?
-              </Text>
-              <TouchableOpacity
-                style={{ marginLeft: 5 }}
-                onPress={() => {
-                  Keyboard.dismiss();
-                  setTimeout(() => {
-                    router.replace("../auth/sign-in");
-                  }, 100);
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: "inter-medium",
-                    fontSize: 16,
-                    color: Colors.LIGHT_GREEN,
-                  }}
-                >
-                  Sign In
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Term of Service and Privacy Policy */}
-            <View
-              style={{
-                flexDirection: "row",
-                flexWrap: "wrap",
-                justifyContent: "center",
-                alignItems: "center",
-                marginTop: 24,
-                width: "80%",
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: "inter-regular",
-                  fontSize: 12,
-                  color: Colors.GRAY,
-                }}
-              >
-                By creating an account, you agree to our
-              </Text>
-
-              <TouchableOpacity style={{ marginLeft: 4 }} onPress={() => {}}>
-                <Text
-                  style={{
-                    fontFamily: "inter-medium",
-                    fontSize: 12,
-                    color: Colors.LIGHT_GREEN,
-                  }}
-                >
-                  Term of Service
-                </Text>
-              </TouchableOpacity>
-
-              <Text
-                style={{
-                  fontFamily: "inter-regular",
-                  fontSize: 12,
-                  color: Colors.GRAY,
-                  marginLeft: 4,
-                }}
-              >
-                and
-              </Text>
-
-              <TouchableOpacity style={{ marginLeft: 4 }} onPress={() => {}}>
-                <Text
-                  style={{
-                    fontFamily: "inter-medium",
-                    fontSize: 12,
-                    color: Colors.LIGHT_GREEN,
-                  }}
-                >
-                  Privacy Policy
+                  Update Password
                 </Text>
               </TouchableOpacity>
             </View>
@@ -281,7 +166,7 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default ResetPassword;
 
 const styles = StyleSheet.create({
   container: {
@@ -290,6 +175,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     paddingHorizontal: 24,
+  },
+  headerBackBtn: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 16,
+    marginLeft: 8,
+    // borderRadius: 8,
+    // backgroundColor: "#9c9c9c1e",
   },
   logo: {
     width: "100%",

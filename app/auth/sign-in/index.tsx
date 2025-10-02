@@ -5,6 +5,7 @@ import { RelativePathString, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -35,8 +36,11 @@ const SignIn = () => {
       });
       return;
     }
-    router.replace("/dashboard" as RelativePathString);
-    // router.push("/dashboard");
+
+    Keyboard.dismiss();
+    setTimeout(() => {
+      router.replace("/dashboard" as RelativePathString);
+    }, 100);
   };
 
   return (
@@ -125,7 +129,12 @@ const SignIn = () => {
                   <Text style={styles.label}>Remember me</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => router.push("../auth/forgot-password")}
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    setTimeout(() => {
+                      router.push("../auth/forgot-password");
+                    }, 100);
+                  }}
                 >
                   <Text style={[styles.label, { color: "#0284C7" }]}>
                     Forgot password?
@@ -160,7 +169,12 @@ const SignIn = () => {
               </Text>
               <TouchableOpacity
                 style={{ marginLeft: 5 }}
-                onPress={() => router.replace("../auth/sign-up")}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setTimeout(() => {
+                    router.replace("../auth/sign-up");
+                  }, 100);
+                }}
               >
                 <Text
                   style={{
