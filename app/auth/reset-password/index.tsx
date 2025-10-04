@@ -1,6 +1,8 @@
+import LoadingModal from "@/components/LoadingModal";
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import Constants from "expo-constants";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Image,
@@ -22,12 +24,14 @@ const ResetPassword = () => {
 
   const [unhidePassword, setUnhidePassword] = useState(true);
 
+  const { email } = useLocalSearchParams();
+  const { otp } = useLocalSearchParams();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleUpdatePassword = () => {
-    Keyboard.dismiss();
+  const [loading, setLoading] = useState(false);
 
+  const handleUpdatePassword = async () => {
     // Handle password update logic here
     if (password !== confirmPassword) {
       Toast.show({
@@ -37,9 +41,52 @@ const ResetPassword = () => {
       });
       return;
     }
-    console.log("Updating password to:", password);
-    
+
+    // call api to update password
+    // console.log(Constants.expoConfig?.extra?.env.RESET_PASSWORD_URL);
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        Constants.expoConfig?.extra?.env.RESET_PASSWORD_URL as string,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+            otp: otp,
+            new_password: password,
+          }),
+        }
+      );
+      const data = await response.json();
+
+      setLoading(false);
+
+      // console.log(data);
+      if (response.ok) {
+        Toast.show({
+          type: "success",
+          text1: "Reset Successful",
+          text2: data.message || "Your password has been updated!",
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Reset Failed",
+          text2: data.message || "Please try again later.",
+        });
+        return;
+      }
+    } catch (error) {
+      console.error(error);
+      return;
+    }
+
     // After updating, navigate to the sign-in screen
+    Keyboard.dismiss();
     setTimeout(() => {
       router.replace("/auth/sign-in");
     }, 100);
@@ -162,6 +209,7 @@ const ResetPassword = () => {
           </View>
         </ScrollView>
       </SafeAreaView>
+      <LoadingModal visible={loading} />
     </KeyboardAvoidingView>
   );
 };

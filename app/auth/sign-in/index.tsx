@@ -1,6 +1,8 @@
+import LoadingModal from "@/components/LoadingModal";
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { Checkbox } from "expo-checkbox";
+import Constants from "expo-constants";
 import { RelativePathString, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -26,14 +28,54 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
 
   const [isChecked, setChecked] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const onSignIn = () => {
+  const onSignIn = async () => {
     if (!email || !password) {
       Toast.show({
         type: "error",
         text1: "Login Failed",
         text2: "Email and password are required",
       });
+      return;
+    }
+
+    setLoading(true);
+
+    // call api to sign in
+    console.log(Constants.expoConfig?.extra?.env.SIGN_IN_API_URL);
+    try {
+      const response = await fetch(
+        Constants.expoConfig?.extra?.env.SIGN_IN_URL as string,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ login: email, password: password }),
+        }
+      );
+      const data = await response.json();
+
+      setLoading(false);
+
+      // console.log(data);
+      if (response.ok) {
+        Toast.show({
+          type: "success",
+          text1: "Login Successful",
+          text2: "Welcome back!",
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Login Failed",
+          text2: data.message || "Please try again later.",
+        });
+        return;
+      }
+    } catch (error) {
+      console.error(error);
       return;
     }
 
@@ -190,6 +232,7 @@ const SignIn = () => {
           </View>
         </ScrollView>
       </SafeAreaView>
+      <LoadingModal visible={loading} />
     </KeyboardAvoidingView>
   );
 };

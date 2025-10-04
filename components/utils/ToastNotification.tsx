@@ -67,6 +67,7 @@ const ToastNotification = ({
               textAlign: "center",
               fontSize: props.text2 ? 14 : 12,
               marginBottom: props.text2 ? 2 : 0,
+              paddingHorizontal: 30,
             }}
           >
             {props.text1}
@@ -78,6 +79,7 @@ const ToastNotification = ({
                 fontFamily: "inter-regular",
                 textAlign: "center",
                 fontSize: 12,
+                paddingHorizontal: 30,
               }}
             >
               {props.text2}

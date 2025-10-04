@@ -1,5 +1,7 @@
+import LoadingModal from "@/components/LoadingModal";
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -27,7 +29,9 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const onSignUp = () => {
+  const [loading, setLoading] = useState(false);
+
+  const onSignUp = async () => {
     if (!fullName || !email || !password || !confirmPassword) {
       Toast.show({
         type: "error",
@@ -42,6 +46,49 @@ const SignUp = () => {
         text1: "Sign Up Failed",
         text2: "Passwords do not match",
       });
+      return;
+    }
+
+    setLoading(true);
+
+    // call api to sign up
+    // console.log(Constants.expoConfig?.extra?.env.SIGN_UP_URL);
+    try {
+      const response = await fetch(
+        Constants.expoConfig?.extra?.env.SIGN_UP_URL as string,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: fullName,
+            email: email,
+            password: password,
+          }),
+        }
+      );
+      const data = await response.json();
+
+      setLoading(false);
+
+      // console.log(data);
+      if (response.ok) {
+        Toast.show({
+          type: "success",
+          text1: "Sign Up Successful",
+          text2: "Please sign in to continue!",
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Sign Up Failed",
+          text2: data.message || "Please try again later.",
+        });
+        return;
+      }
+    } catch (error) {
+      console.error(error);
       return;
     }
 
@@ -277,6 +324,7 @@ const SignUp = () => {
           </View>
         </ScrollView>
       </SafeAreaView>
+      <LoadingModal visible={loading} />
     </KeyboardAvoidingView>
   );
 };

@@ -1,5 +1,7 @@
+import LoadingModal from "@/components/LoadingModal";
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { RelativePathString, useRouter } from "expo-router";
 import React from "react";
 import {
@@ -15,19 +17,59 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 
 const ForgotPassword = () => {
   const router = useRouter();
 
   const [email, setEmail] = React.useState("");
 
-  const handleResetPassword = () => {
+  const [loading, setLoading] = React.useState(false);
+
+  const handleResetPassword = async () => {
     // turn off keyboard before navigating
     Keyboard.dismiss();
 
-    // Handle password reset logic here
-    // For example, send a password reset email to the user
-    console.log("Reset password for email:", email);
+    // call api forgot password
+    // console.log(Constants.expoConfig?.extra?.env.FORGOT_PASSWORD_URL);
+    setLoading(true);
+    
+    try {
+      const response = await fetch(
+        Constants.expoConfig?.extra?.env.FORGOT_PASSWORD_URL as string,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+          }),
+        }
+      );
+      const data = await response.json();
+
+      setLoading(false);
+      
+      // console.log(data);
+      if (response.ok) {
+        Toast.show({
+          type: "success",
+          text1: "Request Successful",
+          text2: data.message || "Please check your email for instructions!",
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Request Failed",
+          text2: data.message || "Please try again later.",
+        });
+        return;
+      }
+    } catch (error) {
+      console.error(error);
+      return;
+    }
 
     // After handling, navigate to the OTP verification screen
     // delay 100ms to allow keyboard to dismiss
@@ -112,6 +154,7 @@ const ForgotPassword = () => {
           </View>
         </ScrollView>
       </SafeAreaView>
+      <LoadingModal visible={loading} />
     </KeyboardAvoidingView>
   );
 };

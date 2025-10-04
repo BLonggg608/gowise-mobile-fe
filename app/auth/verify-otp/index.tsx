@@ -1,5 +1,7 @@
+import LoadingModal from "@/components/LoadingModal";
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import {
   RelativePathString,
   useLocalSearchParams,
@@ -19,6 +21,7 @@ import {
 } from "react-native";
 import { OtpInput } from "react-native-otp-entry";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 
 const VerifyOTP = () => {
   const router = useRouter();
@@ -27,17 +30,59 @@ const VerifyOTP = () => {
   const [otp, setOtp] = useState("");
   const otpMaxLength = 6;
 
-  const handleVerifyOtp = () => {
+  const [loading, setLoading] = useState(false);
+
+  const handleVerifyOtp = async () => {
     // turn off keyboard before navigating
     Keyboard.dismiss();
 
-    // Handle OTP verification logic here
-    console.log("Verifying OTP:", otp, "for email:", email);
+    // call api to verify otp
+    // console.log(Constants.expoConfig?.extra?.env.VALIDATE_OTP_URL);
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        Constants.expoConfig?.extra?.env.VALIDATE_OTP_URL as string,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+            otp: otp,
+          }),
+        }
+      );
+      const data = await response.json();
+
+      setLoading(false);
+
+      // console.log(data);
+      if (response.ok) {
+        Toast.show({
+          type: "success",
+          text1: "Your OTP is verified",
+          text2: data.message || "You can now reset your password!",
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Verification Failed",
+          text2: data.message || "Please try again later.",
+        });
+        return;
+      }
+    } catch (error) {
+      console.error(error);
+      return;
+    }
+
     // After verification, navigate to the reset password screen
     setTimeout(() => {
       router.push({
         pathname: "/auth/reset-password" as RelativePathString,
-        params: { email },
+        params: { email, otp },
       });
     }, 100);
   };
@@ -90,6 +135,53 @@ const VerifyOTP = () => {
                 }}
               />
 
+              {/* OTP resend button */}
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={{ marginTop: 10 }}
+                onPress={async () => {
+                  // Handle resend OTP
+                  try {
+                    const response = await fetch(
+                      Constants.expoConfig?.extra?.env
+                        .FORGOT_PASSWORD_URL as string,
+                      {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                          email: email,
+                        }),
+                      }
+                    );
+                    const data = await response.json();
+                    // console.log(data);
+                    if (response.ok) {
+                      Toast.show({
+                        type: "success",
+                        text1: "Request Successful",
+                        text2:
+                          data.message ||
+                          "Please check your email for instructions!",
+                      });
+                    } else {
+                      Toast.show({
+                        type: "error",
+                        text1: "Request Failed",
+                        text2: data.message || "Please try again later.",
+                      });
+                      return;
+                    }
+                  } catch (error) {
+                    console.error(error);
+                    return;
+                  }
+                }}
+              >
+                <Text style={styles.label}>Resend OTP</Text>
+              </TouchableOpacity>
+
               {/* Verify Code Button */}
               <TouchableOpacity
                 disabled={otp.length !== otpMaxLength}
@@ -113,6 +205,7 @@ const VerifyOTP = () => {
           </View>
         </ScrollView>
       </SafeAreaView>
+      <LoadingModal visible={loading} />
     </KeyboardAvoidingView>
   );
 };
@@ -165,7 +258,7 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: "inter-medium",
     fontSize: 15,
-    color: Colors.BLACK,
+    color: "#0284C7",
   },
   button: {
     backgroundColor: Colors.GREEN,
