@@ -1,5 +1,6 @@
 import LoadingModal from "@/components/LoadingModal";
 import { Colors } from "@/constant/Colors";
+import { getSecureData, saveSecureData } from "@/utils/storage";
 import { Ionicons } from "@expo/vector-icons";
 import { Checkbox } from "expo-checkbox";
 import Constants from "expo-constants";
@@ -43,7 +44,7 @@ const SignIn = () => {
     setLoading(true);
 
     // call api to sign in
-    console.log(Constants.expoConfig?.extra?.env.SIGN_IN_API_URL);
+    // console.log(Constants.expoConfig?.extra?.env.SIGN_IN_API_URL);
     try {
       const response = await fetch(
         Constants.expoConfig?.extra?.env.SIGN_IN_URL as string,
@@ -56,6 +57,10 @@ const SignIn = () => {
         }
       );
       const data = await response.json();
+
+      // save token to local storage
+      await saveSecureData({ key: "accessToken", value: data.accessToken });
+      await saveSecureData({ key: "refreshToken", value: data.refreshToken });
 
       setLoading(false);
 

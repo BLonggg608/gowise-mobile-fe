@@ -35,7 +35,7 @@ const ToastNotification = ({
         style={{
           backgroundColor: Colors.WHITE,
           padding: 16,
-          borderRadius: 40,
+          borderRadius: 20,
           width: "80%",
           boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
         }}

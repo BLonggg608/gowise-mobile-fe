@@ -50,6 +50,7 @@ export default {
         FORGOT_PASSWORD_URL: process.env.FORGOT_PASSWORD_URL,
         VALIDATE_OTP_URL: process.env.VALIDATE_OTP_URL,
         RESET_PASSWORD_URL: process.env.RESET_PASSWORD_URL,
+        REFRESH_TOKEN_URL: process.env.REFRESH_TOKEN_URL,
       },
     },
   },

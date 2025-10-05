@@ -1,12 +1,6 @@
 import { Colors } from "@/constant/Colors";
 import React, { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Animated,
-  Modal,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Animated, Image, Modal, StyleSheet, View } from "react-native";
 
 const LoadingModal = ({ visible }: { visible: boolean }) => {
   const [dotCount, setDotCount] = useState(0);
@@ -25,7 +19,11 @@ const LoadingModal = ({ visible }: { visible: boolean }) => {
     <Modal transparent animationType="fade" visible={visible}>
       <View style={styles.overlay}>
         <View style={styles.container}>
-          <ActivityIndicator size="large" />
+          {/* <ActivityIndicator size="large" /> */}
+          <Image
+            source={require("@/assets/images/Loading/Travel.gif")}
+            style={styles.loadAsset}
+          />
           {/* Animated Loading Text */}
           <Animated.Text style={styles.text}>
             {`Loading${".".repeat(dotCount)}`}
@@ -47,15 +45,25 @@ const styles = StyleSheet.create({
   },
   container: {
     backgroundColor: Colors.WHITE,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 10,
     borderRadius: 10,
-    flexDirection: "row",
-    alignItems: "center",
+    // flexDirection: "row",
+    // alignItems: "center",
+    // justifyContent: "flex-start",
+    width: 150,
+  },
+  loadAsset: {
+    width: 100,
+    height: 100,
+    resizeMode: "contain",
+    alignSelf: "center",
   },
   text: {
-    marginLeft: 10,
+    marginLeft: 26,
     fontSize: 16,
-    color: Colors.BLACK,
+    color: Colors.GRAY,
     fontFamily: "inter-regular",
   },
 });

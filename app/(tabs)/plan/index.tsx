@@ -78,7 +78,7 @@ const Plan = () => {
   }) => {
     // Call API or update state to add the new plan
     // Handle the submitted data from the CreateNewPlanModel
-    console.log("New Plan Data:", data);
+    // console.log("New Plan Data:", data);
 
     // You can add logic here to save the new plan to your backend or state
     setIsCreatePlanModalVisible(false); // Close the modal after submission
