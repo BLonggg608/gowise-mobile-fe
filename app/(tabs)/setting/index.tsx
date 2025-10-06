@@ -32,12 +32,12 @@ const settingsList = [
     label: "Preferences",
     route: "/setting/preferences",
   },
-  {
-    id: "payment-methods",
-    icon: "card-outline",
-    label: "Payment Methods",
-    route: "/setting/payment-methods",
-  },
+  // {
+  //   id: "payment-methods",
+  //   icon: "card-outline",
+  //   label: "Payment Methods",
+  //   route: "/setting/payment-methods",
+  // },
   {
     id: "help-support",
     icon: "help-outline",
