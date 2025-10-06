@@ -24,7 +24,7 @@ const SignUp = () => {
 
   const [unhidePassword, setUnhidePassword] = useState(true);
 
-  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -32,7 +32,7 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
 
   const onSignUp = async () => {
-    if (!fullName || !email || !password || !confirmPassword) {
+    if (!username || !email || !password || !confirmPassword) {
       Toast.show({
         type: "error",
         text1: "Sign Up Failed",
@@ -62,7 +62,7 @@ const SignUp = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            username: fullName,
+            username: username,
             email: email,
             password: password,
           }),
@@ -120,8 +120,8 @@ const SignUp = () => {
             </Text>
 
             <View style={styles.loginFormContainer}>
-              {/* Full Name */}
-              <Text style={styles.label}>Full Name</Text>
+              {/* User Name */}
+              <Text style={styles.label}>User Name</Text>
               <View style={styles.input}>
                 <Ionicons
                   style={{ marginVertical: "auto" }}
@@ -131,10 +131,10 @@ const SignUp = () => {
                 />
                 <TextInput
                   style={styles.inputText}
-                  placeholder="Enter your full name"
+                  placeholder="Enter your user name"
                   placeholderTextColor={"#9CA3AF"}
                   autoCapitalize="words"
-                  onChangeText={(value) => setFullName(value)}
+                  onChangeText={(value) => setUsername(value)}
                 />
               </View>
 
