@@ -48,6 +48,8 @@ export const isAccessTokenValid = async (): Promise<boolean> => {
         // console.log("access:", data.accessToken);
         // console.log("refresh:", data.refreshToken);
 
+        console.log("Tokens refreshed");
+
         return true;
       } else {
         // remove tokens

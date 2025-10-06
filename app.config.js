@@ -2,12 +2,12 @@ import "dotenv/config";
 
 export default {
   expo: {
-    name: "travel-app",
-    slug: "travel-app",
+    name: "GOWISE",
+    slug: "gowise",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/images/icon.png",
-    scheme: "travelapp",
+    icon: "./assets/images/gowise_logo.png",
+    scheme: "gowise",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     ios: {
