@@ -17,6 +17,8 @@ export const isAccessTokenValid = async (): Promise<boolean> => {
   const accessToken = await getSecureData("accessToken");
   if (!accessToken) return false;
 
+  // console.log(accessToken);
+
   const decoded = decodeToken(accessToken as string);
   if (!decoded || !decoded.exp) return false;
 
