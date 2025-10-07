@@ -22,6 +22,7 @@ import {
 import { OtpInput } from "react-native-otp-entry";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
+import { ToastShowParams } from "toastify-react-native/utils/interfaces";
 
 const VerifyOTP = () => {
   const router = useRouter();
@@ -31,6 +32,16 @@ const VerifyOTP = () => {
   const otpMaxLength = 6;
 
   const [loading, setLoading] = useState(false);
+  const [pendingToast, setPendingToast] = useState<ToastShowParams | null>(
+    null
+  );
+
+  React.useEffect(() => {
+    if (!loading && pendingToast) {
+      Toast.show(pendingToast);
+      setPendingToast(null);
+    }
+  }, [loading, pendingToast]);
 
   const handleVerifyOtp = async () => {
     // turn off keyboard before navigating
@@ -38,9 +49,9 @@ const VerifyOTP = () => {
 
     // call api to verify otp
     // console.log(Constants.expoConfig?.extra?.env.VALIDATE_OTP_URL);
-    setLoading(true);
-
     try {
+      setLoading(true);
+
       const response = await fetch(
         Constants.expoConfig?.extra?.env.VALIDATE_OTP_URL as string,
         {
@@ -54,19 +65,20 @@ const VerifyOTP = () => {
           }),
         }
       );
-      const data = await response.json();
 
       setLoading(false);
 
+      const data = await response.json();
+
       // console.log(data);
       if (response.ok) {
-        Toast.show({
+        setPendingToast({
           type: "success",
           text1: "Your OTP is verified",
           text2: data.message || "You can now reset your password!",
         });
       } else {
-        Toast.show({
+        setPendingToast({
           type: "error",
           text1: "Verification Failed",
           text2: data.message || "Please try again later.",
@@ -74,6 +86,7 @@ const VerifyOTP = () => {
         return;
       }
     } catch (error) {
+      setLoading(false);
       console.error(error);
       return;
     }

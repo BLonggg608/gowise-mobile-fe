@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
+import { ToastShowParams } from "toastify-react-native/utils/interfaces";
 
 const ResetPassword = () => {
   const router = useRouter();
@@ -30,11 +31,21 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [pendingToast, setPendingToast] = useState<ToastShowParams | null>(
+    null
+  );
+
+  React.useEffect(() => {
+    if (!loading && pendingToast) {
+      Toast.show(pendingToast);
+      setPendingToast(null);
+    }
+  }, [loading, pendingToast]);
 
   const handleUpdatePassword = async () => {
     // Handle password update logic here
     if (password !== confirmPassword) {
-      Toast.show({
+      setPendingToast({
         type: "error",
         text1: "Update Failed",
         text2: "Passwords do not match",
@@ -44,9 +55,9 @@ const ResetPassword = () => {
 
     // call api to update password
     // console.log(Constants.expoConfig?.extra?.env.RESET_PASSWORD_URL);
-    setLoading(true);
-
     try {
+      setLoading(true);
+
       const response = await fetch(
         Constants.expoConfig?.extra?.env.RESET_PASSWORD_URL as string,
         {
@@ -61,19 +72,20 @@ const ResetPassword = () => {
           }),
         }
       );
-      const data = await response.json();
 
       setLoading(false);
 
+      const data = await response.json();
+
       // console.log(data);
       if (response.ok) {
-        Toast.show({
+        setPendingToast({
           type: "success",
           text1: "Reset Successful",
           text2: data.message || "Your password has been updated!",
         });
       } else {
-        Toast.show({
+        setPendingToast({
           type: "error",
           text1: "Reset Failed",
           text2: data.message || "Please try again later.",
@@ -81,6 +93,7 @@ const ResetPassword = () => {
         return;
       }
     } catch (error) {
+      setLoading(false);
       console.error(error);
       return;
     }

@@ -3,7 +3,7 @@ import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { RelativePathString, useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   Keyboard,
@@ -18,13 +18,24 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
+import { ToastShowParams } from "toastify-react-native/utils/interfaces";
 
 const ForgotPassword = () => {
   const router = useRouter();
 
-  const [email, setEmail] = React.useState("");
+  const [email, setEmail] = useState("");
 
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = useState(false);
+  const [pendingToast, setPendingToast] = useState<ToastShowParams | null>(
+    null
+  );
+
+  useEffect(() => {
+    if (!loading && pendingToast) {
+      Toast.show(pendingToast);
+      setPendingToast(null);
+    }
+  }, [loading, pendingToast]);
 
   const handleResetPassword = async () => {
     // turn off keyboard before navigating
@@ -32,9 +43,9 @@ const ForgotPassword = () => {
 
     // call api forgot password
     // console.log(Constants.expoConfig?.extra?.env.FORGOT_PASSWORD_URL);
-    setLoading(true);
-    
     try {
+      setLoading(true);
+
       const response = await fetch(
         Constants.expoConfig?.extra?.env.FORGOT_PASSWORD_URL as string,
         {
@@ -47,19 +58,20 @@ const ForgotPassword = () => {
           }),
         }
       );
-      const data = await response.json();
 
       setLoading(false);
-      
+
+      const data = await response.json();
+
       // console.log(data);
       if (response.ok) {
-        Toast.show({
+        setPendingToast({
           type: "success",
           text1: "Request Successful",
           text2: data.message || "Please check your email for instructions!",
         });
       } else {
-        Toast.show({
+        setPendingToast({
           type: "error",
           text1: "Request Failed",
           text2: data.message || "Please try again later.",
@@ -67,6 +79,7 @@ const ForgotPassword = () => {
         return;
       }
     } catch (error) {
+      setLoading(false);
       console.error(error);
       return;
     }

@@ -3,7 +3,7 @@ import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   Keyboard,
@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
+import { ToastShowParams } from "toastify-react-native/utils/interfaces";
 
 const SignUp = () => {
   const router = useRouter();
@@ -30,10 +31,20 @@ const SignUp = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [pendingToast, setPendingToast] = useState<ToastShowParams | null>(
+    null
+  );
+
+  useEffect(() => {
+    if (!loading && pendingToast) {
+      Toast.show(pendingToast);
+      setPendingToast(null);
+    }
+  }, [loading, pendingToast]);
 
   const onSignUp = async () => {
     if (!username || !email || !password || !confirmPassword) {
-      Toast.show({
+      setPendingToast({
         type: "error",
         text1: "Sign Up Failed",
         text2: "All fields are required",
@@ -41,7 +52,7 @@ const SignUp = () => {
       return;
     }
     if (password !== confirmPassword) {
-      Toast.show({
+      setPendingToast({
         type: "error",
         text1: "Sign Up Failed",
         text2: "Passwords do not match",
@@ -49,11 +60,11 @@ const SignUp = () => {
       return;
     }
 
-    setLoading(true);
-
     // call api to sign up
     // console.log(Constants.expoConfig?.extra?.env.SIGN_UP_URL);
     try {
+      setLoading(true);
+
       const response = await fetch(
         Constants.expoConfig?.extra?.env.SIGN_UP_URL as string,
         {
@@ -68,19 +79,20 @@ const SignUp = () => {
           }),
         }
       );
-      const data = await response.json();
 
       setLoading(false);
 
+      const data = await response.json();
+
       // console.log(data);
       if (response.ok) {
-        Toast.show({
+        setPendingToast({
           type: "success",
           text1: "Sign Up Successful",
           text2: "Please sign in to continue!",
         });
       } else {
-        Toast.show({
+        setPendingToast({
           type: "error",
           text1: "Sign Up Failed",
           text2: data.message || "Please try again later.",
@@ -88,6 +100,7 @@ const SignUp = () => {
         return;
       }
     } catch (error) {
+      setLoading(false);
       console.error(error);
       return;
     }

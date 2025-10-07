@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Checkbox } from "expo-checkbox";
 import Constants from "expo-constants";
 import { RelativePathString, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   Keyboard,
@@ -20,6 +20,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
+import { ToastShowParams } from "toastify-react-native/utils/interfaces";
 
 const SignIn = () => {
   const router = useRouter();
@@ -30,10 +31,20 @@ const SignIn = () => {
 
   const [isChecked, setChecked] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pendingToast, setPendingToast] = useState<ToastShowParams | null>(
+    null
+  );
+
+  useEffect(() => {
+    if (!loading && pendingToast) {
+      Toast.show(pendingToast);
+      setPendingToast(null);
+    }
+  }, [loading, pendingToast]);
 
   const onSignIn = async () => {
     if (!email || !password) {
-      Toast.show({
+      setPendingToast({
         type: "error",
         text1: "Login Failed",
         text2: "Email and password are required",
@@ -73,7 +84,7 @@ const SignIn = () => {
         await saveSecureData({ key: "accessToken", value: data.accessToken });
         await saveSecureData({ key: "refreshToken", value: data.refreshToken });
       } else {
-        Toast.show({
+        setPendingToast({
           type: "error",
           text1: "Login Failed",
           text2: (data.message as string) || "Please try again later.",
