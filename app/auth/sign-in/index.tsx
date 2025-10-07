@@ -1,6 +1,6 @@
 import LoadingModal from "@/components/LoadingModal";
 import { Colors } from "@/constant/Colors";
-import { saveSecureData } from "@/utils/storage";
+import { getSecureData, saveSecureData } from "@/utils/storage";
 import { Ionicons } from "@expo/vector-icons";
 import { Checkbox } from "expo-checkbox";
 import Constants from "expo-constants";
@@ -52,11 +52,11 @@ const SignIn = () => {
       return;
     }
 
+    setLoading(true);
+
     // call api to sign in
     // console.log(Constants.expoConfig?.extra?.env.SIGN_IN_API_URL);
     try {
-      setLoading(true);
-
       const response = await fetch(
         Constants.expoConfig?.extra?.env.SIGN_IN_URL as string,
         {
@@ -67,10 +67,13 @@ const SignIn = () => {
           body: JSON.stringify({ login: email, password: password }),
         }
       );
+      const data = await response.json();
+
+      // save token to local storage
+      await saveSecureData({ key: "accessToken", value: data.accessToken });
+      await saveSecureData({ key: "refreshToken", value: data.refreshToken });
 
       setLoading(false);
-
-      const data = await response.json();
 
       // console.log(data);
       if (response.ok) {
@@ -79,22 +82,15 @@ const SignIn = () => {
           text1: "Login Successful",
           text2: "Welcome back!",
         });
-
-        // save token to local storage
-        await saveSecureData({ key: "accessToken", value: data.accessToken });
-        await saveSecureData({ key: "refreshToken", value: data.refreshToken });
       } else {
         setPendingToast({
           type: "error",
           text1: "Login Failed",
-          text2: (data.message as string) || "Please try again later.",
+          text2: data.message || "Please try again later.",
         });
-        console.log("Login failed:", data.message);
-
         return;
       }
     } catch (error) {
-      setLoading(false);
       console.error(error);
       return;
     }
