@@ -1,4 +1,4 @@
-import UpdateInfo from "@/components/utils/UpdateInfo";
+import UpdateInfo from "@/components/Dashboard/UpdateInfo";
 import { Colors } from "@/constant/Colors";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { RelativePathString, useRouter } from "expo-router";
@@ -14,6 +14,13 @@ import {
 import { getSecureData } from "@/utils/storage";
 import { decodeToken } from "@/utils/tokenUtils";
 import Constants from "expo-constants";
+import DashboardHeader from "@/components/Dashboard/DashboardHeader";
+
+export type userInfoType = {
+  firstName: string;
+  lastName: string;
+  isPremium: boolean;
+} | null;
 
 const initialPlans = [
   {
@@ -88,44 +95,57 @@ const Dashboard = () => {
   const router = useRouter();
   const [plans, setPlans] = useState(initialPlans);
   const [weather, setWeather] = useState(initialWeather);
+  const [userInfo, setUserInfo] = useState<userInfoType>(null);
 
   const [updateVisible, setUpdateVisible] = useState(false);
 
   useEffect(() => {
     // fetch user info to check if need to update info
     // if need to update, setUpdateVisible(true)
-    const checkUserInfo = async () => {
-      const token = await getSecureData("accessToken");
-      const decoded = decodeToken(token ?? "");
-      const userId = decoded?.sub;
-
-      try {
-        const response = await fetch(
-          Constants.expoConfig?.extra?.env.USER_URL + `/${userId}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (response.ok) {
-          return;
-        } else {
-          setUpdateVisible(true);
-        }
-      } catch (error) {
-        console.error("Failed to fetch user info", error);
-      }
-    };
-
     checkUserInfo();
   }, []);
+
+  const checkUserInfo = async () => {
+    const token = await getSecureData("accessToken");
+    const decoded = decodeToken(token ?? "");
+    const userId = decoded?.sub;
+
+    try {
+      const response = await fetch(
+        Constants.expoConfig?.extra?.env.USER_URL + `/${userId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setUserInfo({
+          firstName: data.data.firstName,
+          lastName: data.data.lastName,
+          isPremium: data.data.isPremium,
+        });
+        console.log(userInfo);
+      } else {
+        setUpdateVisible(true);
+      }
+    } catch (error) {
+      console.error("Failed to fetch user info", error);
+    }
+  };
 
   return (
     <View style={styles.container}>
       {/* <StatusBar style="dark" /> */}
+
+      {/* Header */}
+      <DashboardHeader
+        {...(userInfo || { firstName: "", lastName: "", isPremium: false })}
+      />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
         {/* Summary Cards */}
@@ -291,7 +311,11 @@ const Dashboard = () => {
         </View>
       </ScrollView>
       {/* Update Personal Information */}
-      <UpdateInfo visible={updateVisible} setVisible={setUpdateVisible} />
+      <UpdateInfo
+        visible={updateVisible}
+        setVisible={setUpdateVisible}
+        setUserInfo={setUserInfo}
+      />
     </View>
   );
 };

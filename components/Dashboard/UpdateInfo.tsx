@@ -14,7 +14,7 @@ import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constant/Colors";
-import LoadingModal from "./LoadingModal";
+import LoadingModal from "../utils/LoadingModal";
 import { SelectList } from "react-native-dropdown-select-list";
 import {
   getCityOptions,
@@ -25,13 +25,16 @@ import { ToastShowParams } from "toastify-react-native/utils/interfaces";
 import Constants from "expo-constants";
 import { getSecureData } from "@/utils/storage";
 import { decodeToken } from "@/utils/tokenUtils";
+import { userInfoType } from "@/app/(tabs)/dashboard";
 
 const UpdateInfo = ({
   visible,
   setVisible,
+  setUserInfo,
 }: {
   visible: boolean;
   setVisible: (visible: boolean) => void;
+  setUserInfo: (userInfo: userInfoType) => void;
 }) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -137,6 +140,7 @@ const UpdateInfo = ({
           text1: "Update Successful",
           text2: data.message || "Your information has been updated",
         });
+        setUserInfo({ firstName, lastName, isPremium: false });
         setVisible(false);
       } else {
         setPendingToast({
