@@ -1,7 +1,8 @@
+import UpdateInfo from "@/components/utils/UpdateInfo";
 import { Colors } from "@/constant/Colors";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { RelativePathString, useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -10,6 +11,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { getSecureData } from "@/utils/storage";
+import { decodeToken } from "@/utils/tokenUtils";
+import Constants from "expo-constants";
 
 const initialPlans = [
   {
@@ -82,8 +86,42 @@ const weatherStatusColors: { [key: string]: string } = {
 
 const Dashboard = () => {
   const router = useRouter();
-  const [plans, setPlans] = React.useState(initialPlans);
-  const [weather, setWeather] = React.useState(initialWeather);
+  const [plans, setPlans] = useState(initialPlans);
+  const [weather, setWeather] = useState(initialWeather);
+
+  const [updateVisible, setUpdateVisible] = useState(false);
+
+  useEffect(() => {
+    // fetch user info to check if need to update info
+    // if need to update, setUpdateVisible(true)
+    const checkUserInfo = async () => {
+      const token = await getSecureData("accessToken");
+      const decoded = decodeToken(token ?? "");
+      const userId = decoded?.sub;
+
+      try {
+        const response = await fetch(
+          Constants.expoConfig?.extra?.env.USER_URL + `/${userId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.ok) {
+          return;
+        } else {
+          setUpdateVisible(true);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user info", error);
+      }
+    };
+
+    checkUserInfo();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -252,6 +290,8 @@ const Dashboard = () => {
           ))}
         </View>
       </ScrollView>
+      {/* Update Personal Information */}
+      <UpdateInfo visible={updateVisible} setVisible={setUpdateVisible} />
     </View>
   );
 };

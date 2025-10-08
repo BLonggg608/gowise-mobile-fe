@@ -1,4 +1,5 @@
 import { Colors } from "@/constant/Colors";
+import { deleteSecureData } from "@/utils/storage";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { RelativePathString, useRouter } from "expo-router";
@@ -48,6 +49,12 @@ const settingsList = [
 
 const Setting = () => {
   const router = useRouter();
+
+  const onSignOut = () => {
+    // clear all secure storage data
+    deleteSecureData("accessToken");
+    router.replace("/auth/sign-in");
+  };
   return (
     <View style={{ flex: 1 }}>
       {/* Header */}
@@ -81,7 +88,11 @@ const Setting = () => {
         ))}
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={styles.logoutBtn}
+          activeOpacity={0.8}
+          onPress={onSignOut}
+        >
           <Ionicons
             name="log-out-outline"
             size={20}

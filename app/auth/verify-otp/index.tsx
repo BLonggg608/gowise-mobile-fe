@@ -1,4 +1,4 @@
-import LoadingModal from "@/components/LoadingModal";
+import LoadingModal from "@/components/utils/LoadingModal";
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
