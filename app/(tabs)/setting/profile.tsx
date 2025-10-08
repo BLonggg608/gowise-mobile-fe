@@ -1,9 +1,10 @@
 // Profile screen for user information and editing
 import { Colors } from "@/constant/Colors";
+import { getUserIdFromToken } from "@/utils/tokenUtils";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -12,36 +13,131 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Toast } from "toastify-react-native";
 
 const statusBarHeight = Constants.statusBarHeight;
 
+type profileType = {
+  isPremium: boolean;
+  createdAt: string;
+  firstName: string;
+  lastName: string;
+  bio: string;
+};
+
 // Initial profile data (should be fetched from API in real app)
 const initialProfile = {
+  isPremium: true,
+  createdAt: "2025-10-08T10:14:06.312546",
   firstName: "John",
   lastName: "Doe",
-  email: "john.doe@email.com",
-  phone: "",
   bio: "",
-  membership: "Premium",
-  memberSince: "January 2024",
 };
 
 const Profile = () => {
   const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
   // State for profile data
-  const [profile, setProfile] = useState(initialProfile);
+  const [profile, setProfile] = useState<profileType>(initialProfile);
   // State for edit mode
   const [editing, setEditing] = useState(false);
 
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const id = await getUserIdFromToken();
+      setUserId(id);
+    };
+    fetchUserId();
+  }, []);
+
+  useEffect(() => {
+    if (userId) getProfile(userId);
+  }, [userId]);
+
+  const getProfile = async (uid: string) => {
+    // Fetch profile data from API
+    try {
+      const response = await fetch(
+        Constants.expoConfig?.extra?.env.USER_URL + `/${uid}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setProfile({
+          isPremium: data.data.isPremium,
+          createdAt: data.data.createdAt,
+          firstName: data.data.firstName,
+          lastName: data.data.lastName,
+          bio: data.data.bio || "",
+        });
+      } else {
+        console.error("Failed to fetch profile", data.message);
+      }
+    } catch (error) {
+      console.error("Failed to fetch profile", error);
+    }
+  };
+
   // Handle input changes for each field
-  const handleChange = (field: keyof typeof profile, value: string) => {
-    setProfile((prev) => ({ ...prev, [field]: value }));
+  const handleChange = (field: keyof profileType, value: string | boolean) => {
+    setProfile((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        [field]: value,
+      };
+    });
   };
 
   // Save profile changes (call API here)
-  const handleSave = () => {
-    setEditing(false);
+  const handleSave = async () => {
     // TODO: Call API to update profile with 'profile' state
+    if (!userId) return;
+    try {
+      const response = await fetch(
+        Constants.expoConfig?.extra?.env.USER_URL + `/${userId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            firstName: profile.firstName,
+            lastName: profile.lastName,
+            // bio: profile.bio,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setEditing(false);
+        Toast.show({
+          type: "success",
+          text1: "Update successful!",
+          text2: "Your profile has been updated.",
+        });
+      } else {
+        console.error("Failed to update profile", data.message);
+      }
+    } catch {
+      console.error("Failed to update profile");
+    }
+  };
+
+  const handleToggleEdit = () => {
+    setEditing((e) => !e);
+    if (editing && userId) {
+      getProfile(userId); // reload from API when cancel
+    }
   };
 
   return (
@@ -57,7 +153,7 @@ const Profile = () => {
           </TouchableOpacity>
           <Text style={styles.cardTitle}>Profile</Text>
         </View>
-        <TouchableOpacity onPress={() => setEditing((e) => !e)}>
+        <TouchableOpacity onPress={handleToggleEdit}>
           <View style={styles.editBtn}>
             <Ionicons name="create-outline" size={18} color={Colors.GREEN} />
             <Text style={styles.editText}>{editing ? "Cancel" : "Edit"}</Text>
@@ -83,16 +179,28 @@ const Profile = () => {
               <Text style={styles.nameText}>
                 {profile.firstName} {profile.lastName}
               </Text>
-              <Text style={styles.memberText}>
-                {profile.membership} Member{" "}
-                <MaterialCommunityIcons
-                  name="crown-outline"
-                  size={13}
-                  color={Colors.YELLOW}
-                />
+              <Text
+                style={[
+                  styles.memberText,
+                  !profile.isPremium && { color: Colors.GREEN },
+                ]}
+              >
+                {profile.isPremium ? "Premium" : "Free"} Member{" "}
+                {profile.isPremium && (
+                  <MaterialCommunityIcons
+                    name="crown-outline"
+                    size={13}
+                    color={Colors.YELLOW}
+                  />
+                )}
               </Text>
               <Text style={styles.memberSince}>
-                Member since {profile.memberSince}
+                {/* month but in words */}
+                Member since{" "}
+                {new Date(profile.createdAt).toLocaleString("en-US", {
+                  month: "long",
+                  year: "numeric",
+                })}
               </Text>
             </View>
           </View>
@@ -128,36 +236,7 @@ const Profile = () => {
               />
             </View>
           </View>
-          {/* <View style={styles.formRow}> */}
-          {/* Email */}
-          <View style={styles.inputCol}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={profile.email}
-              editable={editing}
-              onChangeText={(v) => handleChange("email", v)}
-              placeholder="Email"
-              placeholderTextColor={Colors.GRAY}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
 
-          {/* Phone */}
-          <View style={styles.inputCol}>
-            <Text style={styles.label}>Phone</Text>
-            <TextInput
-              style={styles.input}
-              value={profile.phone}
-              editable={editing}
-              onChangeText={(v) => handleChange("phone", v)}
-              placeholder="Phone"
-              placeholderTextColor={Colors.GRAY}
-              keyboardType="phone-pad"
-            />
-          </View>
-          {/* </View> */}
           <View style={styles.inputColFull}>
             {/* Bio */}
             <Text style={styles.label}>Bio</Text>
@@ -280,10 +359,6 @@ const styles = StyleSheet.create({
   formRow: {
     flexDirection: "row",
     gap: 12,
-    marginBottom: 12,
-  },
-  inputCol: {
-    flex: 1,
     marginBottom: 12,
   },
   inputColFull: {

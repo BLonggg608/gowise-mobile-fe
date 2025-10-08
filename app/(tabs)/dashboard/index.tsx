@@ -11,8 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { getSecureData } from "@/utils/storage";
-import { decodeToken } from "@/utils/tokenUtils";
+import { getUserIdFromToken } from "@/utils/tokenUtils";
 import Constants from "expo-constants";
 import DashboardHeader from "@/components/Dashboard/DashboardHeader";
 
@@ -106,9 +105,7 @@ const Dashboard = () => {
   }, []);
 
   const checkUserInfo = async () => {
-    const token = await getSecureData("accessToken");
-    const decoded = decodeToken(token ?? "");
-    const userId = decoded?.sub;
+    const userId = await getUserIdFromToken();
 
     try {
       const response = await fetch(

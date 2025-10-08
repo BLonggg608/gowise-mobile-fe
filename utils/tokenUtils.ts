@@ -71,3 +71,11 @@ export const isAccessTokenValid = async (): Promise<boolean> => {
 
   return true;
 };
+
+export const getUserIdFromToken = async (): Promise<string | null> => {
+  const accessToken = await getSecureData("accessToken");
+  if (!accessToken) return null;
+  const decoded = decodeToken(accessToken as string);
+  if (!decoded || !decoded.sub) return null;
+  return decoded.sub as string;
+};
