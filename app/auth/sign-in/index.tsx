@@ -1,6 +1,6 @@
 import LoadingModal from "@/components/LoadingModal";
 import { Colors } from "@/constant/Colors";
-import { getSecureData, saveSecureData } from "@/utils/storage";
+import { saveSecureData } from "@/utils/storage";
 import { Ionicons } from "@expo/vector-icons";
 import { Checkbox } from "expo-checkbox";
 import Constants from "expo-constants";
