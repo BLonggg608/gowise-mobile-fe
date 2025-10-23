@@ -56,6 +56,8 @@ export default {
         // user
         USER_URL: process.env.USER_URL,
 
+        // api key
+        PROVINCE_API_KEY: process.env.PROVINCE_API_KEY,
       },
     },
   },

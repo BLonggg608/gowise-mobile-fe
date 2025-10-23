@@ -40,6 +40,7 @@ const UpdateInfo = ({
   const [lastName, setLastName] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
+  const [countryId, setCountryId] = useState("");
 
   const [countryOptions, setCountryOptions] = useState<
     { key: string; value: string }[]
@@ -80,20 +81,21 @@ const UpdateInfo = ({
     // get city options based on selected country
     const fetchCityOptions = async () => {
       setCity("");
-      if (!country) {
+      if (!countryId) {
         setCityOptions([]);
         return;
       }
       try {
-        const cities = await getCityOptions(country);
+        const cities = await getCityOptions(countryId);
         setCityOptions(cities);
+        console.log(cityOptions);
       } catch (err) {
         console.error("Failed to load city options", err);
         setCityOptions([]);
       }
     };
     fetchCityOptions();
-  }, [country]);
+  }, [countryId]);
 
   const onUpdate = async () => {
     if (!firstName || !lastName || !country || !city) {
@@ -215,7 +217,18 @@ const UpdateInfo = ({
                   {/* Country dropdown options */}
                   <Text style={[styles.label, { marginTop: 16 }]}>Country</Text>
                   <SelectList
-                    setSelected={(value: string) => setCountry(value)}
+                    setSelected={(value: string) => {
+                      setCountry(value);
+
+                      // get country id from countryOptions
+                      const selectedCountry = countryOptions.find(
+                        (option) => option.value === value
+                      );
+                      if (selectedCountry) {
+                        setCountryId(selectedCountry.key);
+                        console.log(countryId);
+                      }
+                    }}
                     data={countryOptions}
                     save="value"
                     search={true}
@@ -234,6 +247,7 @@ const UpdateInfo = ({
                   <Text style={[styles.label, { marginTop: 16 }]}>City</Text>
                   <SelectList
                     key={`city-select-${country}`}
+                    // get id of city and city name
                     setSelected={(value: string) => setCity(value)}
                     data={cityOptions}
                     save="value"

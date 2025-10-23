@@ -14,6 +14,7 @@ import {
 import { getUserIdFromToken } from "@/utils/tokenUtils";
 import Constants from "expo-constants";
 import DashboardHeader from "@/components/Dashboard/DashboardHeader";
+import { deleteSecureData } from "@/utils/storage";
 
 export type userInfoType = {
   firstName: string;
@@ -126,12 +127,13 @@ const Dashboard = () => {
           lastName: data.data.lastName,
           isPremium: data.data.isPremium,
         });
-        console.log(userInfo);
       } else {
         setUpdateVisible(true);
       }
     } catch (error) {
       console.error("Failed to fetch user info", error);
+      deleteSecureData("accessToken");
+      router.replace("/auth/sign-in");
     }
   };
 

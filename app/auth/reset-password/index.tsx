@@ -94,6 +94,11 @@ const ResetPassword = () => {
       }
     } catch (error) {
       setLoading(false);
+      setPendingToast({
+        type: "error",
+        text1: "Server Error",
+        text2: "Please try again later.",
+      });
       console.error(error);
       return;
     }
