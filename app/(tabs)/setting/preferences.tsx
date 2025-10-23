@@ -1,8 +1,10 @@
 import { Colors } from "@/constant/Colors";
+import { getCityOptions, getCountryOptions } from "@/utils/CountryCity";
+import { getUserIdFromToken } from "@/utils/tokenUtils";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -11,24 +13,22 @@ import {
   View,
 } from "react-native";
 import { SelectList } from "react-native-dropdown-select-list";
+import { Toast } from "toastify-react-native";
+import { ToastShowParams } from "toastify-react-native/utils/interfaces";
 
 const statusBarHeight = Constants.statusBarHeight;
 
 // Initial preferences data (should be fetched from API in real app)
 const initialPreferences = {
   language: "English",
-  timezone: "GMT+7",
+  country: "",
+  city: "",
   theme: "auto", // 'light' | 'dark' | 'auto'
 };
 
 const languageOptions = [
   { key: "1", value: "English" },
   { key: "2", value: "Vietnamese" },
-];
-const timezoneOptions = [
-  { key: "1", value: "GMT+7" },
-  { key: "2", value: "GMT+8" },
-  { key: "3", value: "GMT+9" },
 ];
 
 const themeOptions = [
@@ -39,8 +39,110 @@ const themeOptions = [
 
 const Preferences = () => {
   const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
   // State for preferences data
   const [prefs, setPrefs] = useState(initialPreferences);
+  const [countryId, setCountryId] = useState("");
+
+  const [countryOptions, setCountryOptions] = useState<
+    { key: string; value: string }[]
+  >([]);
+  const [cityOptions, setCityOptions] = useState<
+    { key: string; value: string }[]
+  >([]);
+
+  const [pendingToast, setPendingToast] = useState<ToastShowParams | null>(
+    null
+  );
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const id = await getUserIdFromToken();
+      setUserId(id);
+    };
+    fetchUserId();
+  }, []);
+
+  useEffect(() => {
+    if (!loading && pendingToast) {
+      Toast.show(pendingToast);
+      setPendingToast(null);
+    }
+  }, [loading, pendingToast]);
+
+  useEffect(() => {
+    // get country
+    const fetchCountryOptions = async () => {
+      setLoading(true);
+      try {
+        const countries = await getCountryOptions();
+        setCountryOptions(countries);
+      } catch (err) {
+        console.error("Failed to load country options", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCountryOptions();
+  }, []);
+
+  useEffect(() => {
+    // get city options based on selected country
+    const fetchCityOptions = async () => {
+      setPrefs((prev) => ({ ...prev, city: "" }));
+      if (!countryId) {
+        setCityOptions([]);
+        return;
+      }
+      try {
+        const cities = await getCityOptions(countryId);
+        setCityOptions(cities);
+        // console.log(cityOptions);
+      } catch (err) {
+        console.error("Failed to load city options", err);
+        setCityOptions([]);
+      }
+    };
+    fetchCityOptions();
+  }, [countryId]);
+
+  const handleUpdate = async ({
+    key,
+    value,
+  }: {
+    key: string;
+    value: string;
+  }) => {
+    // TODO: Call API to update profile with 'profile' state
+    if (!userId) return;
+    console.log(userId);
+
+    try {
+      const response = await fetch(
+        Constants.expoConfig?.extra?.env.USER_URL + `/${userId}/${key}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            [key]: value,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Update success");
+      } else {
+        console.error("Failed to update profile:", data.message);
+      }
+    } catch {
+      console.error("Failed to update profile");
+    }
+  };
 
   const handleChange = (field: string, value: string) => {
     setPrefs((prev) => ({ ...prev, [field]: value }));
@@ -87,14 +189,21 @@ const Preferences = () => {
               )}
             />
           </View>
-          {/* Time Zone Dropdown */}
+          {/* Country Dropdown */}
           <View style={styles.inputColFull}>
-            <Text style={styles.label}>Time Zone</Text>
+            <Text style={styles.label}>Country</Text>
             <SelectList
-              setSelected={(value: string) => handleChange("timezone", value)}
-              data={timezoneOptions}
+              setSelected={(value: string) => {
+                handleChange("country", value);
+                const selectedCountry = countryOptions.find(
+                  (opt) => opt.value === value
+                );
+                setCountryId(selectedCountry ? selectedCountry.key : "");
+                handleUpdate({ key: "region", value: value });
+              }}
+              data={countryOptions}
               save="value"
-              search={false}
+              search={true}
               boxStyles={styles.dropdown}
               inputStyles={{ fontFamily: "inter-medium", color: Colors.BLACK }}
               dropdownStyles={styles.dropdownList}
@@ -102,9 +211,35 @@ const Preferences = () => {
                 fontFamily: "inter-medium",
                 color: Colors.BLACK,
               }}
-              defaultOption={timezoneOptions.find(
-                (opt) => opt.value === prefs.timezone
-              )}
+              placeholder="Select your country"
+              // defaultOption={countryOptions.find(
+              //   (opt) => opt.value === prefs.country
+              // )}
+            />
+          </View>
+
+          {/* City Dropdown */}
+          <View style={styles.inputColFull}>
+            <Text style={styles.label}>City</Text>
+            <SelectList
+              setSelected={(value: string) => {
+                handleChange("city", value);
+                handleUpdate({ key: "city", value: value });
+              }}
+              data={cityOptions}
+              save="value"
+              search={true}
+              boxStyles={styles.dropdown}
+              inputStyles={{ fontFamily: "inter-medium", color: Colors.BLACK }}
+              dropdownStyles={styles.dropdownList}
+              dropdownTextStyles={{
+                fontFamily: "inter-medium",
+                color: Colors.BLACK,
+              }}
+              placeholder="Select your city"
+              // defaultOption={countryOptions.find(
+              //   (opt) => opt.value === prefs.country
+              // )}
             />
           </View>
         </View>
