@@ -19,7 +19,7 @@ import { SelectList } from "react-native-dropdown-select-list";
 import {
   getCityOptions,
   getCountryOptions,
-} from "@/components/utils/CountryCity";
+} from "@/utils/CountryCity";
 import { Toast } from "toastify-react-native";
 import { ToastShowParams } from "toastify-react-native/utils/interfaces";
 import Constants from "expo-constants";
@@ -88,7 +88,7 @@ const UpdateInfo = ({
       try {
         const cities = await getCityOptions(countryId);
         setCityOptions(cities);
-        console.log(cityOptions);
+        // console.log(cityOptions);
       } catch (err) {
         console.error("Failed to load city options", err);
         setCityOptions([]);

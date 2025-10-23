@@ -14,13 +14,17 @@ import { ProgressStep, ProgressSteps } from "react-native-progress-steps";
 import Step1 from "./Step/Step1";
 import Step2 from "./Step/Step2";
 import Step3 from "./Step/Step3";
+import Step4 from "./Step/Step4";
 
 interface CreateNewPlanModelProps {
   visible: boolean;
   onClose: () => void;
   onSubmit: (data: {
     type: string;
+    startDate: string;
+    endDate: string;
     NumberOfDays: string;
+    NumberOfParticipants: string;
     Budget: string;
     Destination: string;
   }) => void;
@@ -35,9 +39,15 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
 
   const [type, setType] = useState<"domestic" | "international">("domestic");
+  const [startDate, setStartDate] = useState(
+    new Date().toISOString().split("T")[0].split("-").reverse().join("/")
+  );
+  const [endDate, setEndDate] = useState("");
   const [NumberOfDays, setNumberOfDays] = useState("");
+  const [NumberOfParticipants, setNumberOfParticipants] = useState("");
   const [Budget, setBudget] = useState("");
   const [Destination, setDestination] = useState("");
+  const [Interests, setInterests] = useState<string[]>([]);
 
   useEffect(() => {
     if (!visible) {
@@ -47,6 +57,12 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
       setBudget("");
       setDestination("");
       setCurrentStep(0);
+      setInterests([]);
+      setStartDate(
+        new Date().toISOString().split("T")[0].split("-").reverse().join("/")
+      );
+      setEndDate("");
+      setNumberOfParticipants("");
     }
   }, [visible]);
 
@@ -62,6 +78,10 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
     setCurrentStep(2);
   };
 
+  const handleStep3Next = () => {
+    setCurrentStep(3);
+  };
+
   const handleStepBack = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
@@ -75,10 +95,20 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
   };
 
   const handleSubmit = () => {
-    if (!type || !NumberOfDays || !Budget) return; // Kiểm tra đầy đủ thông tin
+    if (!type || !startDate || !endDate || !Budget) return; // Kiểm tra đầy đủ thông tin
+    // Calculate NumberOfDays
+    const start = new Date(startDate.split("/").reverse().join("-"));
+    const end = new Date(endDate.split("/").reverse().join("-"));
+
+    setNumberOfDays(
+      ((end.getTime() - start.getTime()) / (1000 * 3600 * 24)).toString()
+    );
     onSubmit({
       type,
+      startDate,
+      endDate,
       NumberOfDays,
+      NumberOfParticipants,
       Budget,
       Destination,
     });
@@ -155,20 +185,37 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
             <ProgressStep
               buttonFillColor={Colors.GREEN}
               buttonPreviousText="Back"
+              onNext={handleStep3Next}
               onPrevious={handleStep3Back}
-              onSubmit={handleSubmit}
-              buttonFinishDisabled={!NumberOfDays || !Budget}
-              buttonDisabledColor={Colors.GREEN + "80"}
+              buttonNextText="Next"
+              buttonNextDisabled={
+                !startDate || !endDate || !NumberOfParticipants || !Budget
+              }
             >
               <Step3
                 isHavePlan={isHavePlan}
-                numberOfDays={NumberOfDays}
-                setNumberOfDays={setNumberOfDays}
+                startDate={startDate}
+                setStartDate={setStartDate}
+                endDate={endDate}
+                setEndDate={setEndDate}
+                numberOfParticipants={NumberOfParticipants}
+                setNumberOfParticipants={setNumberOfParticipants}
                 budget={Budget}
                 setBudget={setBudget}
                 destination={Destination}
                 setDestination={setDestination}
               />
+            </ProgressStep>
+            {/* Step 4 */}
+            <ProgressStep
+              buttonFillColor={Colors.GREEN}
+              buttonPreviousText="Back"
+              onPrevious={handleStepBack}
+              onSubmit={handleSubmit}
+              buttonFinishDisabled={Interests.length === 0}
+              buttonDisabledColor={Colors.GREEN + "80"}
+            >
+              <Step4 interests={Interests} setInterests={setInterests} />
             </ProgressStep>
           </ProgressSteps>
         </KeyboardAvoidingView>
