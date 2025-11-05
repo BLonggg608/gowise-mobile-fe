@@ -1,9 +1,14 @@
 import { Colors } from "@/constant/Colors";
+import FlightTicketCard from "@/components/Plan/PlanResult/FlightTicketCard";
+import HotelTicketCard from "@/components/Plan/PlanResult/HotelTicketCard";
+import ItineraryCard, {
+  ItineraryEntry,
+} from "@/components/Plan/PlanResult/ItineraryCard";
 import { getUserIdFromToken } from "@/utils/tokenUtils";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -124,6 +129,71 @@ const pickString = (
   return undefined;
 };
 
+const pickNumber = (
+  source: Record<string, unknown>,
+  paths: (string | number)[][]
+): number | undefined => {
+  for (const path of paths) {
+    let current: unknown = source;
+    let matched = true;
+
+    for (const key of path) {
+      if (
+        current &&
+        typeof current === "object" &&
+        key in (current as Record<string, unknown>)
+      ) {
+        current = (current as Record<string, unknown>)[key as string];
+      } else {
+        matched = false;
+        break;
+      }
+    }
+
+    if (matched) {
+      const value = current;
+      if (typeof value === "number" && !Number.isNaN(value)) {
+        return value;
+      }
+      if (typeof value === "string") {
+        const parsed = Number(value.replace(/[^0-9.-]/g, ""));
+        if (!Number.isNaN(parsed)) {
+          return parsed;
+        }
+      }
+    }
+  }
+  return undefined;
+};
+
+const toStringArray = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) =>
+        typeof item === "string"
+          ? item.trim()
+          : typeof item === "number"
+          ? String(item)
+          : item && typeof item === "object"
+          ? pickString(item as Record<string, unknown>, [
+              ["name"],
+              ["title"],
+              ["label"],
+              ["text"],
+            ])?.trim()
+          : undefined
+      )
+      .filter((item): item is string => Boolean(item && item.length > 0));
+  }
+  if (typeof value === "string" && value.trim()) {
+    return value
+      .split(/[,;|]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
 const flattenValue = (value: unknown): string => {
   if (!value && value !== 0) return "";
   if (typeof value === "string") return value;
@@ -170,13 +240,49 @@ const extractItineraryActivities = (data: Record<string, unknown> | null) => {
   const activities: string[] = [];
   const direct = data.activities;
   if (Array.isArray(direct)) {
-    direct
-      .map((item) => flattenValue(item))
-      .filter(Boolean)
-      .forEach((item) => activities.push(item));
+    const timePriority: Record<string, number> = {
+      morning: 0,
+      lunch: 1,
+      afternoon: 2,
+      dinner: 3,
+    };
+    const decorated = direct
+      .map((item, index) => {
+        const text = flattenValue(item);
+        if (!text) return null;
+        if (item && typeof item === "object") {
+          const slot = pickString(item as Record<string, unknown>, [
+            ["timeOrder"],
+            ["time_order"],
+            ["time"],
+            ["time_of_day"],
+            ["slot"],
+          ])?.toLowerCase();
+          if (slot && slot in timePriority) {
+            return {
+              text,
+              priority: timePriority[slot],
+              index,
+            };
+          }
+        }
+        return { text, priority: Number.MAX_SAFE_INTEGER, index };
+      })
+      .filter(
+        (item): item is { text: string; priority: number; index: number } =>
+          Boolean(item)
+      )
+      .sort((a, b) => {
+        if (a.priority !== b.priority) {
+          return a.priority - b.priority;
+        }
+        return a.index - b.index;
+      });
+
+    decorated.forEach((item) => activities.push(item.text));
   }
 
-  const blocks = ["morning", "afternoon", "evening", "night"];
+  const blocks = ["morning", "lunch", "afternoon", "dinner"];
   blocks.forEach((key) => {
     if (key in data) {
       const text = flattenValue(data[key]);
@@ -223,6 +329,9 @@ const PlanResult = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { from } = useLocalSearchParams();
+  const isShowSaveButton = from === "create-new-plan";
 
   const loadTravelPlan = useCallback(async () => {
     setIsLoading(true);
@@ -391,6 +500,32 @@ const PlanResult = () => {
     return null;
   }, [planData?.itineraryData]);
 
+  const itineraryEntries = useMemo<ItineraryEntry[]>(() => {
+    if (!itineraryDays.length) return [];
+    return itineraryDays.map(({ key, number, data }, index) => {
+      const record = data ?? undefined;
+      const dateText =
+        record && typeof record.date === "string" ? record.date : undefined;
+      const titleText =
+        record && typeof record.title === "string" ? record.title : undefined;
+      const summaryText =
+        record && typeof record.summary === "string"
+          ? record.summary
+          : undefined;
+      return {
+        id: key || `day-${index}`,
+        dayNumber: number || index + 1,
+        date: dateText,
+        title: titleText,
+        summary: summaryText,
+        activities: extractItineraryActivities(data),
+      };
+    });
+  }, [itineraryDays]);
+
+  const isItineraryLoading =
+    itineraryEntries.length === 0 && !itineraryErrorMessage;
+
   const flightPrice = useMemo(() => {
     if (!bestFlight) return 0;
     return (
@@ -420,12 +555,86 @@ const PlanResult = () => {
       ["departure_airport"],
       ["from"],
       ["origin"],
+      ["airline_info", "departure_airport", "name"],
+      ["airline_info", "departure_airport", "id"],
     ]);
     const arrivalCity = pickString(details, [
       ["arrival_city"],
       ["arrival_airport"],
       ["to"],
       ["destination"],
+      ["airline_info", "arrival_airport", "name"],
+      ["airline_info", "arrival_airport", "id"],
+    ]);
+    const departureCode = pickString(details, [
+      ["departure_airport_code"],
+      ["departure_code"],
+      ["from_code"],
+      ["airline_info", "departure_airport", "id"],
+    ]);
+    const arrivalCode = pickString(details, [
+      ["arrival_airport_code"],
+      ["arrival_code"],
+      ["to_code"],
+      ["airline_info", "arrival_airport", "id"],
+    ]);
+    const departureName = pickString(details, [
+      ["departure_airport_name"],
+      ["departure_airport"],
+      ["from_airport"],
+      ["airline_info", "departure_airport", "name"],
+    ]);
+    const arrivalName = pickString(details, [
+      ["arrival_airport_name"],
+      ["arrival_airport"],
+      ["to_airport"],
+      ["airline_info", "arrival_airport", "name"],
+    ]);
+    const priceText = pickString(details, [
+      ["price"],
+      ["display_price"],
+      ["formatted_price"],
+    ]);
+    const tripType = pickString(details, [
+      ["type"],
+      ["trip_type"],
+      ["fare_type"],
+    ]);
+    const airplane = pickString(details, [
+      ["airplane"],
+      ["aircraft"],
+      ["plane"],
+      ["airline_info", "airplane"],
+    ]);
+    const airlineLogo = pickString(details, [
+      ["airline_logo"],
+      ["logo"],
+      ["carrier_logo"],
+      ["airline_info", "logo"],
+    ]);
+    const durationMinutes = pickNumber(details, [
+      ["duration_minutes"],
+      ["duration_mins"],
+      ["duration_in_minutes"],
+      ["total_duration_minutes"],
+    ]);
+    const carbonPercent = pickNumber(details, [
+      ["carbon_emissions", "difference_percent"],
+      ["emissions_difference_percent"],
+    ]);
+    const carbonKg = pickNumber(details, [
+      ["carbon_emissions", "this_flight"],
+      ["emissions_kg"],
+    ]);
+    const legroom = pickString(details, [
+      ["legroom"],
+      ["seat_pitch"],
+      ["leg_room"],
+    ]);
+    const entertainment = pickString(details, [
+      ["entertainment"],
+      ["inflight_entertainment"],
+      ["amenities", "entertainment"],
     ]);
     return {
       airline: pickString(details, [
@@ -433,40 +642,82 @@ const PlanResult = () => {
         ["carrier"],
         ["carrier_name"],
         ["marketing_carrier"],
+        ["airline_info", "airline"],
       ]),
       flightNumber: pickString(details, [
         ["flight_number"],
         ["number"],
         ["marketing_carrier_flight_number"],
+        ["airline_info", "flight_number"],
       ]),
       route:
         departureCity && arrivalCity
           ? `${departureCity} → ${arrivalCity}`
           : pickString(details, [["route"], ["travel_route"]]),
+      priceText,
       departureTime: pickString(details, [
         ["departure_time"],
         ["outbound", "departure_time"],
         ["departure", "time"],
         ["departure"],
+        ["airline_info", "departure_airport", "time"],
       ]),
       arrivalTime: pickString(details, [
         ["arrival_time"],
         ["outbound", "arrival_time"],
         ["arrival", "time"],
         ["arrival"],
+        ["airline_info", "arrival_airport", "time"],
       ]),
       duration: pickString(details, [
         ["duration"],
         ["flight_duration"],
         ["travel_time"],
       ]),
-      cabin: pickString(details, [["cabin"], ["travel_class"]]),
+      cabin: pickString(details, [
+        ["cabin"],
+        ["travel_class"],
+        ["class"],
+        ["fare_class"],
+        ["type"],
+        ["airline_info", "cabin"],
+      ]),
+      tripType,
+      airplane,
+      airlineLogo,
+      departureAirportCode: departureCode,
+      departureAirportName: departureName,
+      arrivalAirportCode: arrivalCode,
+      arrivalAirportName: arrivalName,
+      durationMinutes: durationMinutes ?? undefined,
+      carbonDifferencePercent: carbonPercent ?? undefined,
+      carbonKg:
+        typeof carbonKg === "number"
+          ? Math.round(carbonKg > 999 ? carbonKg / 1000 : carbonKg)
+          : undefined,
+      legroom,
+      entertainment,
     };
   }, [bestFlight]);
 
   const hotelDetails = useMemo(() => {
     if (!bestHotel) return null;
     const details = bestHotel as Record<string, unknown>;
+    const priceValue =
+      pickNumber(details, [
+        ["price_value"],
+        ["price_per_night_value"],
+        ["price_numeric"],
+      ]) ?? parseCurrency(details.price);
+    const priceText =
+      pickString(details, [
+        ["price"],
+        ["display_price"],
+        ["price_text"],
+        ["formatted_price"],
+        ["rate"],
+      ]) || (priceValue ? formatCurrency(priceValue) : undefined);
+    const currency = pickString(details, [["currency"], ["price_currency"]]);
     const rating = (() => {
       const raw = details.rating;
       if (typeof raw === "number") return raw.toFixed(1).replace(/\.0$/, "");
@@ -477,6 +728,136 @@ const PlanResult = () => {
         ["score"],
       ]);
     })();
+    const ratingValue =
+      pickNumber(details, [["rating"], ["review_score"], ["score"]]) ??
+      (rating ? Number(rating) : undefined);
+    const ratingCount = pickNumber(details, [
+      ["rating_count"],
+      ["reviews_count"],
+      ["review_count"],
+      ["number_of_reviews"],
+    ]);
+    const type = pickString(details, [
+      ["type"],
+      ["property_type"],
+      ["hotel_type"],
+    ]);
+    const neighborhood = pickString(details, [
+      ["neighborhood"],
+      ["area"],
+      ["district"],
+    ]);
+    const distance = pickString(details, [
+      ["distance"],
+      ["distance_from_center"],
+      ["distance_text"],
+    ]);
+    const hotelClass = pickString(details, [
+      ["hotel_class"],
+      ["class"],
+      ["star_rating"],
+      ["category"],
+    ]);
+    const roomType = pickString(details, [["room_type"], ["room"], ["type"]]);
+    const amenitiesCandidate = (() => {
+      const candidates = [
+        details.amenities,
+        pickString(details, [["amenities_text"], ["amenity_summary"]]),
+        (details as Record<string, unknown>).amenity_list,
+        (details as Record<string, unknown>).facilities,
+      ];
+      for (const candidate of candidates) {
+        const normalized = toStringArray(candidate);
+        if (normalized.length > 0) return normalized;
+      }
+      return [];
+    })();
+    const mainImageRecord = (() => {
+      const candidates = [
+        details.main_image,
+        details.mainImage,
+        details.image,
+        pickString(details, [
+          ["main_image_url"],
+          ["image_url"],
+          ["hero_image"],
+        ]),
+      ];
+      for (const candidate of candidates) {
+        if (typeof candidate === "string" && candidate) {
+          return { original: candidate, thumbnail: candidate };
+        }
+        if (candidate && typeof candidate === "object") {
+          const record = candidate as Record<string, unknown>;
+          const original = pickString(record, [
+            ["original_image"],
+            ["url"],
+            ["image"],
+            ["src"],
+          ]);
+          const thumbnail = pickString(record, [
+            ["thumbnail"],
+            ["thumb"],
+            ["preview"],
+            ["small"],
+          ]);
+          if (original || thumbnail) {
+            return {
+              original: original ?? thumbnail ?? undefined,
+              thumbnail: thumbnail ?? original ?? undefined,
+            };
+          }
+        }
+      }
+      return undefined;
+    })();
+    const imageList = (() => {
+      const buckets = [
+        details.images,
+        details.photos,
+        (details as Record<string, unknown>).gallery,
+        (details as Record<string, unknown>).media,
+      ];
+      const collected: { original?: string; thumbnail?: string }[] = [];
+      buckets.forEach((bucket) => {
+        if (Array.isArray(bucket)) {
+          bucket.forEach((item) => {
+            if (typeof item === "string" && item) {
+              collected.push({ original: item, thumbnail: item });
+              return;
+            }
+            if (item && typeof item === "object") {
+              const record = item as Record<string, unknown>;
+              const original = pickString(record, [
+                ["original_image"],
+                ["url"],
+                ["image"],
+                ["src"],
+              ]);
+              const thumbnail = pickString(record, [
+                ["thumbnail"],
+                ["thumb"],
+                ["preview"],
+                ["small"],
+              ]);
+              if (original || thumbnail) {
+                collected.push({
+                  original: original ?? thumbnail ?? undefined,
+                  thumbnail: thumbnail ?? original ?? undefined,
+                });
+              }
+            }
+          });
+        }
+      });
+      return collected;
+    })();
+    const bookingLink = pickString(details, [
+      ["link"],
+      ["booking_link"],
+      ["deep_link"],
+      ["url"],
+    ]);
     return {
       name: pickString(details, [["name"], ["hotel_name"], ["title"]]),
       address: pickString(details, [
@@ -485,11 +866,41 @@ const PlanResult = () => {
         ["location"],
       ]),
       rating,
-      checkIn: pickString(details, [["check_in"], ["check_in_date"]]),
-      checkOut: pickString(details, [["check_out"], ["check_out_date"]]),
-      roomType: pickString(details, [["room_type"], ["room"], ["type"]]),
+      ratingValue,
+      ratingCount,
+      type,
+      neighborhood,
+      distance,
+      hotelClass,
+      checkIn: pickString(details, [
+        ["check_in"],
+        ["check_in_date"],
+        ["check_in_time"],
+      ]),
+      checkOut: pickString(details, [
+        ["check_out"],
+        ["check_out_date"],
+        ["check_out_time"],
+      ]),
+      roomType,
+      priceText,
+      priceValue,
+      currency,
+      amenities: amenitiesCandidate,
+      mainImage: mainImageRecord,
+      images: imageList,
+      link: bookingLink,
+      description: pickString(details, [
+        ["description"],
+        ["summary"],
+        ["about"],
+        ["highlights"],
+      ]),
     };
   }, [bestHotel]);
+
+  const isFlightsLoading = !bestFlight && !hasNoFlights;
+  const isHotelsLoading = !bestHotel && !hasNoHotels;
 
   const handleSavePlan = useCallback(async () => {
     if (!planData) {
@@ -625,16 +1036,26 @@ const PlanResult = () => {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            onPress={handleGoBack}
+            style={styles.headerButton}
+          >
+            <Ionicons color={Colors.BLACK} name="arrow-back" size={22} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Plan Result</Text>
+        </View>
         <TouchableOpacity
-          accessibilityRole="button"
-          onPress={handleGoBack}
-          style={styles.headerButton}
+          activeOpacity={0.85}
+          onPress={handleModifySearch}
+          style={styles.modifyButton}
         >
-          <Ionicons color={Colors.BLACK} name="arrow-back" size={22} />
+          <Ionicons color={Colors.GREEN} name="create-outline" size={16} />
+          <Text style={styles.modifyButtonText}>Modify Search</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Travel Plan Results</Text>
-        <View style={styles.headerPlaceholder} />
       </View>
 
       {isLoading ? (
@@ -661,6 +1082,7 @@ const PlanResult = () => {
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
         >
+          {/* Summary Card */}
           <View style={styles.summaryCard}>
             <View style={styles.summaryHeaderRow}>
               <View style={{ flex: 1 }}>
@@ -679,18 +1101,6 @@ const PlanResult = () => {
                   {budgetLabel}
                 </Text>
               </View>
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={handleModifySearch}
-                style={styles.modifyButton}
-              >
-                <Ionicons
-                  color={Colors.GREEN}
-                  name="create-outline"
-                  size={16}
-                />
-                <Text style={styles.modifyButtonText}>Modify Search</Text>
-              </TouchableOpacity>
             </View>
 
             <View style={styles.summaryStatsRow}>
@@ -736,276 +1146,33 @@ const PlanResult = () => {
             ) : null}
           </View>
 
-          <View style={styles.sectionCard}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionHeaderLeft}>
-                <View style={styles.sectionIcon}>
-                  <Ionicons
-                    color={Colors.GREEN}
-                    name="airplane-outline"
-                    size={18}
-                  />
-                </View>
-                <Text style={styles.sectionTitle}>Available Flights</Text>
-              </View>
-              {flightPrice ? (
-                <Text style={styles.sectionMeta}>
-                  {formatCurrency(flightPrice)}
-                </Text>
-              ) : null}
-            </View>
-            {bestFlight ? (
-              <View>
-                {flightDetails?.airline ? (
-                  <Text style={styles.sectionPrimaryText}>
-                    {flightDetails.airline}
-                  </Text>
-                ) : null}
-                {flightDetails?.route ? (
-                  <Text style={styles.sectionSecondaryText}>
-                    {flightDetails.route}
-                  </Text>
-                ) : null}
-                <View style={styles.sectionInfoGrid}>
-                  {flightDetails?.departureTime ? (
-                    <View style={styles.infoCell}>
-                      <Text style={styles.infoLabel}>Departure</Text>
-                      <Text style={styles.infoValue}>
-                        {flightDetails.departureTime}
-                      </Text>
-                    </View>
-                  ) : null}
-                  {flightDetails?.arrivalTime ? (
-                    <View style={styles.infoCell}>
-                      <Text style={styles.infoLabel}>Arrival</Text>
-                      <Text style={styles.infoValue}>
-                        {flightDetails.arrivalTime}
-                      </Text>
-                    </View>
-                  ) : null}
-                  {flightDetails?.duration ? (
-                    <View style={styles.infoCell}>
-                      <Text style={styles.infoLabel}>Duration</Text>
-                      <Text style={styles.infoValue}>
-                        {flightDetails.duration}
-                      </Text>
-                    </View>
-                  ) : null}
-                  {flightDetails?.flightNumber ? (
-                    <View style={styles.infoCell}>
-                      <Text style={styles.infoLabel}>Flight</Text>
-                      <Text style={styles.infoValue}>
-                        {flightDetails.flightNumber}
-                      </Text>
-                    </View>
-                  ) : null}
-                  {flightDetails?.cabin ? (
-                    <View style={styles.infoCell}>
-                      <Text style={styles.infoLabel}>Cabin</Text>
-                      <Text style={styles.infoValue}>
-                        {flightDetails.cabin}
-                      </Text>
-                    </View>
-                  ) : null}
-                </View>
-              </View>
-            ) : hasNoFlights ? (
-              <View style={styles.emptyInnerState}>
-                <Ionicons
-                  color={Colors.GRAY}
-                  name="alert-circle-outline"
-                  size={28}
-                />
-                <Text style={styles.emptyInnerTitle}>No flights available</Text>
-                <Text style={styles.emptyInnerSubtitle}>
-                  {flightErrorMessage ||
-                    `No flights found to ${destinationLabel} for the selected dates.`}
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.emptyInnerState}>
-                <ActivityIndicator color={Colors.GREEN} size="small" />
-                <Text style={styles.emptyInnerSubtitle}>
-                  Loading flight options...
-                </Text>
-              </View>
-            )}
-          </View>
+          {/* Flight Ticket Card */}
+          <FlightTicketCard
+            destinationLabel={destinationLabel}
+            errorMessage={flightErrorMessage}
+            flightDetails={flightDetails}
+            flightPrice={flightPrice}
+            hasNoFlights={hasNoFlights}
+            isLoading={isFlightsLoading}
+          />
 
-          <View style={styles.sectionCard}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionHeaderLeft}>
-                <View style={styles.sectionIcon}>
-                  <Ionicons color={Colors.GREEN} name="bed-outline" size={18} />
-                </View>
-                <Text style={styles.sectionTitle}>Available Hotels</Text>
-              </View>
-              {hotelPrice ? (
-                <Text style={styles.sectionMeta}>
-                  {formatCurrency(hotelPrice)}
-                </Text>
-              ) : null}
-            </View>
-            {bestHotel ? (
-              <View>
-                {hotelDetails?.name ? (
-                  <Text style={styles.sectionPrimaryText}>
-                    {hotelDetails.name}
-                  </Text>
-                ) : null}
-                {hotelDetails?.address ? (
-                  <Text style={styles.sectionSecondaryText}>
-                    {hotelDetails.address}
-                  </Text>
-                ) : null}
-                <View style={styles.sectionInfoGrid}>
-                  {hotelDetails?.checkIn ? (
-                    <View style={styles.infoCell}>
-                      <Text style={styles.infoLabel}>Check-in</Text>
-                      <Text style={styles.infoValue}>
-                        {hotelDetails.checkIn}
-                      </Text>
-                    </View>
-                  ) : null}
-                  {hotelDetails?.checkOut ? (
-                    <View style={styles.infoCell}>
-                      <Text style={styles.infoLabel}>Check-out</Text>
-                      <Text style={styles.infoValue}>
-                        {hotelDetails.checkOut}
-                      </Text>
-                    </View>
-                  ) : null}
-                  {hotelDetails?.roomType ? (
-                    <View style={styles.infoCell}>
-                      <Text style={styles.infoLabel}>Room</Text>
-                      <Text style={styles.infoValue}>
-                        {hotelDetails.roomType}
-                      </Text>
-                    </View>
-                  ) : null}
-                  {hotelDetails?.rating ? (
-                    <View style={styles.infoCell}>
-                      <Text style={styles.infoLabel}>Rating</Text>
-                      <Text style={styles.infoValue}>
-                        {hotelDetails.rating}
-                      </Text>
-                    </View>
-                  ) : null}
-                </View>
-              </View>
-            ) : hasNoHotels ? (
-              <View style={styles.emptyInnerState}>
-                <Ionicons
-                  color={Colors.GRAY}
-                  name="alert-circle-outline"
-                  size={28}
-                />
-                <Text style={styles.emptyInnerTitle}>No hotels available</Text>
-                <Text style={styles.emptyInnerSubtitle}>
-                  {hotelErrorMessage ||
-                    `No hotels found in ${destinationLabel} for the selected dates.`}
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.emptyInnerState}>
-                <ActivityIndicator color={Colors.GREEN} size="small" />
-                <Text style={styles.emptyInnerSubtitle}>
-                  Loading hotel options...
-                </Text>
-              </View>
-            )}
-          </View>
+          {/* Hotel Ticket Card */}
+          <HotelTicketCard
+            destinationLabel={destinationLabel}
+            errorMessage={hotelErrorMessage}
+            hasNoHotels={hasNoHotels}
+            hotelDetails={hotelDetails}
+            hotelPrice={hotelPrice}
+            isLoading={isHotelsLoading}
+          />
 
-          <View style={styles.sectionCard}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionHeaderLeft}>
-                <View style={styles.sectionIcon}>
-                  <Ionicons
-                    color={Colors.GREEN}
-                    name="calendar-outline"
-                    size={18}
-                  />
-                </View>
-                <Text style={styles.sectionTitle}>Your Travel Itinerary</Text>
-              </View>
-              <Text style={styles.sectionMeta}>
-                {itineraryDays.length} day
-                {itineraryDays.length !== 1 ? "s" : ""}
-              </Text>
-            </View>
-            {itineraryDays.length > 0 ? (
-              itineraryDays.map(({ key, number, data }, index) => {
-                const activities = extractItineraryActivities(data);
-                const dateText =
-                  data && typeof data.date === "string" ? data.date : undefined;
-                const titleText =
-                  data && typeof data.title === "string"
-                    ? data.title
-                    : undefined;
-                const summaryText =
-                  data && typeof data.summary === "string"
-                    ? data.summary
-                    : undefined;
-
-                return (
-                  <View
-                    key={key || `day-${index}`}
-                    style={styles.itineraryBlock}
-                  >
-                    <View style={styles.itineraryHeaderRow}>
-                      <Text style={styles.itineraryDayLabel}>
-                        Day {number || index + 1}
-                      </Text>
-                      {dateText ? (
-                        <Text style={styles.itineraryDateText}>{dateText}</Text>
-                      ) : null}
-                    </View>
-                    {titleText ? (
-                      <Text style={styles.itineraryTitle}>{titleText}</Text>
-                    ) : null}
-                    {summaryText ? (
-                      <Text style={styles.itinerarySummary}>{summaryText}</Text>
-                    ) : null}
-                    {activities.length > 0 ? (
-                      activities.map((item, activityIndex) => (
-                        <Text
-                          key={`${key}-activity-${activityIndex}`}
-                          style={styles.itineraryActivity}
-                        >
-                          • {item}
-                        </Text>
-                      ))
-                    ) : (
-                      <Text style={styles.itinerarySummary}>
-                        No detailed activities available.
-                      </Text>
-                    )}
-                  </View>
-                );
-              })
-            ) : itineraryErrorMessage ? (
-              <View style={styles.emptyInnerState}>
-                <Ionicons
-                  color={Colors.GRAY}
-                  name="alert-circle-outline"
-                  size={28}
-                />
-                <Text style={styles.emptyInnerTitle}>
-                  Unable to create itinerary
-                </Text>
-                <Text style={styles.emptyInnerSubtitle}>
-                  {itineraryErrorMessage}
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.emptyInnerState}>
-                <ActivityIndicator color={Colors.GREEN} size="small" />
-                <Text style={styles.emptyInnerSubtitle}>
-                  Loading itinerary...
-                </Text>
-              </View>
-            )}
-          </View>
+          <ItineraryCard
+            containerStyle={styles.sectionCard}
+            daysCount={itineraryDays.length}
+            errorMessage={itineraryErrorMessage}
+            isLoading={isItineraryLoading}
+            items={itineraryEntries}
+          />
 
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Trip Summary</Text>
@@ -1075,21 +1242,27 @@ const PlanResult = () => {
             </View>
           </View>
 
-          <TouchableOpacity
-            activeOpacity={0.85}
-            disabled={isSaving}
-            onPress={handleSavePlan}
-            style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-          >
-            {isSaving ? (
-              <ActivityIndicator color={Colors.WHITE} size="small" />
-            ) : (
-              <>
-                <Ionicons color={Colors.WHITE} name="save-outline" size={20} />
-                <Text style={styles.saveButtonText}>Save Travel Plan</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          {isShowSaveButton && (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              disabled={isSaving}
+              onPress={handleSavePlan}
+              style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+            >
+              {isSaving ? (
+                <ActivityIndicator color={Colors.WHITE} size="small" />
+              ) : (
+                <>
+                  <Ionicons
+                    color={Colors.WHITE}
+                    name="save-outline"
+                    size={20}
+                  />
+                  <Text style={styles.saveButtonText}>Save Travel Plan</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
 
           <View style={{ height: 36 }} />
         </ScrollView>
@@ -1108,30 +1281,27 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 18,
-	paddingTop: 12 + statusBarHeight,
+    paddingTop: 12 + statusBarHeight,
     paddingBottom: 16,
     backgroundColor: Colors.WHITE,
     borderBottomWidth: 1,
     borderBottomColor: "#E2E8F0",
   },
   headerButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#9c9c9c1e",
   },
   headerTitle: {
-    flex: 1,
-    textAlign: "center",
+    marginLeft: 12,
     fontSize: 18,
     fontFamily: "inter-medium",
     color: Colors.BLACK,
-  },
-  headerPlaceholder: {
-    width: 36,
   },
   loadingState: {
     flex: 1,
@@ -1207,7 +1377,6 @@ const styles = StyleSheet.create({
     color: Colors.GRAY,
   },
   modifyButton: {
-    marginLeft: 12,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#E0F2F1",
@@ -1278,122 +1447,9 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
   },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  sectionHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  sectionIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#E0F2F1",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
-  },
   sectionTitle: {
     fontSize: 16,
     fontFamily: "inter-medium",
-    color: Colors.BLACK,
-  },
-  sectionMeta: {
-    fontSize: 13,
-    fontFamily: "inter-medium",
-    color: Colors.GREEN,
-  },
-  sectionPrimaryText: {
-    fontSize: 15,
-    fontFamily: "inter-medium",
-    color: Colors.BLACK,
-  },
-  sectionSecondaryText: {
-    marginTop: 4,
-    fontSize: 13,
-    fontFamily: "inter-regular",
-    color: Colors.GRAY,
-  },
-  sectionInfoGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 12,
-  },
-  infoCell: {
-    width: "48%",
-    marginBottom: 12,
-  },
-  infoLabel: {
-    fontSize: 12,
-    fontFamily: "inter-regular",
-    color: Colors.GRAY,
-  },
-  infoValue: {
-    fontSize: 13,
-    fontFamily: "inter-medium",
-    color: Colors.BLACK,
-    marginTop: 2,
-  },
-  emptyInnerState: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyInnerTitle: {
-    marginTop: 12,
-    fontSize: 14,
-    fontFamily: "inter-medium",
-    color: Colors.BLACK,
-  },
-  emptyInnerSubtitle: {
-    marginTop: 6,
-    fontSize: 12,
-    fontFamily: "inter-regular",
-    color: Colors.GRAY,
-    textAlign: "center",
-  },
-  itineraryBlock: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    padding: 14,
-    marginBottom: 12,
-    backgroundColor: "#F8FAFC",
-  },
-  itineraryHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  itineraryDayLabel: {
-    fontSize: 14,
-    fontFamily: "inter-bold",
-    color: Colors.GREEN,
-  },
-  itineraryDateText: {
-    fontSize: 12,
-    fontFamily: "inter-regular",
-    color: Colors.GRAY,
-  },
-  itineraryTitle: {
-    marginTop: 6,
-    fontSize: 14,
-    fontFamily: "inter-medium",
-    color: Colors.BLACK,
-  },
-  itinerarySummary: {
-    marginTop: 6,
-    fontSize: 13,
-    fontFamily: "inter-regular",
-    color: Colors.GRAY,
-  },
-  itineraryActivity: {
-    marginTop: 6,
-    fontSize: 13,
-    fontFamily: "inter-regular",
     color: Colors.BLACK,
   },
   summaryGrid: {

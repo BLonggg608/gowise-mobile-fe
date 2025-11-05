@@ -1,7 +1,8 @@
-import CreateNewPlanModel from "@/components/Plan/CreateNewPlan/CreateNewPlanModel";
+import CreateNewPlanModel from "@/components/Plan/CreateNewPlan/CreateNewPlanModal";
 import PlanCard, { PlanListItem, PlanStatus } from "@/components/Plan/PlanCard";
 import { Colors } from "@/constant/Colors";
 import { getUserIdFromToken } from "@/utils/tokenUtils";
+import { saveData } from "@/utils/localStorage";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { RelativePathString, useFocusEffect, useRouter } from "expo-router";
@@ -12,7 +13,6 @@ import {
   FlatList,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -259,7 +259,7 @@ const Plan = () => {
 
   const [userId, setUserId] = useState<string | null>(null);
   const [plans, setPlans] = useState<PlanListItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("all");
   const [sortBy, setSortBy] = useState<SortOption>("created");
   const [isLoading, setIsLoading] = useState(true);
@@ -441,9 +441,67 @@ const Plan = () => {
     [confirmDeletePlan]
   );
 
-  const handlePressPlan = useCallback(
-    (plan: PlanListItem) => {
-      router.push(`/plan/${plan.id}` as RelativePathString);
+  const handleOpenPlan = useCallback(
+    async (plan: PlanListItem) => {
+      try {
+        const planRaw = (plan.raw ?? {}) as Record<string, unknown>;
+        const planContentCandidate =
+          (planRaw["plan_content"] as Record<string, unknown> | undefined) ??
+          (planRaw["planContent"] as Record<string, unknown> | undefined);
+
+        const planData: Record<string, unknown> = planContentCandidate
+          ? { ...planContentCandidate }
+          : { ...planRaw };
+
+        if (Object.keys(planData).length === 0) {
+          Toast.show({
+            type: "error",
+            text1: "Không có dữ liệu kế hoạch",
+            text2: "Không thể mở kế hoạch này.",
+          });
+          return;
+        }
+
+        if (plan.id) {
+          if (!planData["plan_id"]) {
+            planData["plan_id"] = plan.id;
+          }
+
+          if (!planData["planId"]) {
+            planData["planId"] = plan.id;
+          }
+        }
+
+        if (!planData["title"]) {
+          planData["title"] = plan.title;
+        }
+
+        if (!planData["destination"]) {
+          planData["destination"] = plan.location;
+        }
+
+        if (!planData["status"]) {
+          planData["status"] = plan.status;
+        }
+
+        if (!planData["hasExistingPlan"]) {
+          planData["hasExistingPlan"] = true;
+        }
+
+        await saveData({ key: "travelPlanData", value: planData });
+
+        router.push({ pathname: "/plan/plan-result", params: { from: "open-plan" } });
+      } catch (err) {
+        console.error("[plan] openPlan error", err);
+        Toast.show({
+          type: "error",
+          text1: "Không thể mở kế hoạch",
+          text2:
+            err instanceof Error
+              ? err.message
+              : "Đã xảy ra lỗi, vui lòng thử lại sau.",
+        });
+      }
     },
     [router]
   );
@@ -458,10 +516,6 @@ const Plan = () => {
       text1: "Tính năng đang phát triển",
       text2: "Chúng tôi sẽ sớm hỗ trợ nhập kế hoạch.",
     });
-  }, []);
-
-  const handleClearSearch = useCallback(() => {
-    setSearchQuery("");
   }, []);
 
   const handleSubmitCreateNewPlan = useCallback(
@@ -561,7 +615,7 @@ const Plan = () => {
           ))}
         </View>
 
-        <View style={styles.searchContainer}>
+        {/* <View style={styles.searchContainer}>
           <Ionicons color={Colors.GRAY} name="search-outline" size={18} />
           <TextInput
             placeholder="Tìm kế hoạch theo tiêu đề hoặc địa điểm..."
@@ -578,8 +632,9 @@ const Plan = () => {
               <Ionicons color={Colors.GRAY} name="close-circle" size={18} />
             </TouchableOpacity>
           ) : null}
-        </View>
+        </View> */}
 
+        <Text style={styles.sectionTitle}>Trạng thái:</Text>
         <View style={styles.filtersRow}>
           {statusFilterOptions.map((option) => {
             const isActive = selectedStatus === option.value;
@@ -603,6 +658,7 @@ const Plan = () => {
           })}
         </View>
 
+        <Text style={styles.sectionTitle}>Sắp xếp theo:</Text>
         <View style={styles.sortRow}>
           {sortOptions.map((option) => {
             const isActive = sortBy === option.value;
@@ -628,10 +684,8 @@ const Plan = () => {
       </View>
     );
   }, [
-    handleClearSearch,
     handleCreatePlan,
     handleImportPlan,
-    searchQuery,
     selectedStatus,
     sortBy,
     stats.active,
@@ -710,7 +764,7 @@ const Plan = () => {
             plan={item}
             statusColors={planStatusColors}
             onDelete={handleDeletePlan}
-            onPress={handlePressPlan}
+            onPress={handleOpenPlan}
             viewMode="list"
           />
         )}
@@ -868,6 +922,12 @@ const styles = StyleSheet.create({
   clearSearchButton: {
     marginLeft: 8,
   },
+  sectionTitle: {
+    fontSize: 15,
+    fontFamily: "inter-medium",
+    color: Colors.GRAY,
+    marginBottom: 4,
+  },
   filtersRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -876,7 +936,7 @@ const styles = StyleSheet.create({
   filterChip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 18,
+    borderRadius: 12,
     backgroundColor: Colors.WHITE,
     borderWidth: 1,
     borderColor: "#E2E8F0",
@@ -898,25 +958,36 @@ const styles = StyleSheet.create({
   sortRow: {
     flexDirection: "row",
     flexWrap: "wrap",
+    justifyContent: "space-between",
     marginBottom: 12,
+    padding: 4,
+    // paddingVertical: 3,
+    borderColor: "#E2E8F0",
+    borderWidth: 1,
+    borderRadius: 12,
+    backgroundColor: Colors.WHITE,
   },
   sortOption: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    marginRight: 8,
-    backgroundColor: Colors.WHITE,
+    borderRadius: 10,
+    // borderWidth: 1,
+    // borderColor: "#E2E8F0",
+    // marginRight: 8,
+    // backgroundColor: Colors.WHITE,
+    flex: 1,
   },
   sortOptionActive: {
     borderColor: Colors.GREEN,
     backgroundColor: "rgba(13, 148, 136, 0.12)",
+    // add shadow for active sort option to make it floating
+    boxShadow: `1px 1px 2px rgba(34, 39, 39, 0.3)`,
   },
   sortOptionText: {
     fontSize: 13,
     fontFamily: "inter-medium",
-    color: Colors.GRAY,
+    color: Colors.GRAY + "70",
+    textAlign: "center",
   },
   sortOptionTextActive: {
     color: Colors.GREEN,

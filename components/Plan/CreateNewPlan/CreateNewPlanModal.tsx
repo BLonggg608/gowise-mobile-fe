@@ -186,7 +186,7 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
 
       await AsyncStorage.setItem("travelPlanData", JSON.stringify(dataToSend));
       console.log(dataToSend);
-      router.push("/plan/plan-result");
+      router.push({ pathname: "/plan/plan-result", params: { from: "create-new-plan" } });
       onClose();
     } catch (err) {
       const errorMessage =
