@@ -6,11 +6,11 @@ import { MultipleSelectList } from "react-native-dropdown-select-list";
 const ListInterests = [
   { key: "food", value: "Ẩm Thực" },
   { key: "nature", value: "Thiên Nhiên" },
-  { key: "mountain_climbing", value: "Leo núi" },
-  { key: "mountain_conquering", value: "Chinh phục núi" },
+  { key: "hiking", value: "Leo núi" },
+  { key: "mountain-climbing", value: "Chinh phục núi" },
   { key: "culture", value: "Văn hoá" },
   { key: "history", value: "Lịch sử" },
-  { key: "shopping", value: "Mua sắm" },
+  { key: "shop", value: "Mua sắm" },
   { key: "adventure", value: "Phiêu lưu" },
   { key: "entertainment", value: "Giải trí" },
 ];
@@ -34,7 +34,7 @@ const Step4 = ({
           setSelected={(val: string[]) => setInterests(val)}
           data={ListInterests}
           save="value"
-          onSelect={() => alert(interests)}
+          // onSelect={() => console.log(interests)}
           label="Categories"
           inputStyles={{ fontFamily: "inter-medium", color: Colors.BLACK }}
           dropdownTextStyles={{

@@ -9,12 +9,18 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Alert,
 } from "react-native";
 import { ProgressStep, ProgressSteps } from "react-native-progress-steps";
 import Step1 from "./Step/Step1";
 import Step2 from "./Step/Step2";
 import Step3 from "./Step/Step3";
 import Step4 from "./Step/Step4";
+import Constants from "expo-constants";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
+import LoadingModal from "@/components/utils/LoadingModal";
+import * as Location from "expo-location";
 
 interface CreateNewPlanModelProps {
   visible: boolean;
@@ -47,7 +53,18 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
   const [NumberOfParticipants, setNumberOfParticipants] = useState("");
   const [Budget, setBudget] = useState("");
   const [Destination, setDestination] = useState("");
-  const [Interests, setInterests] = useState<string[]>([]);
+  // Removed Interests state, using selectedInterests instead
+
+  // New states for API data and UI
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lon: number;
+  } | null>(null);
+  const [flightData, setFlightData] = useState<any>(null);
+  const [hotelData, setHotelData] = useState<any>(null);
+  const [itineraryData, setItineraryData] = useState<any>(null);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!visible) {
@@ -57,7 +74,7 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
       setBudget("");
       setDestination("");
       setCurrentStep(0);
-      setInterests([]);
+      // Removed setInterests
       setStartDate(
         new Date().toISOString().split("T")[0].split("-").reverse().join("/")
       );
@@ -94,25 +111,294 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
     }
   };
 
-  const handleSubmit = () => {
-    if (!type || !startDate || !endDate || !Budget) return; // Kiểm tra đầy đủ thông tin
-    // Calculate NumberOfDays
-    const start = new Date(startDate.split("/").reverse().join("-"));
-    const end = new Date(endDate.split("/").reverse().join("-"));
+  const handleSubmit = async () => {
+    const isValidForExistingPlan =
+      isHavePlan &&
+      Destination &&
+      startDate &&
+      endDate &&
+      NumberOfParticipants &&
+      Budget;
+    const isValidForNewPlan =
+      !isHavePlan && startDate && endDate && NumberOfParticipants && Budget;
+    if (!isValidForExistingPlan && !isValidForNewPlan) return;
 
-    setNumberOfDays(
-      ((end.getTime() - start.getTime()) / (1000 * 3600 * 24)).toString()
-    );
-    onSubmit({
-      type,
-      startDate,
-      endDate,
-      NumberOfDays,
-      NumberOfParticipants,
-      Budget,
-      Destination,
-    });
-    onClose();
+    setIsSubmitting(true);
+    try {
+      const location = await getUserLocation();
+      if (!location) throw new Error("Could not get user location");
+
+      const destination = isHavePlan
+        ? Destination
+        : getRandomDestination(location);
+      const tripDuration = Math.ceil(
+        (new Date(endDate.split("/").reverse().join("-")).getTime() -
+          new Date(startDate.split("/").reverse().join("-")).getTime()) /
+          (1000 * 60 * 60 * 24)
+      );
+      const interestsString = selectedInterests.join(", ");
+      const numericBudget = parseInt(Budget) || 500;
+      let budgetCategory = "moderate";
+      if (numericBudget >= 2000) budgetCategory = "high";
+      else if (numericBudget >= 500) budgetCategory = "moderate";
+      else budgetCategory = "low";
+
+      const [flight, hotel, itinerary] = await Promise.all([
+        fetchFlightData(
+          location,
+          destination,
+          startDate.split("/").reverse().join("-"),
+          endDate.split("/").reverse().join("-")
+        ),
+        fetchHotelData(
+          destination,
+          startDate.split("/").reverse().join("-"),
+          endDate.split("/").reverse().join("-"),
+          NumberOfParticipants
+        ),
+        fetchItineraryData(
+          destination,
+          tripDuration,
+          interestsString,
+          budgetCategory,
+          parseInt(NumberOfParticipants) || 2
+        ),
+      ]);
+
+      setFlightData(flight);
+      setHotelData(hotel);
+      setItineraryData(itinerary);
+
+      const dataToSend = {
+        hasExistingPlan: isHavePlan,
+        travelType: type,
+        destination,
+        startDate,
+        endDate,
+        participants: NumberOfParticipants,
+        budget: Budget,
+        flightData: flight,
+        hotelData: hotel,
+        itineraryData: itinerary,
+        selectedInterests,
+        userLocation: location,
+      };
+
+      await AsyncStorage.setItem("travelPlanData", JSON.stringify(dataToSend));
+      console.log(dataToSend);
+      router.push("/plan/plan-result");
+      onClose();
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Unknown error occurred";
+      Alert.alert("Error", errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // API Functions
+  const getUserLocation = async (): Promise<{
+    lat: number;
+    lon: number;
+  } | null> => {
+    try {
+      console.log("🌍 Getting user location...");
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.warn("❌ Location permission denied");
+        const defaultLocation = { lat: 10.7769, lon: 106.7009 };
+        console.log("📍 Using default location:", defaultLocation);
+        return defaultLocation;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const userLocation = {
+        lat: location.coords.latitude,
+        lon: location.coords.longitude,
+      };
+      console.log("✅ User location obtained:", userLocation);
+      return userLocation;
+    } catch (error) {
+      console.error("❌ Error getting location:", error);
+      const defaultLocation = { lat: 10.7769, lon: 106.7009 };
+      console.log("📍 Using default location after error:", defaultLocation);
+      return defaultLocation;
+    }
+  };
+
+  const fetchFlightData = async (
+    location: { lat: number; lon: number },
+    destination: string,
+    startDate: string,
+    endDate: string
+  ) => {
+    const requestData = {
+      departure_lat: location.lat,
+      departure_lon: location.lon,
+      arrival_city: destination,
+      outbound_date: startDate,
+      return_date: endDate,
+      sort_criteria: "score",
+      limit: 3,
+    };
+    try {
+      const response = await fetch(
+        `${Constants.expoConfig?.extra?.env?.BE_DOMAIN}:${Constants.expoConfig?.extra?.env?.BE_PORT}/flights/search`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestData),
+        }
+      );
+      if (response.ok || response.status === 400) {
+        const data = await response.json();
+        if (
+          response.status === 400 ||
+          (data.message &&
+            (data.message.includes("No flights found") ||
+              data.message.includes("Found 0 flights")))
+        ) {
+          return {
+            success: false,
+            message: data.message || "No flights found",
+            no_flights_found: true,
+            destination,
+          };
+        }
+        return data;
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching flight data:", error);
+      return null;
+    }
+  };
+
+  const fetchHotelData = async (
+    destination: string,
+    startDate: string,
+    endDate: string,
+    participants: string
+  ) => {
+    const requestData = {
+      location: destination,
+      check_in_date: startDate,
+      check_out_date: endDate,
+      adults: parseInt(participants) || 2,
+      limit: 5,
+    };
+    try {
+      const response = await fetch(
+        `${Constants.expoConfig?.extra?.env?.BE_DOMAIN}:${Constants.expoConfig?.extra?.env?.BE_PORT}/hotels/search`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestData),
+        }
+      );
+      if (response.ok || response.status === 400) {
+        const data = await response.json();
+        if (
+          response.status === 400 ||
+          (data.message &&
+            (data.message.includes("No hotels found") ||
+              data.message.includes("Found 0 hotels")))
+        ) {
+          return {
+            success: false,
+            message: data.message || "No hotels found",
+            no_hotels_found: true,
+            destination,
+          };
+        }
+        return data;
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching hotel data:", error);
+      return null;
+    }
+  };
+
+  const fetchItineraryData = async (
+    destination: string,
+    days: number,
+    interests: string,
+    budget: string,
+    groupSize: number
+  ) => {
+    const requestData = {
+      city: destination,
+      days,
+      interests,
+      budget,
+      group_size: groupSize,
+    };
+    try {
+      const response = await fetch(
+        `${Constants.expoConfig?.extra?.env?.BE_DOMAIN}:${Constants.expoConfig?.extra?.env?.BE_PORT}/agent/itinerary`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestData),
+        }
+      );
+      if (response.ok) {
+        return await response.json();
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching itinerary data:", error);
+      return null;
+    }
+  };
+
+  const getRandomDestination = (userLocation: {
+    lat: number;
+    lon: number;
+  }): string => {
+    const isInVietnam =
+      userLocation.lat >= 8.2 &&
+      userLocation.lat <= 23.4 &&
+      userLocation.lon >= 102.1 &&
+      userLocation.lon <= 109.5;
+    const domesticDestinations = [
+      "Ho Chi Minh City",
+      "Da Nang",
+      "Nha Trang",
+      "Hoi An",
+      "Ha Long",
+      "Phu Quoc",
+      "Da Lat",
+      "Can Tho",
+      "Hue",
+      "Sapa",
+    ];
+    const internationalDestinations = [
+      "Bangkok",
+      "Singapore",
+      "Kuala Lumpur",
+      "Jakarta",
+      "Manila",
+      "Seoul",
+      "Tokyo",
+      "Taipei",
+      "Hong Kong",
+      "Phnom Penh",
+    ];
+    let destinations: string[];
+    if (type === "domestic") {
+      destinations = isInVietnam
+        ? domesticDestinations
+        : ["Ho Chi Minh City", "Hanoi"];
+    } else {
+      destinations = internationalDestinations;
+    }
+    return destinations[Math.floor(Math.random() * destinations.length)];
   };
 
   return (
@@ -212,14 +498,18 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
               buttonPreviousText="Back"
               onPrevious={handleStepBack}
               onSubmit={handleSubmit}
-              buttonFinishDisabled={Interests.length === 0}
+              buttonFinishDisabled={selectedInterests.length === 0}
               buttonDisabledColor={Colors.GREEN + "80"}
             >
-              <Step4 interests={Interests} setInterests={setInterests} />
+              <Step4
+                interests={selectedInterests}
+                setInterests={setSelectedInterests}
+              />
             </ProgressStep>
           </ProgressSteps>
         </KeyboardAvoidingView>
       </View>
+      <LoadingModal visible={isSubmitting} />
     </Modal>
   );
 };

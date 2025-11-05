@@ -45,6 +45,10 @@ export default {
     },
     extra: {
       env: {
+        // be domain
+        BE_DOMAIN: process.env.BE_DOMAIN,
+        BE_PORT: process.env.BE_PORT,
+
         // auth
         SIGN_IN_URL: process.env.SIGN_IN_URL,
         SIGN_UP_URL: process.env.SIGN_UP_URL,
