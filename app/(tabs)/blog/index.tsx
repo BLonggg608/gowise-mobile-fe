@@ -122,13 +122,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-
     paddingTop: statusBarHeight + 10,
     paddingBottom: 16,
     paddingHorizontal: 18,
     backgroundColor: Colors.WHITE,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#E2E8F0",
   },
   headerTitle: {
     fontSize: 22,

@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     backgroundColor: Colors.WHITE,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#E2E8F0",
   },
   headerBackBtn: {
     width: 32,

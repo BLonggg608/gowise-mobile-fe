@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     paddingHorizontal: 18,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#E2E8F0",
   },
   sliderTitle: {
     fontSize: 18,

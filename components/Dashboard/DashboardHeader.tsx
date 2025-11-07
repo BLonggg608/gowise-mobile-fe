@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: Colors.WHITE,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#E2E8F0",
   },
   header: {
     width: "100%",

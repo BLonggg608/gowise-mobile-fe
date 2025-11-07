@@ -42,12 +42,31 @@ const TabLayout = () => {
         }}
       />
       <Tabs.Screen
+        name="gallery"
+        options={{
+          tabBarLabel: "Gallery",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="images-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="achievement"
+        options={{
+          tabBarLabel: "Achievement",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="ribbon-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="fund"
         options={{
           tabBarLabel: "Fund",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="wallet-outline" color={color} size={size} />
           ),
+          href: null,
         }}
       />
       <Tabs.Screen

@@ -541,7 +541,8 @@ const Plan = () => {
     > = {
       total: {
         icon: "folder-open-outline",
-        background: "#F8FAFC",
+        // background: "#F8FAFC",
+        background: Colors.WHITE,
         iconBackground: "#E2E8F0",
         iconColor: Colors.GRAY,
       },
@@ -771,7 +772,7 @@ const Plan = () => {
         showsVerticalScrollIndicator={false}
       />
 
-      <View style={styles.fabContainer}>
+      {/* <View style={styles.fabContainer}>
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => router.push("/setting" as RelativePathString)}
@@ -786,7 +787,7 @@ const Plan = () => {
         >
           <Ionicons color={Colors.WHITE} name="add" size={24} />
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       <CreateNewPlanModel
         onClose={() => setIsCreatePlanModalVisible(false)}

@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     backgroundColor: Colors.WHITE,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#E2E8F0",
   },
   headerIconBtn: {
     marginRight: 12,
