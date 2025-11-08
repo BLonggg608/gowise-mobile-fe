@@ -68,9 +68,6 @@ const Blog = () => {
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>Travel Blog</Text>
-          <Text style={styles.headerSubtitle}>
-            Discover amazing travel stories and tips
-          </Text>
         </View>
         {/* <View style={styles.headerIcons}>
           <TouchableOpacity style={styles.headerActionIcon}>
@@ -81,6 +78,10 @@ const Blog = () => {
           </TouchableOpacity>
         </View> */}
       </View>
+
+      <Text style={styles.headerSubtitle}>
+        Discover amazing travel stories and tips
+      </Text>
 
       {/* Blogs List */}
       <FlatList
@@ -135,10 +136,11 @@ const styles = StyleSheet.create({
     color: Colors.BLACK,
   },
   headerSubtitle: {
+    paddingHorizontal: 18,
     fontSize: 14,
     fontFamily: "inter-regular",
     color: Colors.GRAY,
-    marginTop: 2,
+    marginTop: 18,
   },
   headerIcons: {
     flexDirection: "row",

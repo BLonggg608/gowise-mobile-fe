@@ -333,7 +333,6 @@ export default GalleryScreen;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#F1F5F9",
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -343,7 +342,6 @@ const styles = StyleSheet.create({
     paddingTop: statusBarHeight + 12,
     paddingBottom: 16,
     paddingHorizontal: 18,
-    marginBottom: 16,
     backgroundColor: Colors.WHITE,
     borderBottomWidth: 1,
     borderBottomColor: "#E2E8F0",
@@ -360,7 +358,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "inter-regular",
     color: Colors.GRAY,
-    marginBottom: 16,
+    marginVertical: 16,
   },
   uploadButton: {
     flexDirection: "row",
@@ -380,7 +378,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 24,
-    gap: 12
+    gap: 12,
   },
   statCard: {
     flex: 1,
@@ -401,7 +399,7 @@ const styles = StyleSheet.create({
     fontFamily: "inter-regular",
     color: Colors.GRAY,
     marginBottom: 6,
-    width: '90%',
+    width: "90%",
   },
   statValue: {
     fontSize: 22,

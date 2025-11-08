@@ -803,7 +803,6 @@ export default Plan;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
   },
   header: {
     paddingTop: statusBarHeight + 12,
