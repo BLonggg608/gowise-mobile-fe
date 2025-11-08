@@ -1,5 +1,7 @@
 import "dotenv/config";
 
+console.log("BE_DOMAIN:", process.env.BE_DOMAIN);
+
 export default {
   expo: {
     name: "GOWISE",
@@ -14,6 +16,7 @@ export default {
       supportsTablet: true,
     },
     android: {
+      package: "com.blonggg608.gowise",
       adaptiveIcon: {
         // foregroundImage: "./assets/images/adaptive-icon.png",
         // backgroundColor: "#ffffff",
@@ -44,6 +47,9 @@ export default {
       typedRoutes: true,
     },
     extra: {
+      eas: {
+        projectId: "ed5ac50a-b592-4eed-a0ff-3cffec08bd45",
+      },
       env: {
         // be domain
         BE_DOMAIN: process.env.BE_DOMAIN,

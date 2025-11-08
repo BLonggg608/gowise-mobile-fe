@@ -55,7 +55,7 @@ const SignIn = () => {
     setLoading(true);
 
     // call api to sign in
-    // console.log(Constants.expoConfig?.extra?.env.SIGN_IN_API_URL);
+    // console.log(Constants.expoConfig?.extra?.env.SIGN_IN_URL);
     try {
       const response = await fetch(
         Constants.expoConfig?.extra?.env.SIGN_IN_URL as string,

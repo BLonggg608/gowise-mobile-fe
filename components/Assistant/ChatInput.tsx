@@ -7,23 +7,40 @@ export type ChatInputProps = {
   value: string;
   onChange: (text: string) => void;
   onSend: () => void;
+  disabled?: boolean;
+  sendDisabled?: boolean;
 };
 
-const ChatInput = ({ value, onChange, onSend }: ChatInputProps) => (
-  <View style={styles.inputRow}>
-    <TextInput
-      style={styles.input}
-      value={value}
-      onChangeText={onChange}
-      placeholder="Nhập tin nhắn..."
-      placeholderTextColor={Colors.GRAY}
-      multiline
-    />
-    <TouchableOpacity style={styles.sendBtn} onPress={onSend}>
-      <Ionicons name="send" size={22} color="#fff" />
-    </TouchableOpacity>
-  </View>
-);
+const ChatInput = ({
+  value,
+  onChange,
+  onSend,
+  disabled = false,
+  sendDisabled,
+}: ChatInputProps) => {
+  const isSendDisabled = Boolean(sendDisabled ?? disabled);
+
+  return (
+    <View style={styles.inputRow}>
+      <TextInput
+        style={styles.input}
+        value={value}
+        onChangeText={onChange}
+        placeholder="Nhập tin nhắn..."
+        placeholderTextColor={Colors.GRAY}
+        multiline
+        editable={!disabled}
+      />
+      <TouchableOpacity
+        style={[styles.sendBtn, isSendDisabled && { opacity: 0.5 }]}
+        onPress={onSend}
+        disabled={isSendDisabled}
+      >
+        <Ionicons name="send" size={22} color="#fff" />
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 export default ChatInput;
 
