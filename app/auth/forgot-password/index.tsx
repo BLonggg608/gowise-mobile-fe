@@ -67,14 +67,14 @@ const ForgotPassword = () => {
       if (response.ok) {
         setPendingToast({
           type: "success",
-          text1: "Request Successful",
-          text2: data.message || "Please check your email for instructions!",
+          text1: "Yêu cầu thành công",
+          text2: data.message || "Vui lòng kiểm tra email để xem hướng dẫn!",
         });
       } else {
         setPendingToast({
           type: "error",
-          text1: "Request Failed",
-          text2: data.message || "Please try again later.",
+          text1: "Yêu cầu thất bại",
+          text2: data.message || "Vui lòng thử lại sau.",
         });
         return;
       }
@@ -82,8 +82,8 @@ const ForgotPassword = () => {
       setLoading(false);
       setPendingToast({
         type: "error",
-        text1: "Server Error",
-        text2: "Please try again later.",
+        text1: "Lỗi máy chủ",
+        text2: "Vui lòng thử lại sau.",
       });
       console.error(error);
       return;
@@ -127,14 +127,14 @@ const ForgotPassword = () => {
               source={require("../../../assets/images/gowise_logo.png")}
             />
 
-            <Text style={styles.title}>Forgot Password</Text>
+            <Text style={styles.title}>Quên mật khẩu</Text>
             <Text style={styles.description}>
-              Please enter your email to reset the password
+              Vui lòng nhập email để đặt lại mật khẩu
             </Text>
 
             <View style={styles.loginFormContainer}>
               {/* Email Input */}
-              <Text style={styles.label}>Email Address</Text>
+              <Text style={styles.label}>Địa chỉ email</Text>
               <View style={styles.input}>
                 <Ionicons
                   style={{ marginVertical: "auto" }}
@@ -144,7 +144,7 @@ const ForgotPassword = () => {
                 />
                 <TextInput
                   style={styles.inputText}
-                  placeholder="Enter your email"
+                  placeholder="Nhập email của bạn"
                   placeholderTextColor={"#9CA3AF"}
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -165,7 +165,7 @@ const ForgotPassword = () => {
                     color: Colors.WHITE,
                   }}
                 >
-                  Reset Password
+                  Đặt lại mật khẩu
                 </Text>
               </TouchableOpacity>
             </View>

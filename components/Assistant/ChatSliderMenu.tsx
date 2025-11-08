@@ -48,7 +48,7 @@ const SliderMenu = ({
       )}
       <Animated.View style={[styles.slider, { width: sliderWidth }]}>
         <View style={styles.sliderHeader}>
-          <Text style={styles.sliderTitle}>Select a Plan</Text>
+          <Text style={styles.sliderTitle}>Chọn cuộc trò chuyện</Text>
           <TouchableOpacity onPress={onClose} style={styles.sliderCloseBtn}>
             <Ionicons name="close" size={22} color={Colors.GRAY} />
           </TouchableOpacity>

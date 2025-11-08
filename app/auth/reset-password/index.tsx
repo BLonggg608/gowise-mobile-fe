@@ -47,8 +47,8 @@ const ResetPassword = () => {
     if (password !== confirmPassword) {
       setPendingToast({
         type: "error",
-        text1: "Update Failed",
-        text2: "Passwords do not match",
+        text1: "Cập nhật thất bại",
+        text2: "Mật khẩu không trùng khớp",
       });
       return;
     }
@@ -81,14 +81,14 @@ const ResetPassword = () => {
       if (response.ok) {
         setPendingToast({
           type: "success",
-          text1: "Reset Successful",
-          text2: data.message || "Your password has been updated!",
+          text1: "Đặt lại thành công",
+          text2: data.message || "Mật khẩu của bạn đã được cập nhật!",
         });
       } else {
         setPendingToast({
           type: "error",
-          text1: "Reset Failed",
-          text2: data.message || "Please try again later.",
+          text1: "Đặt lại thất bại",
+          text2: data.message || "Vui lòng thử lại sau.",
         });
         return;
       }
@@ -96,8 +96,8 @@ const ResetPassword = () => {
       setLoading(false);
       setPendingToast({
         type: "error",
-        text1: "Server Error",
-        text2: "Please try again later.",
+        text1: "Lỗi máy chủ",
+        text2: "Vui lòng thử lại sau.",
       });
       console.error(error);
       return;
@@ -138,14 +138,14 @@ const ResetPassword = () => {
               source={require("../../../assets/images/gowise_logo.png")}
             />
 
-            <Text style={styles.title}>Set New Password</Text>
+            <Text style={styles.title}>Tạo mật khẩu mới</Text>
             <Text style={styles.description}>
-              Create a new password. Ensure it differs from previous ones
+              Tạo mật khẩu mới khác với những mật khẩu trước đó
             </Text>
 
             <View style={styles.loginFormContainer}>
               {/* Password */}
-              <Text style={[styles.label, { marginTop: 16 }]}>Password</Text>
+              <Text style={[styles.label, { marginTop: 16 }]}>Mật khẩu</Text>
               <View style={styles.input}>
                 <Ionicons
                   style={{ marginVertical: "auto" }}
@@ -155,7 +155,7 @@ const ResetPassword = () => {
                 />
                 <TextInput
                   style={styles.inputText}
-                  placeholder="Enter your password"
+                  placeholder="Nhập mật khẩu của bạn"
                   placeholderTextColor={"#9CA3AF"}
                   secureTextEntry={unhidePassword}
                   autoCapitalize="none"
@@ -175,7 +175,7 @@ const ResetPassword = () => {
 
               {/* Confirm Password */}
               <Text style={[styles.label, { marginTop: 16 }]}>
-                Confirm Password
+                Xác nhận mật khẩu
               </Text>
               <View style={styles.input}>
                 <Ionicons
@@ -186,7 +186,7 @@ const ResetPassword = () => {
                 />
                 <TextInput
                   style={styles.inputText}
-                  placeholder="Enter your password"
+                  placeholder="Nhập mật khẩu của bạn"
                   placeholderTextColor={"#9CA3AF"}
                   secureTextEntry={unhidePassword}
                   autoCapitalize="none"
@@ -220,7 +220,7 @@ const ResetPassword = () => {
                     color: Colors.WHITE,
                   }}
                 >
-                  Update Password
+                  Cập nhật mật khẩu
                 </Text>
               </TouchableOpacity>
             </View>

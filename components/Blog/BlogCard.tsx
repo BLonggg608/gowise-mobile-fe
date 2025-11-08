@@ -8,7 +8,7 @@ type BlogType = {
   title: string;
   subtitle: string;
   image: any;
-  readTime: string;
+  // readTime: string;
   date: string;
   likes: number;
   views: number;
@@ -37,17 +37,17 @@ const BlogCard = ({ blog }: { blog: BlogType }) => {
         {/* Meta Info */}
         <View style={styles.metaContainer}>
           <View style={styles.cardMetaRow}>
-            <Text style={styles.cardMeta}>
-              <Ionicons name="time-outline" /> {blog.readTime}
-            </Text>
-            <Text style={styles.cardMeta}> • {blog.date}</Text>
+            {/* <Text style={styles.cardMeta}>
+               {blog.readTime}
+            </Text> */}
+            <Text style={styles.cardMeta}><Ionicons name="time-outline" /> {blog.date}</Text>
           </View>
           <View style={styles.cardStatsRow}>
             <Text style={[styles.cardStat, { marginRight: 8 }]}>
-              <Ionicons name="heart-outline" /> {blog.likes}
+              <Ionicons name="heart-outline" /> {blog.likes} lượt thích
             </Text>
             <Text style={styles.cardStat}>
-              <Ionicons name="eye-outline" /> {blog.views}
+              <Ionicons name="eye-outline" /> {blog.views} lượt xem
             </Text>
           </View>
         </View>

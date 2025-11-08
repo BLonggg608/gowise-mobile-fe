@@ -11,26 +11,26 @@ import {
   View,
 } from "react-native";
 
-// Dummy chat data, replace with API later
+// Dữ liệu chat mẫu, thay thế bằng API sau
 const initialChats = [
   {
     id: "general",
-    title: "General Chat",
-    subtitle: "General travel assistance",
+    title: "Trò chuyện chung",
+    subtitle: "Hỗ trợ du lịch tổng quát",
   },
   {
     id: "tokyo",
-    title: "Tokyo Adventure",
-    subtitle: "Japan",
+    title: "Khám phá Tokyo",
+    subtitle: "Nhật Bản",
   },
   {
     id: "europe",
-    title: "European Explorer",
-    subtitle: "Europe",
+    title: "Châu Âu phiêu lưu ký",
+    subtitle: "Châu Âu",
   },
   {
     id: "bali",
-    title: "Bali Retreat",
+    title: "Kỳ nghỉ Bali",
     subtitle: "Indonesia",
   },
 ];
@@ -54,44 +54,44 @@ const Assistant = () => {
       {
         id: "m1",
         sender: "assistant" as "assistant",
-        text: "Hello! I'm your AI Travel Assistant. How can I help you plan your next adventure?",
-        time: "10:30 AM",
+        text: "Xin chào! Tôi là Trợ lý Du lịch AI của bạn. Tôi có thể giúp gì cho chuyến đi sắp tới của bạn?",
+        time: "10:30",
       },
     ],
     tokyo: [
       {
         id: "m1",
         sender: "assistant" as "assistant",
-        text: "Hello! I'm your AI Travel Assistant. How can I help you plan your next adventure?",
-        time: "10:30 AM",
+        text: "Xin chào! Tôi là Trợ lý Du lịch AI của bạn. Tôi có thể giúp gì cho chuyến đi sắp tới của bạn?",
+        time: "10:30",
       },
       {
         id: "m2",
         sender: "user" as "user",
-        text: "I want to plan a trip to Tokyo for 7 days. What are the must-visit places?",
-        time: "10:32 AM",
+        text: "Tôi muốn lên kế hoạch đi Tokyo 7 ngày. Những địa điểm nào nên ghé thăm?",
+        time: "10:32",
       },
       {
         id: "m3",
         sender: "assistant" as "assistant",
-        text: "Great choice! For a 7-day Tokyo trip, I recommend visiting:\n\n• Senso-ji Temple in Asakusa\n• Shibuya Crossing\n• Tokyo Skytree\n• Meiji Shrine\n• Tsukiji Fish Market\n• Harajuku District\n• Imperial Palace Gardens\n\nWould you like me to create a detailed itinerary for each day?",
-        time: "10:33 AM",
+        text: "Lựa chọn tuyệt vời! Cho chuyến đi Tokyo 7 ngày, tôi gợi ý bạn nên ghé thăm:\n\n• Chùa Senso-ji ở Asakusa\n• Ngã tư Shibuya\n• Tháp Tokyo Skytree\n• Đền Meiji\n• Chợ cá Tsukiji\n• Khu Harajuku\n• Vườn Hoàng gia\n\nBạn có muốn tôi lên lịch trình chi tiết cho từng ngày không?",
+        time: "10:33",
       },
     ],
     europe: [
       {
         id: "m1",
         sender: "assistant" as "assistant",
-        text: "Hello! I'm your AI Travel Assistant. How can I help you plan your next adventure?",
-        time: "10:30 AM",
+        text: "Xin chào! Tôi là Trợ lý Du lịch AI của bạn. Tôi có thể giúp gì cho chuyến đi sắp tới của bạn?",
+        time: "10:30",
       },
     ],
     bali: [
       {
         id: "m1",
         sender: "assistant" as "assistant",
-        text: "Hello! I'm your AI Travel Assistant. How can I help you plan your next adventure?",
-        time: "10:30 AM",
+        text: "Xin chào! Tôi là Trợ lý Du lịch AI của bạn. Tôi có thể giúp gì cho chuyến đi sắp tới của bạn?",
+        time: "10:30",
       },
     ],
   });

@@ -74,14 +74,14 @@ const VerifyOTP = () => {
       if (response.ok) {
         setPendingToast({
           type: "success",
-          text1: "Your OTP is verified",
-          text2: data.message || "You can now reset your password!",
+          text1: "OTP của bạn đã được xác minh",
+          text2: data.message || "Bạn có thể đặt lại mật khẩu ngay bây giờ!",
         });
       } else {
         setPendingToast({
           type: "error",
-          text1: "Verification Failed",
-          text2: data.message || "Please try again later.",
+          text1: "Xác minh thất bại",
+          text2: data.message || "Vui lòng thử lại sau.",
         });
         return;
       }
@@ -89,8 +89,8 @@ const VerifyOTP = () => {
       setLoading(false);
       setPendingToast({
         type: "error",
-        text1: "Server Error",
-        text2: "Please try again later.",
+        text1: "Lỗi máy chủ",
+        text2: "Vui lòng thử lại sau.",
       });
       console.error(error);
       return;
@@ -133,9 +133,9 @@ const VerifyOTP = () => {
               source={require("../../../assets/images/gowise_logo.png")}
             />
 
-            <Text style={styles.title}>Verify OTP</Text>
+            <Text style={styles.title}>Xác minh OTP</Text>
             <Text style={styles.description}>
-              Please enter the OTP sent to your email
+              Vui lòng nhập mã OTP được gửi tới email của bạn
             </Text>
 
             <View style={styles.loginFormContainer}>
@@ -178,16 +178,16 @@ const VerifyOTP = () => {
                     if (response.ok) {
                       Toast.show({
                         type: "success",
-                        text1: "Request Successful",
+                        text1: "Yêu cầu thành công",
                         text2:
                           data.message ||
-                          "Please check your email for instructions!",
+                          "Vui lòng kiểm tra email để xem hướng dẫn!",
                       });
                     } else {
                       Toast.show({
                         type: "error",
-                        text1: "Request Failed",
-                        text2: data.message || "Please try again later.",
+                        text1: "Yêu cầu thất bại",
+                        text2: data.message || "Vui lòng thử lại sau.",
                       });
                       return;
                     }
@@ -197,7 +197,7 @@ const VerifyOTP = () => {
                   }
                 }}
               >
-                <Text style={styles.label}>Resend OTP</Text>
+                <Text style={styles.label}>Gửi lại OTP</Text>
               </TouchableOpacity>
 
               {/* Verify Code Button */}
@@ -216,7 +216,7 @@ const VerifyOTP = () => {
                     color: Colors.WHITE,
                   }}
                 >
-                  Verify Code
+                  Xác nhận mã
                 </Text>
               </TouchableOpacity>
             </View>

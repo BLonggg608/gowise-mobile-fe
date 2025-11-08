@@ -9,21 +9,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const slides = [
   {
     image: require("./../assets/images/StartPage/step1.png"),
-    title: "Find your perfect place to stay!",
+    title: "Tìm nơi lưu trú hoàn hảo cho bạn!",
     description:
-      "Discover amazing destinations and accommodations tailored to your preferences with AI-powered recommendations.",
+      "Khám phá điểm đến và chỗ ở tuyệt vời được cá nhân hóa nhờ gợi ý từ AI.",
   },
   {
     image: require("./../assets/images/StartPage/step2.png"),
-    title: "Automated Itinerary Creation!",
+    title: "Tự động tạo lịch trình!",
     description:
-      "Effortlessly create personalized travel itineraries with our smart planning tools.",
+      "Lên lịch trình du lịch cá nhân hóa thật dễ dàng với công cụ lập kế hoạch thông minh.",
   },
   {
     image: require("./../assets/images/StartPage/step3.png"),
-    title: "Start your journey!",
+    title: "Bắt đầu hành trình!",
     description:
-      "Sign in to unlock personalized features and create your own travel itinerary.",
+      "Đăng nhập để mở khóa các tính năng cá nhân hóa và tạo lịch trình của riêng bạn.",
   },
 ];
 
@@ -77,10 +77,10 @@ const OnBoardingScreen = () => {
       bottomButton={true}
       showSkipButton={true}
       showPrevButton={true}
-      renderNextButton={() => nextDoneButton("Continue")}
-      renderSkipButton={() => skipPrevButton("Skip for now")}
-      renderPrevButton={() => skipPrevButton("Back")}
-      renderDoneButton={() => nextDoneButton("Sign In")}
+      renderNextButton={() => nextDoneButton("Tiếp tục")}
+      renderSkipButton={() => skipPrevButton("Bỏ qua tạm thời")}
+      renderPrevButton={() => skipPrevButton("Quay lại")}
+      renderDoneButton={() => nextDoneButton("Đăng nhập")}
       onDone={() => router.push("/auth/sign-in")}
       contentContainerStyle={styles.sliderContentContainer}
     />
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,
-    paddingTop: '30%',
+    paddingTop: "30%",
   },
   contentContainer: {
     flex: 1,

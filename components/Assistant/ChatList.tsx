@@ -19,6 +19,10 @@ const ChatList = ({ messages }: ChatListProps) => {
         flexGrow: 1,
       }}
       showsVerticalScrollIndicator={false}
+      // Không có tin nhắn
+      ListEmptyComponent={() => (
+        <>{/* Có thể thêm thông báo tiếng Việt ở đây nếu muốn */}</>
+      )}
     />
   );
 };

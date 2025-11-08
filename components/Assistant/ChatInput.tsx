@@ -15,7 +15,7 @@ const ChatInput = ({ value, onChange, onSend }: ChatInputProps) => (
       style={styles.input}
       value={value}
       onChangeText={onChange}
-      placeholder="Type your message..."
+      placeholder="Nhập tin nhắn..."
       placeholderTextColor={Colors.GRAY}
       multiline
     />

@@ -18,26 +18,26 @@ const securityOptions = [
   {
     id: "password",
     icon: "lock-closed-outline",
-    title: "Password",
-    desc: "Last changed 3 months ago",
-    action: "Change",
-    onPress: () => {}, // TODO: Implement change password
+    title: "Mật khẩu",
+    desc: "Đổi lần cuối 3 tháng trước",
+    action: "Đổi",
+    onPress: () => {},
   },
   {
     id: "2fa",
     icon: "phone-portrait-outline",
-    title: "Two-Factor Authentication",
-    desc: "Add an extra layer of security",
-    action: "Enable",
-    onPress: () => {}, // TODO: Implement enable 2FA
+    title: "Xác thực 2 lớp",
+    desc: "Thêm lớp bảo mật cho tài khoản",
+    action: "Bật",
+    onPress: () => {},
   },
   {
     id: "api",
     icon: "key-outline",
-    title: "API Keys",
-    desc: "Manage your API access",
-    action: "Manage",
-    onPress: () => {}, // TODO: Implement manage API keys
+    title: "API Key",
+    desc: "Quản lý quyền truy cập API",
+    action: "Quản lý",
+    onPress: () => {},
   },
 ];
 
@@ -54,7 +54,7 @@ const AccountSecurity = () => {
         >
           <Ionicons name="arrow-back" size={22} color={Colors.BLACK} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Account & Security</Text>
+        <Text style={styles.headerTitle}>Tài khoản & Bảo mật</Text>
       </View>
 
       {/* Security options list */}

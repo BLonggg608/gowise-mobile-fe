@@ -18,31 +18,31 @@ const settingsList = [
   {
     id: "profile",
     icon: "person-outline",
-    label: "Profile",
+    label: "Hồ sơ cá nhân",
     route: "/setting/profile",
   },
   {
     id: "account-security",
     icon: "shield-outline",
-    label: "Account & Security",
+    label: "Tài khoản & Bảo mật",
     route: "/setting/account-security",
   },
   {
     id: "preferences",
     icon: "settings-outline",
-    label: "Preferences",
+    label: "Tuỳ chỉnh",
     route: "/setting/preferences",
   },
   // {
   //   id: "payment-methods",
   //   icon: "card-outline",
-  //   label: "Payment Methods",
+  //   label: "Phương thức thanh toán",
   //   route: "/setting/payment-methods",
   // },
   {
     id: "help-support",
     icon: "help-outline",
-    label: "Help & Support",
+    label: "Hỗ trợ & Trợ giúp",
     route: "/setting/help-support",
   },
 ];
@@ -59,7 +59,7 @@ const Setting = () => {
     <View style={{ flex: 1 }}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={styles.headerTitle}>Cài đặt</Text>
       </View>
 
       <ScrollView
@@ -99,7 +99,7 @@ const Setting = () => {
             color={Colors.WHITE}
             style={{ marginRight: 8 }}
           />
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text style={styles.logoutText}>Đăng xuất</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

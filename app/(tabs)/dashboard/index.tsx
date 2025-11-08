@@ -1,20 +1,22 @@
 import UpdateInfo from "@/components/Dashboard/UpdateInfo";
 import { Colors } from "@/constant/Colors";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { RelativePathString, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { useRouter } from "expo-router";
+import React, { useEffect, useState, useCallback } from "react";
 import {
-  Image,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { getUserIdFromToken } from "@/utils/tokenUtils";
 import Constants from "expo-constants";
 import DashboardHeader from "@/components/Dashboard/DashboardHeader";
 import { deleteSecureData } from "@/utils/storage";
+import RecentPlanCard from "@/components/Dashboard/RecentPlanCard";
+import { saveData } from "@/utils/localStorage";
+import { Toast } from "toastify-react-native";
 
 export type userInfoType = {
   firstName: string;
@@ -22,47 +24,165 @@ export type userInfoType = {
   isPremium: boolean;
 } | null;
 
-const initialPlans = [
-  {
-    id: "1",
-    title: "Tokyo Adventure",
-    subtitle: "Japan • 7 days",
-    status: "Active",
-    progress: 0.85,
-    image: require("@/assets/images/PlanImage/1.jpg"),
-  },
-  {
-    id: "2",
-    title: "European Explorer",
-    subtitle: "Europe • 14 days",
-    status: "Draft",
-    progress: 0.6,
-    image: require("@/assets/images/PlanImage/2.jpg"),
-  },
-  {
-    id: "3",
-    title: "Bali Retreat",
-    subtitle: "Indonesia • 10 days",
-    status: "Completed",
-    progress: 1,
-    image: require("@/assets/images/PlanImage/3.jpg"),
-  },
-];
+// Plan API types and helpers (reuse from plan screen)
+type ApiPlan = {
+  _id?: { $oid?: string };
+  id?: string;
+  plan_id?: string;
+  planId?: string;
+  planID?: string;
+  created_at?: string;
+  createdAt?: string;
+  status?: string;
+  plan_content?: Record<string, unknown>;
+  planContent?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
+type DashboardPlan = {
+  id: string;
+  title: string;
+  subtitle: string;
+  location: string;
+  durationInDays: number;
+  status: string;
+  progress: number;
+  image?: any;
+  createdValue: number;
+  raw: ApiPlan;
+};
+
+const getPlanIdentifier = (plan: ApiPlan) => {
+  const content =
+    (plan.plan_content as Record<string, unknown> | undefined) ??
+    (plan.planContent as Record<string, unknown> | undefined) ??
+    {};
+  return (
+    plan._id?.$oid ||
+    (typeof plan.plan_id === "string" ? plan.plan_id : undefined) ||
+    (typeof plan.planId === "string" ? plan.planId : undefined) ||
+    (typeof plan.planID === "string" ? plan.planID : undefined) ||
+    (typeof plan.id === "string" ? plan.id : undefined) ||
+    (typeof content?.plan_id === "string" ? content.plan_id : undefined) ||
+    (typeof content?.planId === "string" ? content.planId : undefined)
+  );
+};
+
+const parseDateValue = (value?: unknown) => {
+  if (!value || typeof value !== "string") return null;
+  if (value.includes("/")) {
+    const parts = value.split("/").map((part) => Number(part));
+    if (parts.length === 3) {
+      const [day, month, year] = parts;
+      const parsed = new Date(year, month - 1, day);
+      if (!Number.isNaN(parsed.getTime())) return parsed;
+    }
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed;
+};
+
+const buildApiUrl = (path: string) => {
+  const domain = Constants.expoConfig?.extra?.env?.BE_DOMAIN ?? "";
+  const port = Constants.expoConfig?.extra?.env?.BE_PORT ?? "";
+  if (!domain) {
+    throw new Error("Thiếu cấu hình máy chủ");
+  }
+  const trimmedDomain = domain.endsWith("/") ? domain.slice(0, -1) : domain;
+  const formattedPath = path.startsWith("/") ? path : `/${path}`;
+  return port
+    ? `${trimmedDomain}:${port}${formattedPath}`
+    : `${trimmedDomain}${formattedPath}`;
+};
+
+const transformPlan = (plan: ApiPlan): DashboardPlan | null => {
+  const content =
+    (plan.plan_content as Record<string, unknown> | undefined) ??
+    (plan.planContent as Record<string, unknown> | undefined) ??
+    {};
+  const id = getPlanIdentifier(plan);
+  if (!id) return null;
+  const destination =
+    (content.destination as string | undefined) ||
+    (content.location as string | undefined) ||
+    (plan.destination as string | undefined) ||
+    "Không xác định";
+  const startDateRaw =
+    (content.startDate as string | undefined) ||
+    (content.start_date as string | undefined);
+  const endDateRaw =
+    (content.endDate as string | undefined) ||
+    (content.end_date as string | undefined);
+  const startDate = parseDateValue(startDateRaw);
+  const endDate = parseDateValue(endDateRaw);
+  const durationInDays =
+    startDate && endDate
+      ? Math.max(
+          1,
+          Math.ceil(
+            (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+          )
+        )
+      : 0;
+  const subtitle = `${destination} • ${
+    durationInDays > 0 ? durationInDays + " ngày" : "Không rõ"
+  }`;
+  const statusRaw = (plan.status || content.status || "active") as string;
+  let status = "Đang hoạt động";
+  if (statusRaw.toLowerCase().includes("draft")) status = "Bản nháp";
+  else if (statusRaw.toLowerCase().includes("complete")) status = "Hoàn thành";
+  // Progress: completed = 1, draft = 0.6, active = 0.85 (demo)
+  let progress = 0.85;
+  if (status === "Hoàn thành") progress = 1;
+  else if (status === "Bản nháp") progress = 0.6;
+  // Image: lấy từ content nếu có, hoặc null
+  let image = undefined;
+  if (content.image) image = content.image;
+  // createdValue for sorting
+  const createdDate =
+    parseDateValue(plan.created_at) ||
+    parseDateValue(plan.createdAt) ||
+    parseDateValue(content.createdAt);
+  const createdValue = createdDate ? createdDate.getTime() : 0;
+  // Title
+  const title =
+    (content.title as string | undefined) ||
+    (plan.title as string | undefined) ||
+    (destination !== "Không xác định"
+      ? `Chuyến đi đến ${destination}`
+      : "Kế hoạch không xác định");
+  const ensuredId = id as string;
+  return {
+    id: ensuredId,
+    title,
+    subtitle,
+    location: destination,
+    durationInDays,
+    status,
+    progress,
+    image,
+    createdValue,
+    raw: plan,
+  };
+};
 
 const initialWeather = [
   {
-    city: "Tokyo, Japan",
+    city: "Tokyo, Nhật Bản",
     temp: "22°C",
-    desc: "Sunny",
+    desc: "Nắng",
     humidity: "65%",
     wind: "12 km/h",
     uv: "UV 6",
     icon: "sunny-outline",
   },
   {
-    city: "Paris, France",
+    city: "Paris, Pháp",
     temp: "18°C",
-    desc: "Cloudy",
+    desc: "Âm u",
     humidity: "76%",
     wind: "8 km/h",
     uv: "UV 3",
@@ -71,7 +191,7 @@ const initialWeather = [
   {
     city: "Bali, Indonesia",
     temp: "28°C",
-    desc: "Rain",
+    desc: "Mưa",
     humidity: "85%",
     wind: "15 km/h",
     uv: "UV 4",
@@ -80,34 +200,28 @@ const initialWeather = [
 ];
 
 const planStatusColors: { [key: string]: string } = {
-  Active: Colors.LIGHT_GREEN,
-  Draft: Colors.YELLOW,
-  Completed: Colors.GREEN,
+  "Đang hoạt động": Colors.LIGHT_GREEN,
+  "Bản nháp": Colors.YELLOW,
+  "Hoàn thành": Colors.GREEN,
 };
 
 const weatherStatusColors: { [key: string]: string } = {
-  Sunny: Colors.YELLOW,
-  Cloudy: Colors.GRAY,
-  Rain: Colors.GREEN,
+  Nắng: Colors.YELLOW,
+  "Âm u": Colors.GRAY,
+  Mưa: Colors.GREEN,
 };
 
 const Dashboard = () => {
   const router = useRouter();
-  const [plans, setPlans] = useState(initialPlans);
-  const [weather, setWeather] = useState(initialWeather);
+  const [plans, setPlans] = useState<DashboardPlan[]>([]);
+  const [weather] = useState(initialWeather);
   const [userInfo, setUserInfo] = useState<userInfoType>(null);
-
   const [updateVisible, setUpdateVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    // fetch user info to check if need to update info
-    // if need to update, setUpdateVisible(true)
-    checkUserInfo();
-  }, []);
-
-  const checkUserInfo = async () => {
+  // Fetch user info (giữ nguyên)
+  const checkUserInfo = useCallback(async () => {
     const userId = await getUserIdFromToken();
-
     try {
       const response = await fetch(
         Constants.expoConfig?.extra?.env.USER_URL + `/${userId}`,
@@ -118,9 +232,7 @@ const Dashboard = () => {
           },
         }
       );
-
       const data = await response.json();
-
       if (response.ok) {
         setUserInfo({
           firstName: data.data.firstName,
@@ -135,7 +247,137 @@ const Dashboard = () => {
       deleteSecureData("accessToken");
       router.replace("/auth/sign-in");
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    checkUserInfo();
+  }, [checkUserInfo]);
+
+  // Fetch plans from API (giống plan screen)
+  const fetchPlans = useCallback(async () => {
+    try {
+      const userId = await getUserIdFromToken();
+      if (!userId) {
+        setPlans([]);
+        return;
+      }
+      const response = await fetch(buildApiUrl(`/plans/${userId}`), {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!response.ok) {
+        setPlans([]);
+        throw new Error("Request failed");
+      }
+      const data = await response.json();
+      const rawPlans: ApiPlan[] = Array.isArray(data?.plans)
+        ? data.plans
+        : Array.isArray(data)
+        ? data
+        : [];
+      const transformed = rawPlans
+        .map(transformPlan)
+        .filter((plan): plan is DashboardPlan => Boolean(plan));
+      transformed.sort((a, b) => b.createdValue - a.createdValue);
+      setPlans(transformed);
+    } catch (err) {
+      setPlans([]);
+      throw err;
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPlans().catch(() => {
+      Toast.show({
+        type: "error",
+        text1: "Không thể tải kế hoạch",
+        text2: "Vui lòng kéo để làm mới và thử lại.",
+      });
+    });
+  }, [fetchPlans]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([fetchPlans(), checkUserInfo()]);
+    } catch {
+      Toast.show({
+        type: "error",
+        text1: "Không thể làm mới",
+        text2: "Vui lòng thử lại sau.",
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchPlans, checkUserInfo]);
+
+  const handleOpenPlan = useCallback(
+    async (plan: DashboardPlan) => {
+      try {
+        const planRaw = (plan.raw ?? {}) as Record<string, unknown>;
+        const planContentCandidate =
+          (planRaw["plan_content"] as Record<string, unknown> | undefined) ??
+          (planRaw["planContent"] as Record<string, unknown> | undefined);
+
+        const planData: Record<string, unknown> = planContentCandidate
+          ? { ...planContentCandidate }
+          : { ...planRaw };
+
+        if (Object.keys(planData).length === 0) {
+          Toast.show({
+            type: "error",
+            text1: "Không có dữ liệu kế hoạch",
+            text2: "Không thể mở kế hoạch này.",
+          });
+          return;
+        }
+
+        if (plan.id) {
+          if (!planData["plan_id"]) {
+            planData["plan_id"] = plan.id;
+          }
+
+          if (!planData["planId"]) {
+            planData["planId"] = plan.id;
+          }
+        }
+
+        if (!planData["title"]) {
+          planData["title"] = plan.title;
+        }
+
+        if (!planData["destination"]) {
+          planData["destination"] = plan.location;
+        }
+
+        if (!planData["status"]) {
+          planData["status"] = plan.status;
+        }
+
+        if (!planData["hasExistingPlan"]) {
+          planData["hasExistingPlan"] = true;
+        }
+
+        await saveData({ key: "travelPlanData", value: planData });
+
+        router.push({
+          pathname: "/plan/plan-result",
+          params: { from: "open-plan" },
+        });
+      } catch (err) {
+        console.error("[dashboard] openPlan error", err);
+        Toast.show({
+          type: "error",
+          text1: "Không thể mở kế hoạch",
+          text2:
+            err instanceof Error
+              ? err.message
+              : "Đã xảy ra lỗi, vui lòng thử lại sau.",
+        });
+      }
+    },
+    [router]
+  );
 
   return (
     <View style={styles.container}>
@@ -146,7 +388,17 @@ const Dashboard = () => {
         {...(userInfo || { firstName: "", lastName: "", isPremium: false })}
       />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 24 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.GREEN}
+            colors={[Colors.GREEN]}
+          />
+        }
+      >
         {/* Summary Cards */}
         <View style={styles.summaryRow}>
           <View style={styles.summaryCard}>
@@ -156,8 +408,8 @@ const Dashboard = () => {
               color={Colors.GREEN}
               style={styles.summaryIcon}
             />
-            <Text style={styles.summaryValue}>3</Text>
-            <Text style={styles.summaryLabel}>Total Plans</Text>
+            <Text style={styles.summaryValue}>{plans.length}</Text>
+            <Text style={styles.summaryLabel}>Tổng số kế hoạch</Text>
             <Text
               style={[
                 [
@@ -166,7 +418,7 @@ const Dashboard = () => {
                 ],
               ]}
             >
-              All time
+              Tất cả thời gian
             </Text>
           </View>
           <View style={styles.summaryCard}>
@@ -176,8 +428,10 @@ const Dashboard = () => {
               color={Colors.GREEN}
               style={styles.summaryIcon}
             />
-            <Text style={styles.summaryValue}>1</Text>
-            <Text style={styles.summaryLabel}>Active Plans</Text>
+            <Text style={styles.summaryValue}>
+              {plans.filter((p) => p.status === "Đang hoạt động").length}
+            </Text>
+            <Text style={styles.summaryLabel}>Kế hoạch đang hoạt động</Text>
             <Text
               style={[
                 [
@@ -186,89 +440,33 @@ const Dashboard = () => {
                 ],
               ]}
             >
-              In progress
+              Đang thực hiện
             </Text>
           </View>
         </View>
 
         {/* Recent Plans */}
-        <Text style={styles.sectionTitle}>Recent Plans</Text>
+        <Text style={styles.sectionTitle}>Kế hoạch gần đây</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ marginBottom: 8, padding: 4 }}
         >
-          {plans.map((plan, idx) => (
-            <TouchableOpacity
-              key={idx}
-              style={styles.planCard}
-              activeOpacity={0.7}
-              onPress={() => {
-                router.push(`/plan/${plan.id}` as RelativePathString);
-              }}
-            >
-              <View style={styles.planImageWrap}>
-                {!plan.image ? (
-                  <Ionicons
-                    name="image-outline"
-                    size={80}
-                    color="#ccc"
-                    style={styles.planImageIcon}
-                  />
-                ) : (
-                  <Image
-                    source={plan.image}
-                    style={{
-                      resizeMode: "cover",
-                      width: "100%",
-                      height: "100%",
-                    }}
-                  />
-                )}
-                {/* Replace with <Image> for real images */}
-              </View>
-              <View style={{ padding: 12 }}>
-                <View style={styles.planHeader}>
-                  <Text
-                    style={styles.planTitle}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {plan.title}
-                  </Text>
-                  <View
-                    style={[
-                      styles.planStatus,
-                      {
-                        backgroundColor: planStatusColors[plan.status],
-                      },
-                    ]}
-                  >
-                    <Text style={styles.planStatusText}>{plan.status}</Text>
-                  </View>
-                </View>
-                <Text style={styles.planSubtitle}>{plan.subtitle}</Text>
-                <View style={styles.progressBarWrap}>
-                  <View
-                    style={[
-                      styles.progressBar,
-                      {
-                        width: `${plan.progress * 100}%`,
-                        backgroundColor: Colors.GREEN,
-                      },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.progressPercent}>
-                  {Math.round(plan.progress * 100)}%
-                </Text>
-              </View>
-            </TouchableOpacity>
+          {plans.slice(0, 3).map((plan) => (
+            <RecentPlanCard
+              key={plan.id}
+              title={plan.title}
+              location={plan.location}
+              durationInDays={plan.durationInDays}
+              status={plan.status}
+              statusColor={planStatusColors[plan.status] ?? Colors.GRAY}
+              onPress={() => handleOpenPlan(plan)}
+            />
           ))}
         </ScrollView>
 
         {/* Weather Board */}
-        <Text style={styles.sectionTitle}>Weather Board</Text>
+        <Text style={styles.sectionTitle}>Thời tiết</Text>
         <View style={styles.weatherRow}>
           {weather.map((w, idx) => (
             <View key={idx} style={styles.weatherCard}>
@@ -325,17 +523,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  planHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  planImageIcon: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-  },
-
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -380,67 +567,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 18,
     marginTop: 12,
     marginBottom: 8,
-  },
-  planCard: {
-    width: 220,
-    backgroundColor: Colors.WHITE,
-    borderRadius: 16,
-    marginLeft: 18,
-    shadowColor: Colors.BLACK,
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 2,
-    overflow: "hidden",
-  },
-  planImageWrap: {
-    height: 110,
-    backgroundColor: "#eaeaea",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  planTitle: {
-    fontSize: 15,
-    fontFamily: "inter-medium",
-    color: Colors.BLACK,
-    flex: 1,
-    maxWidth: "70%",
-  },
-  planSubtitle: {
-    fontSize: 13,
-    color: Colors.GRAY,
-    marginTop: 2,
-    marginBottom: 6,
-  },
-  planStatus: {
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginLeft: 6,
-    alignSelf: "flex-start",
-  },
-  planStatusText: {
-    color: Colors.WHITE,
-    fontSize: 11,
-    fontFamily: "inter-medium",
-  },
-  progressBarWrap: {
-    height: 6,
-    backgroundColor: "#eee",
-    borderRadius: 3,
-    marginTop: 4,
-    marginBottom: 2,
-    overflow: "hidden",
-  },
-  progressBar: {
-    height: 6,
-    borderRadius: 3,
-  },
-  progressPercent: {
-    fontSize: 11,
-    color: Colors.GRAY,
-    fontFamily: "inter-regular",
-    marginTop: 2,
-    textAlign: "right",
   },
   weatherRow: {
     flexDirection: "row",

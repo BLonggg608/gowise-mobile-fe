@@ -46,16 +46,16 @@ const SignUp = () => {
     if (!username || !email || !password || !confirmPassword) {
       setPendingToast({
         type: "error",
-        text1: "Sign Up Failed",
-        text2: "All fields are required",
+        text1: "Đăng ký thất bại",
+        text2: "Vui lòng điền đầy đủ thông tin",
       });
       return;
     }
     if (password !== confirmPassword) {
       setPendingToast({
         type: "error",
-        text1: "Sign Up Failed",
-        text2: "Passwords do not match",
+        text1: "Đăng ký thất bại",
+        text2: "Mật khẩu không trùng khớp",
       });
       return;
     }
@@ -88,14 +88,14 @@ const SignUp = () => {
       if (response.ok) {
         setPendingToast({
           type: "success",
-          text1: "Sign Up Successful",
-          text2: "Please sign in to continue!",
+          text1: "Đăng ký thành công",
+          text2: "Vui lòng đăng nhập để tiếp tục!",
         });
       } else {
         setPendingToast({
           type: "error",
-          text1: "Sign Up Failed",
-          text2: data.message || "Please try again later.",
+          text1: "Đăng ký thất bại",
+          text2: data.message || "Vui lòng thử lại sau.",
         });
         return;
       }
@@ -103,8 +103,8 @@ const SignUp = () => {
       setLoading(false);
       setPendingToast({
         type: "error",
-        text1: "Server Error",
-        text2: "Please try again later.",
+        text1: "Lỗi máy chủ",
+        text2: "Vui lòng thử lại sau.",
       });
       console.error(error);
       return;
@@ -132,14 +132,14 @@ const SignUp = () => {
               source={require("../../../assets/images/gowise_logo.png")}
             />
 
-            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.title}>Tạo tài khoản</Text>
             <Text style={styles.description}>
-              Start planning your perfect trips with AI
+              Bắt đầu lập kế hoạch chuyến đi lý tưởng với AI
             </Text>
 
             <View style={styles.loginFormContainer}>
               {/* User Name */}
-              <Text style={styles.label}>User Name</Text>
+              <Text style={styles.label}>Tên người dùng</Text>
               <View style={styles.input}>
                 <Ionicons
                   style={{ marginVertical: "auto" }}
@@ -149,7 +149,7 @@ const SignUp = () => {
                 />
                 <TextInput
                   style={styles.inputText}
-                  placeholder="Enter your user name"
+                  placeholder="Nhập tên người dùng"
                   placeholderTextColor={"#9CA3AF"}
                   autoCapitalize="words"
                   onChangeText={(value) => setUsername(value)}
@@ -158,7 +158,7 @@ const SignUp = () => {
 
               {/* Email */}
               <Text style={[styles.label, { marginTop: 16 }]}>
-                Email Address
+                Địa chỉ email
               </Text>
               <View style={styles.input}>
                 <Ionicons
@@ -169,7 +169,7 @@ const SignUp = () => {
                 />
                 <TextInput
                   style={styles.inputText}
-                  placeholder="Enter your email"
+                  placeholder="Nhập email của bạn"
                   placeholderTextColor={"#9CA3AF"}
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -178,7 +178,7 @@ const SignUp = () => {
               </View>
 
               {/* Password */}
-              <Text style={[styles.label, { marginTop: 16 }]}>Password</Text>
+              <Text style={[styles.label, { marginTop: 16 }]}>Mật khẩu</Text>
               <View style={styles.input}>
                 <Ionicons
                   style={{ marginVertical: "auto" }}
@@ -188,7 +188,7 @@ const SignUp = () => {
                 />
                 <TextInput
                   style={styles.inputText}
-                  placeholder="Enter your password"
+                  placeholder="Nhập mật khẩu của bạn"
                   placeholderTextColor={"#9CA3AF"}
                   secureTextEntry={unhidePassword}
                   autoCapitalize="none"
@@ -208,7 +208,7 @@ const SignUp = () => {
 
               {/* Confirm Password */}
               <Text style={[styles.label, { marginTop: 16 }]}>
-                Confirm Password
+                Xác nhận mật khẩu
               </Text>
               <View style={styles.input}>
                 <Ionicons
@@ -219,7 +219,7 @@ const SignUp = () => {
                 />
                 <TextInput
                   style={styles.inputText}
-                  placeholder="Enter your password"
+                  placeholder="Nhập mật khẩu của bạn"
                   placeholderTextColor={"#9CA3AF"}
                   secureTextEntry={unhidePassword}
                   autoCapitalize="none"
@@ -246,7 +246,7 @@ const SignUp = () => {
                     color: Colors.WHITE,
                   }}
                 >
-                  Create Account
+                  Tạo tài khoản
                 </Text>
               </TouchableOpacity>
             </View>
@@ -260,7 +260,7 @@ const SignUp = () => {
                   color: Colors.BLACK,
                 }}
               >
-                Already have an account?
+                Đã có tài khoản?
               </Text>
               <TouchableOpacity
                 style={{ marginLeft: 5 }}
@@ -278,7 +278,7 @@ const SignUp = () => {
                     color: Colors.LIGHT_GREEN,
                   }}
                 >
-                  Sign In
+                  Đăng nhập
                 </Text>
               </TouchableOpacity>
             </View>
@@ -301,7 +301,7 @@ const SignUp = () => {
                   color: Colors.GRAY,
                 }}
               >
-                By creating an account, you agree to our
+                Khi tạo tài khoản, bạn đồng ý với
               </Text>
 
               <TouchableOpacity style={{ marginLeft: 4 }} onPress={() => {}}>
@@ -312,7 +312,7 @@ const SignUp = () => {
                     color: Colors.LIGHT_GREEN,
                   }}
                 >
-                  Term of Service
+                  Điều khoản dịch vụ
                 </Text>
               </TouchableOpacity>
 
@@ -324,7 +324,7 @@ const SignUp = () => {
                   marginLeft: 4,
                 }}
               >
-                and
+                và
               </Text>
 
               <TouchableOpacity style={{ marginLeft: 4 }} onPress={() => {}}>
@@ -335,7 +335,7 @@ const SignUp = () => {
                     color: Colors.LIGHT_GREEN,
                   }}
                 >
-                  Privacy Policy
+                  Chính sách bảo mật
                 </Text>
               </TouchableOpacity>
             </View>

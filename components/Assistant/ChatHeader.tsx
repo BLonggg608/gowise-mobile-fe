@@ -17,7 +17,7 @@ const Header = ({ subtitle, onMenuPress }: HeaderProps) => (
       <Ionicons name="menu" size={26} color={Colors.GREEN} />
     </TouchableOpacity>
     <View style={{ flex: 1 }}>
-      <Text style={styles.headerTitle}>AI Travel Assistant</Text>
+      <Text style={styles.headerTitle}>Trợ lý Du lịch AI</Text>
       {subtitle && <Text style={styles.headerSubtitle}>{subtitle}</Text>}
     </View>
   </View>

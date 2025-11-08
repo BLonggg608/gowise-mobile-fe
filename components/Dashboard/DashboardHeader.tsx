@@ -66,7 +66,9 @@ const DashboardHeader = (userInfo: userInfoType) => {
                 },
               ]}
             >
-              {userInfo?.isPremium ? "Premium" : "Free"} Member{" "}
+              {userInfo?.isPremium
+                ? "Thành viên Premium"
+                : "Thành viên miễn phí"}
               {userInfo?.isPremium && (
                 <MaterialCommunityIcons
                   name="crown-outline"

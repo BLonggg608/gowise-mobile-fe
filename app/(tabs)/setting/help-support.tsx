@@ -18,30 +18,30 @@ const helpOptions = [
   {
     id: "getting-started",
     icon: "book-outline",
-    title: "Getting Started",
-    desc: "Learn the basics of using Gowise",
-    onPress: () => {}, // TODO: Call API hoặc chuyển màn hướng dẫn
+    title: "Bắt đầu sử dụng",
+    desc: "Tìm hiểu cách sử dụng Gowise cơ bản",
+    onPress: () => {},
   },
   {
     id: "faqs",
     icon: "help-circle-outline",
-    title: "FAQs",
-    desc: "Find answers to common questions",
-    onPress: () => {}, // TODO: Call API lấy danh sách FAQ
+    title: "Câu hỏi thường gặp",
+    desc: "Tìm câu trả lời cho các thắc mắc phổ biến",
+    onPress: () => {},
   },
   {
     id: "contact-support",
     icon: "chatbubble-ellipses-outline",
-    title: "Contact Support",
-    desc: "Get help from our support team",
-    onPress: () => {}, // TODO: Call API gửi yêu cầu hỗ trợ
+    title: "Liên hệ hỗ trợ",
+    desc: "Nhận trợ giúp từ đội ngũ hỗ trợ",
+    onPress: () => {},
   },
   {
     id: "feature-requests",
     icon: "add-circle-outline",
-    title: "Feature Requests",
-    desc: "Suggest new features",
-    onPress: () => {}, // TODO: Call API gửi đề xuất tính năng
+    title: "Đề xuất tính năng",
+    desc: "Gửi ý tưởng, góp ý mới",
+    onPress: () => {},
   },
 ];
 
@@ -58,7 +58,7 @@ const HelpSupport = () => {
         >
           <Ionicons name="arrow-back" size={22} color={Colors.BLACK} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Help & Support</Text>
+        <Text style={styles.headerTitle}>Hỗ trợ & Trợ giúp</Text>
       </View>
 
       {/* Danh sách các mục hỗ trợ */}

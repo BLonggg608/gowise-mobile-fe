@@ -29,8 +29,8 @@ type profileType = {
 const initialProfile = {
   isPremium: true,
   createdAt: "2025-10-08T10:14:06.312546",
-  firstName: "John",
-  lastName: "Doe",
+  firstName: "Nguyễn",
+  lastName: "Văn A",
   bio: "",
 };
 
@@ -151,12 +151,12 @@ const Profile = () => {
           >
             <Ionicons name="arrow-back" size={22} color={Colors.BLACK} />
           </TouchableOpacity>
-          <Text style={styles.cardTitle}>Profile</Text>
+          <Text style={styles.cardTitle}>Hồ sơ cá nhân</Text>
         </View>
         <TouchableOpacity onPress={handleToggleEdit}>
           <View style={styles.editBtn}>
             <Ionicons name="create-outline" size={18} color={Colors.GREEN} />
-            <Text style={styles.editText}>{editing ? "Cancel" : "Edit"}</Text>
+            <Text style={styles.editText}>{editing ? "Huỷ" : "Chỉnh sửa"}</Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -185,7 +185,9 @@ const Profile = () => {
                   !profile.isPremium && { color: Colors.GREEN },
                 ]}
               >
-                {profile.isPremium ? "Premium" : "Free"} Member{" "}
+                {profile.isPremium
+                  ? "Thành viên Premium"
+                  : "Thành viên miễn phí"}
                 {profile.isPremium && (
                   <MaterialCommunityIcons
                     name="crown-outline"
@@ -196,8 +198,8 @@ const Profile = () => {
               </Text>
               <Text style={styles.memberSince}>
                 {/* month but in words */}
-                Member since{" "}
-                {new Date(profile.createdAt).toLocaleString("en-US", {
+                Thành viên từ{" "}
+                {new Date(profile.createdAt).toLocaleString("vi-VN", {
                   month: "long",
                   year: "numeric",
                 })}
@@ -212,26 +214,26 @@ const Profile = () => {
           <View style={styles.formRow}>
             {/* First Name */}
             <View style={{ flex: 1 }}>
-              <Text style={styles.label}>First Name</Text>
+              <Text style={styles.label}>Họ</Text>
               <TextInput
                 style={styles.input}
                 value={profile.firstName}
                 editable={editing}
                 onChangeText={(v) => handleChange("firstName", v)}
-                placeholder="First Name"
+                placeholder="Họ"
                 placeholderTextColor={Colors.GRAY}
               />
             </View>
 
             {/* Last Name */}
             <View style={{ flex: 1 }}>
-              <Text style={styles.label}>Last Name</Text>
+              <Text style={styles.label}>Tên</Text>
               <TextInput
                 style={styles.input}
                 value={profile.lastName}
                 editable={editing}
                 onChangeText={(v) => handleChange("lastName", v)}
-                placeholder="Last Name"
+                placeholder="Tên"
                 placeholderTextColor={Colors.GRAY}
               />
             </View>
@@ -239,13 +241,13 @@ const Profile = () => {
 
           <View style={styles.inputColFull}>
             {/* Bio */}
-            <Text style={styles.label}>Bio</Text>
+            <Text style={styles.label}>Giới thiệu</Text>
             <TextInput
               style={styles.inputBio}
               value={profile.bio}
               editable={editing}
               onChangeText={(v) => handleChange("bio", v)}
-              placeholder="Bio"
+              placeholder="Giới thiệu bản thân"
               placeholderTextColor={Colors.GRAY}
               multiline
               numberOfLines={3}
@@ -255,7 +257,7 @@ const Profile = () => {
           {/* Save button only shown in edit mode */}
           {editing && (
             <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-              <Text style={styles.saveText}>Save</Text>
+              <Text style={styles.saveText}>Lưu</Text>
             </TouchableOpacity>
           )}
         </View>

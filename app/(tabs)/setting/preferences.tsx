@@ -20,21 +20,21 @@ const statusBarHeight = Constants.statusBarHeight;
 
 // Initial preferences data (should be fetched from API in real app)
 const initialPreferences = {
-  language: "English",
+  language: "Tiếng Việt",
   country: "",
   city: "",
   theme: "auto", // 'light' | 'dark' | 'auto'
 };
 
 const languageOptions = [
-  { key: "1", value: "English" },
-  { key: "2", value: "Vietnamese" },
+  { key: "1", value: "Tiếng Anh" },
+  { key: "2", value: "Tiếng Việt" },
 ];
 
 const themeOptions = [
-  { key: "light", value: "Light", icon: "sunny-outline" },
-  { key: "dark", value: "Dark", icon: "moon-outline" },
-  { key: "auto", value: "Auto", icon: "phone-portrait-outline" },
+  { key: "light", value: "Sáng", icon: "sunny-outline" },
+  { key: "dark", value: "Tối", icon: "moon-outline" },
+  { key: "auto", value: "Tự động", icon: "phone-portrait-outline" },
 ];
 
 const Preferences = () => {
@@ -159,7 +159,7 @@ const Preferences = () => {
         >
           <Ionicons name="arrow-back" size={22} color={Colors.BLACK} />
         </TouchableOpacity>
-        <Text style={styles.cardTitle}>Preferences</Text>
+        <Text style={styles.cardTitle}>Tuỳ chỉnh</Text>
       </View>
 
       <ScrollView
@@ -168,10 +168,10 @@ const Preferences = () => {
       >
         {/* General Preferences Card */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>General Preferences</Text>
+          <Text style={styles.sectionTitle}>Tuỳ chỉnh chung</Text>
           {/* Language Dropdown */}
           <View style={styles.inputColFull}>
-            <Text style={styles.label}>Language</Text>
+            <Text style={styles.label}>Ngôn ngữ</Text>
             <SelectList
               setSelected={(value: string) => handleChange("language", value)}
               data={languageOptions}
@@ -191,7 +191,7 @@ const Preferences = () => {
           </View>
           {/* Country Dropdown */}
           <View style={styles.inputColFull}>
-            <Text style={styles.label}>Country</Text>
+            <Text style={styles.label}>Quốc gia</Text>
             <SelectList
               setSelected={(value: string) => {
                 handleChange("country", value);
@@ -211,7 +211,7 @@ const Preferences = () => {
                 fontFamily: "inter-medium",
                 color: Colors.BLACK,
               }}
-              placeholder="Select your country"
+              placeholder="Chọn quốc gia của bạn"
               // defaultOption={countryOptions.find(
               //   (opt) => opt.value === prefs.country
               // )}
@@ -220,7 +220,7 @@ const Preferences = () => {
 
           {/* City Dropdown */}
           <View style={styles.inputColFull}>
-            <Text style={styles.label}>City</Text>
+            <Text style={styles.label}>Thành phố</Text>
             <SelectList
               setSelected={(value: string) => {
                 handleChange("city", value);
@@ -236,7 +236,7 @@ const Preferences = () => {
                 fontFamily: "inter-medium",
                 color: Colors.BLACK,
               }}
-              placeholder="Select your city"
+              placeholder="Chọn thành phố của bạn"
               // defaultOption={countryOptions.find(
               //   (opt) => opt.value === prefs.country
               // )}
@@ -246,8 +246,8 @@ const Preferences = () => {
 
         {/* Theme & Display Card */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Theme & Display</Text>
-          <Text style={styles.label}>Theme</Text>
+          <Text style={styles.sectionTitle}>Giao diện & Hiển thị</Text>
+          <Text style={styles.label}>Chủ đề</Text>
           <View style={styles.themeRow}>
             {themeOptions.map((opt) => (
               <TouchableOpacity

@@ -14,38 +14,35 @@ import {
 
 const statusBarHeight = Constants.statusBarHeight;
 
-// Dummy data for now, replace with API call in future
+// Dữ liệu mẫu, sẽ thay bằng API sau
 const initialBlogs = [
   {
     id: "1",
-    title: "Ultimate Guide to Tokyo in 7 Days",
+    title: "Hướng dẫn du lịch Tokyo 7 ngày",
     subtitle:
-      "Discover the best of Tokyo with our comprehensive guide covering must-visit places, local cuisine, and hidden gems.",
+      "Khám phá Tokyo với hướng dẫn chi tiết về các điểm đến nổi bật, ẩm thực địa phương và những điều thú vị ít ai biết.",
     image: require("@/assets/images/PlanImage/1.jpg"),
-    readTime: "8 min read",
-    date: "2 days ago",
+    date: "2 ngày trước",
     likes: 124,
     views: 1543,
   },
   {
     id: "2",
-    title: "Budget Travel: Europe on $50 a Day",
+    title: "Du lịch Châu Âu chỉ với 1.200.000đ/ngày",
     subtitle:
-      "Learn how to explore Europe without breaking the bank with these practical tips and budget-friendly recommendations.",
+      "Khám phá cách vi vu Châu Âu tiết kiệm với các mẹo thực tế và gợi ý hợp túi tiền.",
     image: require("@/assets/images/PlanImage/2.jpg"),
-    readTime: "6 min read",
-    date: "5 days ago",
+    date: "5 ngày trước",
     likes: 89,
     views: 1543,
   },
   {
     id: "3",
-    title: "Bali Hidden Temples You Must Visit",
+    title: "Những ngôi đền bí ẩn ở Bali",
     subtitle:
-      "Explore the spiritual side of Bali with these lesser-known temples that offer tranquility and stunning architecture.",
+      "Khám phá nét tâm linh của Bali qua các ngôi đền ít người biết đến, yên bình và kiến trúc tuyệt đẹp.",
     image: require("@/assets/images/PlanImage/3.jpg"),
-    readTime: "5 min read",
-    date: "1 week ago",
+    date: "1 tuần trước",
     likes: 67,
     views: 1543,
   },
@@ -67,7 +64,7 @@ const Blog = () => {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Travel Blog</Text>
+          <Text style={styles.headerTitle}>Blog Du Lịch</Text>
         </View>
         {/* <View style={styles.headerIcons}>
           <TouchableOpacity style={styles.headerActionIcon}>
@@ -80,7 +77,7 @@ const Blog = () => {
       </View>
 
       <Text style={styles.headerSubtitle}>
-        Discover amazing travel stories and tips
+        Khám phá những câu chuyện và mẹo du lịch tuyệt vời
       </Text>
 
       {/* Blogs List */}

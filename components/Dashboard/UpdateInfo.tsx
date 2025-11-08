@@ -16,10 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constant/Colors";
 import LoadingModal from "../utils/LoadingModal";
 import { SelectList } from "react-native-dropdown-select-list";
-import {
-  getCityOptions,
-  getCountryOptions,
-} from "@/utils/CountryCity";
+import { getCityOptions, getCountryOptions } from "@/utils/CountryCity";
 import { Toast } from "toastify-react-native";
 import { ToastShowParams } from "toastify-react-native/utils/interfaces";
 import Constants from "expo-constants";
@@ -102,8 +99,8 @@ const UpdateInfo = ({
       // show error toast
       setPendingToast({
         type: "error",
-        text1: "Update Failed",
-        text2: "All fields are required",
+        text1: "Cập nhật thất bại",
+        text2: "Vui lòng điền đầy đủ thông tin",
       });
       return;
     }
@@ -139,16 +136,16 @@ const UpdateInfo = ({
       if (response.ok) {
         setPendingToast({
           type: "success",
-          text1: "Update Successful",
-          text2: data.message || "Your information has been updated",
+          text1: "Cập nhật thành công",
+          text2: data.message || "Thông tin của bạn đã được cập nhật",
         });
         setUserInfo({ firstName, lastName, isPremium: false });
         setVisible(false);
       } else {
         setPendingToast({
           type: "error",
-          text1: "Update Failed",
-          text2: data.message || "Could not update user information",
+          text1: "Cập nhật thất bại",
+          text2: data.message || "Không thể cập nhật thông tin người dùng",
         });
       }
     } catch (error) {
@@ -172,14 +169,14 @@ const UpdateInfo = ({
                   source={require("@/assets/images/gowise_logo.png")}
                 />
 
-                <Text style={styles.title}>Update Personal Information</Text>
+                <Text style={styles.title}>Cập nhật thông tin cá nhân</Text>
                 <Text style={styles.description}>
-                  Please fill in all information to continue
+                  Vui lòng điền đầy đủ thông tin để tiếp tục
                 </Text>
 
                 <View style={styles.loginFormContainer}>
                   {/* First Name */}
-                  <Text style={styles.label}>First Name</Text>
+                  <Text style={styles.label}>Họ</Text>
                   <View style={styles.input}>
                     <Ionicons
                       style={{ marginVertical: "auto" }}
@@ -189,16 +186,14 @@ const UpdateInfo = ({
                     />
                     <TextInput
                       style={styles.inputText}
-                      placeholder="Enter your first name"
+                      placeholder="Nhập họ của bạn"
                       placeholderTextColor={"#9CA3AF"}
                       onChangeText={(value) => setFirstName(value)}
                     />
                   </View>
 
                   {/* Last Name */}
-                  <Text style={[styles.label, { marginTop: 16 }]}>
-                    Last Name
-                  </Text>
+                  <Text style={[styles.label, { marginTop: 16 }]}>Tên</Text>
                   <View style={styles.input}>
                     <Ionicons
                       style={{ marginVertical: "auto" }}
@@ -208,14 +203,16 @@ const UpdateInfo = ({
                     />
                     <TextInput
                       style={styles.inputText}
-                      placeholder="Enter your last name"
+                      placeholder="Nhập tên của bạn"
                       placeholderTextColor={"#9CA3AF"}
                       onChangeText={(value) => setLastName(value)}
                     />
                   </View>
 
                   {/* Country dropdown options */}
-                  <Text style={[styles.label, { marginTop: 16 }]}>Country</Text>
+                  <Text style={[styles.label, { marginTop: 16 }]}>
+                    Quốc gia
+                  </Text>
                   <SelectList
                     setSelected={(value: string) => {
                       setCountry(value);
@@ -234,9 +231,9 @@ const UpdateInfo = ({
                     search={true}
                     fontFamily="inter-regular"
                     maxHeight={200}
-                    placeholder="Select your country"
-                    searchPlaceholder="Search country"
-                    notFoundText="No country found"
+                    placeholder="Chọn quốc gia của bạn"
+                    searchPlaceholder="Tìm quốc gia"
+                    notFoundText="Không tìm thấy quốc gia"
                     boxStyles={styles.dropdown}
                     inputStyles={styles.inputText}
                     dropdownStyles={styles.dropdown}
@@ -244,7 +241,9 @@ const UpdateInfo = ({
                   />
 
                   {/* City dropdown options */}
-                  <Text style={[styles.label, { marginTop: 16 }]}>City</Text>
+                  <Text style={[styles.label, { marginTop: 16 }]}>
+                    Thành phố
+                  </Text>
                   <SelectList
                     key={`city-select-${country}`}
                     // get id of city and city name
@@ -254,9 +253,9 @@ const UpdateInfo = ({
                     search={true}
                     fontFamily="inter-regular"
                     maxHeight={200}
-                    placeholder="Select your city"
-                    searchPlaceholder="Search city"
-                    notFoundText="No city found"
+                    placeholder="Chọn thành phố của bạn"
+                    searchPlaceholder="Tìm thành phố"
+                    notFoundText="Không tìm thấy thành phố"
                     boxStyles={styles.dropdown}
                     inputStyles={styles.inputText}
                     dropdownStyles={styles.dropdown}
@@ -272,7 +271,7 @@ const UpdateInfo = ({
                         color: Colors.WHITE,
                       }}
                     >
-                      Update Information
+                      Cập nhật thông tin
                     </Text>
                   </TouchableOpacity>
                 </View>
