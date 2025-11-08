@@ -9,9 +9,11 @@
       "distribution": "internal"
     },
     "preview": {
+      "workflow": "generic",
       "distribution": "internal"
     },
     "production": {
+      "workflow": "generic",
       "autoIncrement": true
     }
   },
