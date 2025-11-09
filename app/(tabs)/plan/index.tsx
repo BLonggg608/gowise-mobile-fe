@@ -575,7 +575,23 @@ const Plan = () => {
           Tổ chức và quản lý tất cả kế hoạch du lịch của bạn ở một nơi ✈️
         </Text>
 
-        <View style={styles.actionsRow}>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={handleCreatePlan}
+          style={[
+            styles.primaryButton,
+            {
+              marginVertical: 12,
+              alignItems: "center",
+              justifyContent: "center",
+            },
+          ]}
+        >
+          <Ionicons color={Colors.WHITE} name="add" size={18} />
+          <Text style={styles.primaryButtonText}>Tạo kế hoạch mới</Text>
+        </TouchableOpacity>
+
+        {/* <View style={styles.actionsRow}>
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={handleCreatePlan}
@@ -596,7 +612,7 @@ const Plan = () => {
             />
             <Text style={styles.secondaryButtonText}>Nhập kế hoạch</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
 
         <View style={styles.statsGrid}>
           {(

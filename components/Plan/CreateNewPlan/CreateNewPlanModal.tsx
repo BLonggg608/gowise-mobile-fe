@@ -59,6 +59,9 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const keyboardBehavior = Platform.OS === "ios" ? "padding" : "height";
+  const keyboardVerticalOffset = Platform.OS === "android" ? 24 : 0;
+
   useEffect(() => {
     if (!visible) {
       setIsHavePlan(true);
@@ -417,7 +420,8 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
             styles.modalContent,
             { height: isHavePlan && currentStep === 2 ? 550 : 500 },
           ]}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={keyboardBehavior}
+          keyboardVerticalOffset={keyboardVerticalOffset}
         >
           {/* Header */}
           <View style={styles.headerRow}>
