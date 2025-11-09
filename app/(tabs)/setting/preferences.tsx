@@ -245,7 +245,7 @@ const Preferences = () => {
         </View>
 
         {/* Theme & Display Card */}
-        <View style={styles.card}>
+        {/* <View style={styles.card}>
           <Text style={styles.sectionTitle}>Giao diện & Hiển thị</Text>
           <Text style={styles.label}>Chủ đề</Text>
           <View style={styles.themeRow}>
@@ -278,7 +278,7 @@ const Preferences = () => {
               </TouchableOpacity>
             ))}
           </View>
-        </View>
+        </View> */}
       </ScrollView>
     </View>
   );

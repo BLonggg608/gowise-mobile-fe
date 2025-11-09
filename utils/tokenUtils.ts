@@ -2,10 +2,16 @@ import Constants from "expo-constants";
 import { jwtDecode } from "jwt-decode";
 import { deleteSecureData, getSecureData, saveSecureData } from "./storage";
 
+interface TokenPayload {
+  sub: string;
+  iat: number;
+  [key: string]: any;
+}
+
 // decode JWT token
 export const decodeToken = (token: string) => {
   try {
-    return jwtDecode(token);
+    return jwtDecode(token) as TokenPayload;
   } catch (error) {
     console.error("Invalid token:", error);
     return null;

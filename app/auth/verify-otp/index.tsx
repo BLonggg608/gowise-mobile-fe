@@ -27,7 +27,7 @@ import { ToastShowParams } from "toastify-react-native/utils/interfaces";
 const VerifyOTP = () => {
   const router = useRouter();
 
-  const { email } = useLocalSearchParams();
+  const { email, from } = useLocalSearchParams();
   const [otp, setOtp] = useState("");
   const otpMaxLength = 6;
 
@@ -98,8 +98,8 @@ const VerifyOTP = () => {
 
     // After verification, navigate to the reset password screen
     setTimeout(() => {
-      router.push({
-        pathname: "/auth/reset-password" as RelativePathString,
+      router.replace({
+        pathname: from === 'forgot-password' ? "/auth/reset-password" as RelativePathString : "/auth/change-password" as RelativePathString,
         params: { email, otp },
       });
     }, 100);

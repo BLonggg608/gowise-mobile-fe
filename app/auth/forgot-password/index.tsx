@@ -94,7 +94,7 @@ const ForgotPassword = () => {
     setTimeout(() => {
       router.push({
         pathname: "/auth/verify-otp" as RelativePathString,
-        params: { email },
+        params: { email, from: "forgot-password" },
       });
     }, 100);
   };

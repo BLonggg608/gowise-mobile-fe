@@ -1,8 +1,11 @@
+import LoadingModal from "@/components/utils/LoadingModal";
 import { Colors } from "@/constant/Colors";
+import { getSecureData } from "@/utils/storage";
+import { decodeToken } from "@/utils/tokenUtils";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
-import { useRouter } from "expo-router";
-import React from "react";
+import { RelativePathString, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -10,6 +13,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Toast } from "toastify-react-native";
+import { ToastShowParams } from "toastify-react-native/utils/interfaces";
 
 const statusBarHeight = Constants.statusBarHeight;
 
@@ -44,6 +49,92 @@ const securityOptions = [
 // Main Account Security screen
 const AccountSecurity = () => {
   const router = useRouter();
+
+  const [loading, setLoading] = useState(false);
+  const [pendingToast, setPendingToast] = useState<ToastShowParams | null>(
+    null
+  );
+
+  useEffect(() => {
+    if (!loading && pendingToast) {
+      Toast.show(pendingToast);
+      setPendingToast(null);
+    }
+  }, [loading, pendingToast]);
+
+  const getEmail = async () => {
+    const accessToken = await getSecureData("accessToken");
+    const decoded = decodeToken(accessToken || "");
+    const email = decoded?.email || null;
+
+    console.log("Decoded email:", email);
+    return email;
+  };
+
+  const onPressChangePassword = async () => {
+    setLoading(true);
+
+    const email = await getEmail();
+
+    if (!email) {
+      setLoading(false);
+      setPendingToast({
+        type: "error",
+        text1: "Lỗi máy chủ",
+        text2: "Vui lòng thử lại sau.",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        Constants.expoConfig?.extra?.env.FORGOT_PASSWORD_URL as string,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+          }),
+        }
+      );
+
+      setLoading(false);
+
+      const data = await response.json();
+
+      // console.log(data);
+      if (response.ok) {
+        setPendingToast({
+          type: "success",
+          text1: "Yêu cầu thành công",
+          text2: data.message || "Vui lòng kiểm tra email để xem hướng dẫn!",
+        });
+      } else {
+        setPendingToast({
+          type: "error",
+          text1: "Yêu cầu thất bại",
+          text2: data.message || "Vui lòng thử lại sau.",
+        });
+        return;
+      }
+    } catch (error) {
+      setLoading(false);
+      setPendingToast({
+        type: "error",
+        text1: "Lỗi máy chủ",
+        text2: "Vui lòng thử lại sau.",
+      });
+      console.error(error);
+      return;
+    }
+
+    router.push({
+      pathname: "/auth/verify-otp" as RelativePathString,
+      params: { email, from: "change-password"},
+    });
+  };
   return (
     <View style={{ flex: 1 }}>
       {/* Header */}
@@ -89,33 +180,38 @@ const AccountSecurity = () => {
             </View>
             {/* Action button */}
             <TouchableOpacity
-              onPress={item.onPress}
+              onPress={
+                ["Bật", "Quản lý"].includes(item.action)
+                  ? item.onPress
+                  : onPressChangePassword
+              }
               style={
-                item.action === "Enable"
+                ["Bật", "Quản lý"].includes(item.action)
                   ? {
-                      backgroundColor: Colors.GREEN,
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
                       borderRadius: 8,
-                      paddingVertical: 6,
-                      paddingHorizontal: 18,
+                      backgroundColor: Colors.GRAY + "20",
                     }
                   : {
-                      backgroundColor: "transparent",
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
                       borderRadius: 8,
-                      paddingVertical: 6,
-                      paddingHorizontal: 10,
+                      backgroundColor: Colors.GREEN,
                     }
               }
+              activeOpacity={["Bật", "Quản lý"].includes(item.action) ? 1 : 0.5}
             >
               <Text
                 style={
-                  item.action === "Enable"
+                  ["Bật", "Quản lý"].includes(item.action)
                     ? {
-                        color: Colors.WHITE,
+                        color: Colors.GRAY + "80",
                         fontSize: 15,
                         fontFamily: "inter-medium",
                       }
                     : {
-                        color: Colors.GREEN,
+                        color: Colors.WHITE,
                         fontSize: 15,
                         fontFamily: "inter-medium",
                       }
@@ -127,6 +223,7 @@ const AccountSecurity = () => {
           </View>
         ))}
       </ScrollView>
+      <LoadingModal visible={loading} />
     </View>
   );
 };

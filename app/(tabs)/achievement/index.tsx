@@ -270,11 +270,7 @@ const AchievementScreen = () => {
         </Text>
 
         <View style={styles.statRow}>
-          <View style={[styles.statCard, styles.statCardLeft]}>
-            <View>
-              <Text style={styles.statLabel}>Tổng điểm</Text>
-              <Text style={styles.statValue}>{totalPoints}</Text>
-            </View>
+          <View style={styles.statCard}>
             <View
               style={[
                 styles.statIcon,
@@ -283,14 +279,10 @@ const AchievementScreen = () => {
             >
               <Ionicons color="#CA8A04" name="trophy-outline" size={20} />
             </View>
+            <Text style={styles.statLabel}>Tổng điểm</Text>
+            <Text style={styles.statValue}>{totalPoints}</Text>
           </View>
           <View style={styles.statCard}>
-            <View>
-              <Text style={styles.statLabel}>Hạng</Text>
-              <Text style={[styles.statValue, styles.rankText]}>
-                {rankLabel}
-              </Text>
-            </View>
             <View
               style={[
                 styles.statIcon,
@@ -299,6 +291,8 @@ const AchievementScreen = () => {
             >
               <Ionicons color="#2563EB" name="ribbon-outline" size={20} />
             </View>
+            <Text style={styles.statLabel}>Hạng</Text>
+            <Text style={[styles.statValue, styles.rankText]}>{rankLabel}</Text>
           </View>
         </View>
 
@@ -517,12 +511,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 20,
+    gap: 12,
   },
   statCard: {
     flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    // flexDirection: "row",
+    // justifyContent: "space-between",
+    // alignItems: "center",
     backgroundColor: Colors.WHITE,
     borderRadius: 20,
     paddingVertical: 18,
@@ -532,11 +527,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
-    marginLeft: 12,
-  },
-  statCardLeft: {
-    marginLeft: 0,
-    marginRight: 12,
   },
   statLabel: {
     fontSize: 13,
@@ -558,6 +548,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 8,
   },
   filterContainer: {
     flexDirection: "row",

@@ -153,18 +153,18 @@ const Profile = () => {
           </TouchableOpacity>
           <Text style={styles.cardTitle}>Hồ sơ cá nhân</Text>
         </View>
-        <TouchableOpacity onPress={handleToggleEdit}>
-          <View style={styles.editBtn}>
-            <Ionicons name="create-outline" size={18} color={Colors.GREEN} />
-            <Text style={styles.editText}>{editing ? "Huỷ" : "Chỉnh sửa"}</Text>
-          </View>
-        </TouchableOpacity>
       </View>
 
       <ScrollView
         contentContainerStyle={styles.profileContainer}
         showsVerticalScrollIndicator={false}
       >
+        <TouchableOpacity onPress={handleToggleEdit}>
+          <View style={[styles.editBtn, editing && { backgroundColor: Colors.RED }]}>
+            <Ionicons name="create-outline" size={18} color={editing ? Colors.WHITE : Colors.GREEN} />
+            <Text style={[styles.editText, editing && { color: Colors.WHITE }]}>{editing ? "Huỷ" : "Chỉnh sửa"}</Text>
+          </View>
+        </TouchableOpacity>
         {/* Card container for profile info and form */}
         <View style={styles.card}>
           {/* User avatar and basic info */}
@@ -311,11 +311,13 @@ const styles = StyleSheet.create({
   },
   editBtn: {
     flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#eafcf7",
     borderRadius: 8,
     paddingVertical: 4,
     paddingHorizontal: 10,
+    marginBottom: 12,
   },
   editText: {
     color: Colors.GREEN,

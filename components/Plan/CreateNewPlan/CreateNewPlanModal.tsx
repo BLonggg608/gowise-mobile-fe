@@ -56,13 +56,6 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
   // Removed Interests state, using selectedInterests instead
 
   // New states for API data and UI
-  const [userLocation, setUserLocation] = useState<{
-    lat: number;
-    lon: number;
-  } | null>(null);
-  const [flightData, setFlightData] = useState<any>(null);
-  const [hotelData, setHotelData] = useState<any>(null);
-  const [itineraryData, setItineraryData] = useState<any>(null);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -165,10 +158,6 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
         ),
       ]);
 
-      setFlightData(flight);
-      setHotelData(hotel);
-      setItineraryData(itinerary);
-
       const dataToSend = {
         hasExistingPlan: isHavePlan,
         travelType: type,
@@ -186,7 +175,21 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
 
       await AsyncStorage.setItem("travelPlanData", JSON.stringify(dataToSend));
       console.log(dataToSend);
-      router.push({ pathname: "/plan/plan-result", params: { from: "create-new-plan" } });
+
+      onSubmit({
+        type,
+        startDate,
+        endDate,
+        NumberOfDays,
+        NumberOfParticipants,
+        Budget,
+        Destination: destination,
+      });
+
+      router.push({
+        pathname: "/plan/plan-result",
+        params: { from: "create-new-plan" },
+      });
       onClose();
     } catch (err) {
       const errorMessage =

@@ -19,6 +19,7 @@ import {
   View,
 } from "react-native";
 import { Toast } from "toastify-react-native";
+import CreateNewPlanModel from "@/components/Plan/CreateNewPlan/CreateNewPlanModal";
 
 const statusBarHeight = Constants.statusBarHeight;
 
@@ -329,6 +330,8 @@ const PlanResult = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCreatePlanModalVisible, setIsCreatePlanModalVisible] =
+    useState(false);
 
   const { from } = useLocalSearchParams();
   const isShowSaveButton = from === "create-new-plan";
@@ -1020,8 +1023,24 @@ const PlanResult = () => {
   ]);
 
   const handleModifySearch = useCallback(() => {
-    router.replace("/(tabs)/plan");
-  }, [router]);
+    setIsCreatePlanModalVisible(true);
+  }, []);
+
+  const handleSubmitCreateNewPlan = useCallback(
+    (_data: {
+      type: string;
+      startDate: string;
+      endDate: string;
+      NumberOfDays: string;
+      NumberOfParticipants: string;
+      Budget: string;
+      Destination: string;
+    }) => {
+      setIsCreatePlanModalVisible(false);
+      loadTravelPlan();
+    },
+    [loadTravelPlan]
+  );
 
   const handleGoBack = useCallback(() => {
     router.back();
@@ -1048,14 +1067,6 @@ const PlanResult = () => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Plan Result</Text>
         </View>
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={handleModifySearch}
-          style={styles.modifyButton}
-        >
-          <Ionicons color={Colors.GREEN} name="create-outline" size={16} />
-          <Text style={styles.modifyButtonText}>Modify Search</Text>
-        </TouchableOpacity>
       </View>
 
       {isLoading ? (
@@ -1082,6 +1093,17 @@ const PlanResult = () => {
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
         >
+          {isShowSaveButton && (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleModifySearch}
+              style={styles.modifyButton}
+            >
+              <Ionicons color={Colors.GREEN} name="create-outline" size={16} />
+              <Text style={styles.modifyButtonText}>Modify Search</Text>
+            </TouchableOpacity>
+          )}
+
           {/* Summary Card */}
           <View style={styles.summaryCard}>
             <View style={styles.summaryHeaderRow}>
@@ -1095,7 +1117,8 @@ const PlanResult = () => {
                   {formattedStart && formattedEnd
                     ? `${formattedStart} - ${formattedEnd}`
                     : "Date not set"}
-                  {" • "}
+                </Text>
+                <Text style={styles.summarySubtitle}>
                   {participantsLabel}
                   {" • Budget: "}
                   {budgetLabel}
@@ -1104,13 +1127,13 @@ const PlanResult = () => {
             </View>
 
             <View style={styles.summaryStatsRow}>
-              <View style={[styles.summaryStatBox, styles.summaryStatSpacer]}>
+              <View>
                 <Text style={styles.statLabel}>Duration</Text>
                 <Text style={styles.statValue}>
                   {tripDuration} day{tripDuration !== 1 ? "s" : ""}
                 </Text>
               </View>
-              <View style={[styles.summaryStatBox, styles.summaryStatSpacer]}>
+              <View>
                 <Text style={styles.statLabel}>Travel Type</Text>
                 <Text style={styles.statValue}>
                   {planData?.travelType === "international"
@@ -1118,7 +1141,7 @@ const PlanResult = () => {
                     : "Domestic"}
                 </Text>
               </View>
-              <View style={styles.summaryStatBox}>
+              <View>
                 <Text style={styles.statLabel}>Plan Status</Text>
                 <Text style={styles.statValue}>
                   {planData?.hasExistingPlan ? "Existing" : "New"}
@@ -1201,7 +1224,7 @@ const PlanResult = () => {
               </View>
             </View>
 
-            {Array.isArray(planData.selectedInterests) &&
+            {/* {Array.isArray(planData.selectedInterests) &&
             planData.selectedInterests.length > 0 ? (
               <View style={styles.interestSection}>
                 <Text style={styles.summaryGridLabel}>Interests</Text>
@@ -1218,7 +1241,11 @@ const PlanResult = () => {
                   })}
                 </View>
               </View>
-            ) : null}
+            ) : null} */}
+
+            <View
+              style={{ width: "100%", height: 2, backgroundColor: "#E2E8F0" }}
+            ></View>
 
             <View style={styles.costGrid}>
               <View style={styles.costCell}>
@@ -1267,6 +1294,11 @@ const PlanResult = () => {
           <View style={{ height: 36 }} />
         </ScrollView>
       )}
+      <CreateNewPlanModel
+        onClose={() => setIsCreatePlanModalVisible(false)}
+        onSubmit={handleSubmitCreateNewPlan}
+        visible={isCreatePlanModalVisible}
+      />
     </View>
   );
 };
@@ -1378,10 +1410,12 @@ const styles = StyleSheet.create({
   modifyButton: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     backgroundColor: "#E0F2F1",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
+    marginBottom: 12,
   },
   modifyButtonText: {
     marginLeft: 6,
@@ -1392,12 +1426,8 @@ const styles = StyleSheet.create({
   summaryStatsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-  },
-  summaryStatBox: {
-    flex: 1,
-  },
-  summaryStatSpacer: {
-    marginRight: 12,
+    flexWrap: "wrap",
+    gap: 12,
   },
   statLabel: {
     fontSize: 12,
@@ -1487,12 +1517,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: "inter-bold",
     color: Colors.GREEN,
+    textAlign: "center",
   },
   costSubtitle: {
     marginTop: 4,
     fontSize: 12,
     fontFamily: "inter-regular",
     color: Colors.GRAY,
+    textAlign: "center",
   },
   costGridSeparator: {
     width: 1,

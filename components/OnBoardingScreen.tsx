@@ -1,5 +1,5 @@
 import { Colors } from "@/constant/Colors";
-import { Ionicons } from "@expo/vector-icons";
+// import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
@@ -43,12 +43,12 @@ const OnBoardingScreen = () => {
         >
           {label}
         </Text>
-        <Ionicons
+        {/* <Ionicons
           name="chevron-forward"
           size={20}
           color={Colors.WHITE}
           style={{ position: "absolute", right: 24, top: 15 }}
-        />
+        /> */}
       </View>
     );
   };
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,
-    paddingTop: "30%",
+    paddingTop: "10%",
   },
   contentContainer: {
     flex: 1,
@@ -127,7 +127,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.GREEN,
     padding: 15,
     borderRadius: 10,
-    marginTop: 5,
     marginHorizontal: 100,
     alignItems: "center",
     justifyContent: "center",
@@ -139,7 +138,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.BLACK,
     textAlign: "center",
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: "15%",
   },
   sliderContentContainer: {

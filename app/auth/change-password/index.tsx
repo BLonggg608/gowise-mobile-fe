@@ -1,0 +1,365 @@
+import LoadingModal from "@/components/utils/LoadingModal";
+import { Colors } from "@/constant/Colors";
+import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
+import {
+  RelativePathString,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
+import React, { useState } from "react";
+import {
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
+import { ToastShowParams } from "toastify-react-native/utils/interfaces";
+
+const ChangePassword = () => {
+  const router = useRouter();
+
+  const [unhidePassword, setUnhidePassword] = useState(true);
+
+  const { email } = useLocalSearchParams();
+  const { otp } = useLocalSearchParams();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [pendingToast, setPendingToast] = useState<ToastShowParams | null>(
+    null
+  );
+
+  React.useEffect(() => {
+    if (!loading && pendingToast) {
+      Toast.show(pendingToast);
+      setPendingToast(null);
+    }
+  }, [loading, pendingToast]);
+
+  const handleUpdatePassword = async () => {
+    // Handle password update logic here
+    if (password !== confirmPassword) {
+      setPendingToast({
+        type: "error",
+        text1: "Cập nhật thất bại",
+        text2: "Mật khẩu không trùng khớp",
+      });
+      return;
+    }
+
+    if (!password || !confirmPassword || !currentPassword) {
+      setPendingToast({
+        type: "error",
+        text1: "Cập nhật thất bại",
+        text2: "Vui lòng điền đầy đủ thông tin",
+      });
+      return;
+    }
+
+    if (currentPassword !== confirmPassword) {
+      setPendingToast({
+        type: "error",
+        text1: "Cập nhật thất bại",
+        text2: "Mật khẩu mới phải khác hiện tại",
+      });
+      return;
+    }
+
+    // call api to update password
+    // console.log(Constants.expoConfig?.extra?.env.RESET_PASSWORD_URL);
+    try {
+      setLoading(true);
+
+      const response = await fetch(
+        (Constants.expoConfig?.extra?.env.BE_DOMAIN +
+          `:${Constants.expoConfig?.extra?.env.BE_PORT}/auth/change-password`) as string,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+            oldPassword: currentPassword,
+            newPassword: password,
+          }),
+        }
+      );
+
+      setLoading(false);
+
+      const data = await response.json();
+
+      // console.log(data);
+      if (response.ok) {
+        setPendingToast({
+          type: "success",
+          text1: "Đặt lại thành công",
+          text2: data.message || "Mật khẩu của bạn đã được cập nhật!",
+        });
+      } else {
+        setPendingToast({
+          type: "error",
+          text1: "Đặt lại thất bại",
+          text2: data.message || "Vui lòng thử lại sau.",
+        });
+        return;
+      }
+    } catch (error) {
+      setLoading(false);
+      setPendingToast({
+        type: "error",
+        text1: "Lỗi máy chủ",
+        text2: "Vui lòng thử lại sau.",
+      });
+      console.error(error);
+      return;
+    }
+
+    // After updating, navigate to the sign-in screen
+    Keyboard.dismiss();
+    setTimeout(() => {
+      router.replace("/(tabs)/setting/account-security" as RelativePathString);
+    }, 100);
+  };
+
+  return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        {/* Back Button */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={styles.headerBackBtn}
+          onPress={() => router.back()}
+        >
+          <Ionicons
+            name="chevron-back-outline"
+            size={28}
+            color={Colors.BLACK}
+          />
+        </TouchableOpacity>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.container}>
+            <Image
+              style={styles.logo}
+              source={require("../../../assets/images/gowise_logo.png")}
+            />
+
+            <Text style={styles.title}>Tạo mật khẩu mới</Text>
+            <Text style={styles.description}>
+              Tạo mật khẩu mới khác với những mật khẩu trước đó
+            </Text>
+
+            <View style={styles.loginFormContainer}>
+              {/* Current Password */}
+              <Text style={[styles.label, { marginTop: 16 }]}>
+                Mật khẩu hiện tại
+              </Text>
+              <View style={styles.input}>
+                <Ionicons
+                  style={{ marginVertical: "auto" }}
+                  name="lock-closed-outline"
+                  size={24}
+                  color={"#9CA3AF"}
+                />
+                <TextInput
+                  style={styles.inputText}
+                  placeholder="Nhập mật khẩu hiện tại"
+                  placeholderTextColor={"#9CA3AF"}
+                  secureTextEntry={unhidePassword}
+                  autoCapitalize="none"
+                  onChangeText={(value) => setCurrentPassword(value)}
+                />
+                <TouchableOpacity
+                  onPress={() => setUnhidePassword(!unhidePassword)}
+                >
+                  <Ionicons
+                    style={{ marginVertical: "auto" }}
+                    name={unhidePassword ? "eye-outline" : "eye-off-outline"}
+                    size={24}
+                    color={"#9CA3AF"}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {/* Password */}
+              <Text style={[styles.label, { marginTop: 16 }]}>Mật khẩu</Text>
+              <View style={styles.input}>
+                <Ionicons
+                  style={{ marginVertical: "auto" }}
+                  name="lock-closed-outline"
+                  size={24}
+                  color={"#9CA3AF"}
+                />
+                <TextInput
+                  style={styles.inputText}
+                  placeholder="Nhập mật khẩu mới"
+                  placeholderTextColor={"#9CA3AF"}
+                  secureTextEntry={unhidePassword}
+                  autoCapitalize="none"
+                  onChangeText={(value) => setPassword(value)}
+                />
+                <TouchableOpacity
+                  onPress={() => setUnhidePassword(!unhidePassword)}
+                >
+                  <Ionicons
+                    style={{ marginVertical: "auto" }}
+                    name={unhidePassword ? "eye-outline" : "eye-off-outline"}
+                    size={24}
+                    color={"#9CA3AF"}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {/* Confirm Password */}
+              <Text style={[styles.label, { marginTop: 16 }]}>
+                Xác nhận mật khẩu
+              </Text>
+              <View style={styles.input}>
+                <Ionicons
+                  style={{ marginVertical: "auto" }}
+                  name="lock-closed-outline"
+                  size={24}
+                  color={"#9CA3AF"}
+                />
+                <TextInput
+                  style={styles.inputText}
+                  placeholder="Nhập mật khẩu mới"
+                  placeholderTextColor={"#9CA3AF"}
+                  secureTextEntry={unhidePassword}
+                  autoCapitalize="none"
+                  onChangeText={(value) => setConfirmPassword(value)}
+                />
+                <TouchableOpacity
+                  onPress={() => setUnhidePassword(!unhidePassword)}
+                >
+                  <Ionicons
+                    style={{ marginVertical: "auto" }}
+                    name={unhidePassword ? "eye-outline" : "eye-off-outline"}
+                    size={24}
+                    color={"#9CA3AF"}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {/* Update Password Button */}
+              <TouchableOpacity
+                disabled={!password || !confirmPassword}
+                style={[
+                  styles.button,
+                  { opacity: password && confirmPassword ? 1 : 0.5 },
+                ]}
+                onPress={handleUpdatePassword}
+              >
+                <Text
+                  style={{
+                    fontFamily: "inter-medium",
+                    fontSize: 18,
+                    color: Colors.WHITE,
+                  }}
+                >
+                  Cập nhật mật khẩu
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+      <LoadingModal visible={loading} />
+    </KeyboardAvoidingView>
+  );
+};
+
+export default ChangePassword;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    // justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+    paddingHorizontal: 24,
+  },
+  headerBackBtn: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 16,
+    marginLeft: 8,
+    // borderRadius: 8,
+    // backgroundColor: "#9c9c9c1e",
+  },
+  logo: {
+    width: "100%",
+    height: 120,
+    resizeMode: "contain",
+    marginTop: "10%",
+  },
+  title: {
+    fontFamily: "inter-bold",
+    fontSize: 28,
+    textAlign: "center",
+    color: Colors.BLACK,
+    marginVertical: 8,
+  },
+  description: {
+    fontFamily: "inter-regular",
+    fontSize: 15,
+    paddingHorizontal: 16,
+    textAlign: "center",
+    color: Colors.GRAY,
+  },
+  loginFormContainer: {
+    width: "100%",
+    marginTop: 30,
+    paddingHorizontal: 18,
+  },
+  label: {
+    fontFamily: "inter-medium",
+    fontSize: 15,
+    color: Colors.BLACK,
+  },
+  input: {
+    // if android padding vertical: 0, ios padding vertical: 10
+    paddingVertical: Platform.OS === "android" ? 0 : 10,
+    paddingHorizontal: 10,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: "#D7DAE0",
+    borderRadius: 8,
+    flexDirection: "row",
+  },
+  inputText: {
+    fontFamily: "inter-regular",
+    fontSize: 16,
+    color: Colors.BLACK,
+    marginLeft: 6,
+    flex: 1,
+  },
+  button: {
+    backgroundColor: Colors.GREEN,
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

@@ -252,14 +252,6 @@ const GalleryScreen = () => {
         <View>
           <Text style={styles.title}>Kho kỉ niệm</Text>
         </View>
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={handleOpenUpload}
-          style={styles.uploadButton}
-        >
-          <Ionicons color={Colors.WHITE} name="add-circle" size={18} />
-          <Text style={styles.uploadButtonText}>Tạo kho ảnh</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Content */}
@@ -278,27 +270,33 @@ const GalleryScreen = () => {
         <Text style={styles.subtitle}>
           Lưu giữ và chia sẻ những khoảnh khắc đáng nhớ
         </Text>
+
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={handleOpenUpload}
+          style={styles.uploadButton}
+        >
+          <Ionicons color={Colors.WHITE} name="add-circle" size={18} />
+          <Text style={styles.uploadButtonText}>Tạo kho ảnh</Text>
+        </TouchableOpacity>
+
         {/* Stat */}
         <View style={styles.statGrid}>
           <View style={styles.statCard}>
-            <View>
-              <Text style={styles.statLabel}>Tổng số kho ảnh</Text>
-              <Text style={styles.statValue}>{stats.total}</Text>
-            </View>
             <View style={[styles.statIcon, styles.statIconTeal]}>
               <Ionicons color={Colors.GREEN} name="images" size={20} />
             </View>
+            <Text style={styles.statLabel}>Tổng số kho ảnh</Text>
+            <Text style={styles.statValue}>{stats.total}</Text>
           </View>
           <View style={styles.statCard}>
-            <View>
-              <Text style={styles.statLabel}>Đang hiển thị</Text>
-              <Text style={[styles.statValue, styles.statValueBlue]}>
-                {stats.filtered}
-              </Text>
-            </View>
             <View style={[styles.statIcon, styles.statIconBlue]}>
               <Ionicons color="#2563EB" name="search" size={20} />
             </View>
+            <Text style={styles.statLabel}>Đang hiển thị</Text>
+            <Text style={[styles.statValue, styles.statValueBlue]}>
+              {stats.filtered}
+            </Text>
           </View>
         </View>
 
@@ -362,11 +360,13 @@ const styles = StyleSheet.create({
   },
   uploadButton: {
     flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
     backgroundColor: Colors.GREEN,
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 14,
+    marginBottom: 18,
   },
   uploadButtonText: {
     marginLeft: 8,
@@ -382,9 +382,9 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    flexDirection: "row",
+    // flexDirection: "row",
     // alignItems: "center",
-    justifyContent: "space-between",
+    // justifyContent: "space-between",
     backgroundColor: Colors.WHITE,
     borderRadius: 18,
     paddingVertical: 18,
@@ -415,6 +415,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 8,
   },
   statIconTeal: {
     backgroundColor: "rgba(13, 148, 136, 0.12)",

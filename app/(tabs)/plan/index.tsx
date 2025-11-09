@@ -490,7 +490,10 @@ const Plan = () => {
 
         await saveData({ key: "travelPlanData", value: planData });
 
-        router.push({ pathname: "/plan/plan-result", params: { from: "open-plan" } });
+        router.push({
+          pathname: "/plan/plan-result",
+          params: { from: "open-plan" },
+        });
       } catch (err) {
         console.error("[plan] openPlan error", err);
         Toast.show({
@@ -971,6 +974,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
     // borderWidth: 1,
     // borderColor: "#E2E8F0",
     // marginRight: 8,
