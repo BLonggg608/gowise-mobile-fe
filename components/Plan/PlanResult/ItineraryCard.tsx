@@ -1,14 +1,40 @@
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Linking,
+  ScrollView,
   StyleProp,
   StyleSheet,
+  TouchableOpacity,
   Text,
   View,
   ViewStyle,
 } from "react-native";
+
+export type ItineraryActivity = {
+  id: string;
+  title: string;
+  description?: string;
+  timeOfDay?: string;
+  time?: string;
+  endTime?: string;
+  timeRange?: string;
+  durationText?: string;
+  location?: string;
+  address?: string;
+  category?: string;
+  cost?: string;
+  ratingText?: string;
+  ratingValue?: number;
+  ratingCount?: number;
+  notes?: string;
+  contact?: string;
+  bookingLink?: string;
+  transportation?: string;
+  additionalDetails?: string[];
+};
 
 export type ItineraryEntry = {
   id: string;
@@ -16,7 +42,7 @@ export type ItineraryEntry = {
   date?: string;
   title?: string;
   summary?: string;
-  activities: string[];
+  activities: ItineraryActivity[];
 };
 
 type ItineraryCardProps = {
@@ -34,6 +60,73 @@ const ItineraryCard: React.FC<ItineraryCardProps> = ({
   errorMessage,
   isLoading,
 }) => {
+  const dayOptions = useMemo(() => {
+    const uniqueDays = Array.from(new Set(items.map((item) => item.dayNumber)));
+    return uniqueDays.sort((a, b) => a - b);
+  }, [items]);
+
+  const [activeDay, setActiveDay] = useState<number | null>(
+    dayOptions.length > 0 ? dayOptions[0] : null
+  );
+
+  useEffect(() => {
+    if (dayOptions.length === 0) {
+      setActiveDay(null);
+      return;
+    }
+
+    setActiveDay((prev) =>
+      prev !== null && dayOptions.includes(prev) ? prev : dayOptions[0]
+    );
+  }, [dayOptions]);
+
+  const filteredItems = useMemo(() => {
+    if (activeDay === null) {
+      return items;
+    }
+
+    return items.filter((item) => item.dayNumber === activeDay);
+  }, [activeDay, items]);
+
+  const openLink = useCallback(async (url: string) => {
+    if (!url) {
+      return;
+    }
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      }
+    } catch (error) {
+      console.warn("[ItineraryCard] Unable to open url", url, error);
+    }
+  }, []);
+
+  const formatBadge = (value?: string | null, shouldTitleCase = true) => {
+    if (!value) return null;
+    const trimmed = value.trim();
+    if (!shouldTitleCase) {
+      return trimmed;
+    }
+    if (/\d/.test(trimmed)) {
+      return trimmed;
+    }
+    return trimmed
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
+  const formatRating = (activity: ItineraryActivity) => {
+    if (typeof activity.ratingValue === "number") {
+      const rounded = Math.round(activity.ratingValue * 10) / 10;
+      if (activity.ratingCount && activity.ratingCount > 0) {
+        return `${rounded}/5 (${activity.ratingCount})`;
+      }
+      return `${rounded}/5`;
+    }
+    return activity.ratingText ?? null;
+  };
+
   return (
     <View style={[styles.sectionCard, containerStyle]}>
       <View style={styles.sectionHeader}>
@@ -49,36 +142,251 @@ const ItineraryCard: React.FC<ItineraryCardProps> = ({
       </View>
 
       {items.length > 0 ? (
-        items.map((item) => (
-          <View key={item.id} style={styles.itineraryBlock}>
-            <View style={styles.itineraryHeaderRow}>
-              <Text style={styles.itineraryDayLabel}>Day {item.dayNumber}</Text>
-              {item.date ? (
-                <Text style={styles.itineraryDateText}>{item.date}</Text>
-              ) : null}
-            </View>
-            {item.title ? (
-              <Text style={styles.itineraryTitle}>{item.title}</Text>
-            ) : null}
-            {item.summary ? (
-              <Text style={styles.itinerarySummary}>{item.summary}</Text>
-            ) : null}
-            {item.activities.length > 0 ? (
-              item.activities.map((activity, index) => (
-                <Text
-                  key={`${item.id}-activity-${index}`}
-                  style={styles.itineraryActivity}
+        <>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.dayTabsContent}
+            style={styles.dayTabsContainer}
+          >
+            {dayOptions.map((dayNumber) => {
+              const isActive = activeDay === dayNumber;
+              return (
+                <TouchableOpacity
+                  key={`day-tab-${dayNumber}`}
+                  onPress={() => setActiveDay(dayNumber)}
+                  style={[
+                    styles.dayTab,
+                    isActive ? styles.dayTabActive : styles.dayTabInactive,
+                  ]}
                 >
-                  • {activity}
+                  <Text
+                    style={[
+                      styles.dayTabLabel,
+                      isActive
+                        ? styles.dayTabLabelActive
+                        : styles.dayTabLabelInactive,
+                    ]}
+                  >
+                    Day {dayNumber}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {filteredItems.map((item) => (
+            <View key={item.id} style={styles.itineraryBlock}>
+              <View style={styles.itineraryHeaderRow}>
+                <Text style={styles.itineraryDayLabel}>
+                  Day {item.dayNumber}
                 </Text>
-              ))
-            ) : (
-              <Text style={styles.itinerarySummary}>
-                No detailed activities available.
-              </Text>
-            )}
-          </View>
-        ))
+                {item.date ? (
+                  <Text style={styles.itineraryDateText}>{item.date}</Text>
+                ) : null}
+              </View>
+              {item.title ? (
+                <Text style={styles.itineraryTitle}>{item.title}</Text>
+              ) : null}
+              {item.summary ? (
+                <Text style={styles.itinerarySummary}>{item.summary}</Text>
+              ) : null}
+
+              {item.activities.length > 0 ? (
+                item.activities.map((activity) => {
+                  const badgeDay = formatBadge(activity.timeOfDay);
+                  const timeBadge = formatBadge(activity.time, false);
+                  const durationLabel = formatBadge(
+                    activity.durationText,
+                    false
+                  );
+                  const ratingLabel = formatRating(activity);
+
+                  return (
+                    <View key={activity.id} style={styles.activityCard}>
+                      <View style={styles.activityHeaderRow}>
+                        <View style={styles.activityHeaderText}>
+                          <Text style={styles.activityTitle}>
+                            {activity.title}
+                          </Text>
+                          <View style={styles.activityBadgeRow}>
+                            {badgeDay ? (
+                              <View style={styles.badge}>
+                                <Text style={styles.badgeText}>{badgeDay}</Text>
+                              </View>
+                            ) : null}
+                            {timeBadge ? (
+                              <View style={styles.badge}>
+                                <Text style={styles.badgeText}>
+                                  {timeBadge}
+                                </Text>
+                              </View>
+                            ) : null}
+                            {activity.timeRange ? (
+                              <View style={styles.badge}>
+                                <Text style={styles.badgeText}>
+                                  {formatBadge(activity.timeRange, false)}
+                                </Text>
+                              </View>
+                            ) : null}
+                            {durationLabel ? (
+                              <View style={styles.badge}>
+                                <Text style={styles.badgeText}>
+                                  {durationLabel}
+                                </Text>
+                              </View>
+                            ) : null}
+                          </View>
+                        </View>
+                      </View>
+
+                      {activity.description ? (
+                        <Text style={styles.activityDescription}>
+                          {activity.description}
+                        </Text>
+                      ) : null}
+
+                      <View style={styles.metaRow}>
+                        {activity.location ? (
+                          <View style={styles.metaItem}>
+                            <Ionicons
+                              color={Colors.GREEN}
+                              name="location-outline"
+                              size={14}
+                              style={styles.metaIcon}
+                            />
+                            <Text style={styles.metaText}>
+                              {activity.location}
+                            </Text>
+                          </View>
+                        ) : null}
+                        {activity.address ? (
+                          <View style={styles.metaItem}>
+                            <Ionicons
+                              color={Colors.GRAY}
+                              name="home-outline"
+                              size={14}
+                              style={styles.metaIcon}
+                            />
+                            <Text style={styles.metaText}>
+                              {activity.address}
+                            </Text>
+                          </View>
+                        ) : null}
+                        {activity.transportation ? (
+                          <View style={styles.metaItem}>
+                            <Ionicons
+                              color={Colors.GRAY}
+                              name="walk-outline"
+                              size={14}
+                              style={styles.metaIcon}
+                            />
+                            <Text style={styles.metaText}>
+                              {activity.transportation}
+                            </Text>
+                          </View>
+                        ) : null}
+                        {activity.cost ? (
+                          <View style={styles.metaItem}>
+                            <Ionicons
+                              color={Colors.GREEN}
+                              name="cash-outline"
+                              size={14}
+                              style={styles.metaIcon}
+                            />
+                            <Text style={styles.metaText}>{activity.cost}</Text>
+                          </View>
+                        ) : null}
+                        {ratingLabel ? (
+                          <View style={styles.metaItem}>
+                            <Ionicons
+                              color="#f97316"
+                              name="star"
+                              size={14}
+                              style={styles.metaIcon}
+                            />
+                            <Text style={styles.metaText}>{ratingLabel}</Text>
+                            {activity.category ? (
+                              <View style={styles.categoryChip}>
+                                <Text style={styles.categoryChipText}>
+                                  {formatBadge(activity.category)}
+                                </Text>
+                              </View>
+                            ) : null}
+                          </View>
+                        ) : null}
+                      </View>
+
+                      {activity.notes ? (
+                        <View style={styles.noteContainer}>
+                          <Ionicons
+                            color={Colors.GREEN}
+                            name="information-circle-outline"
+                            size={16}
+                            style={styles.metaIcon}
+                          />
+                          <Text style={styles.noteText}>{activity.notes}</Text>
+                        </View>
+                      ) : null}
+
+                      {activity.contact ? (
+                        <View style={styles.metaItem}>
+                          <Ionicons
+                            color={Colors.GRAY}
+                            name="call-outline"
+                            size={14}
+                            style={styles.metaIcon}
+                          />
+                          <Text style={styles.metaText}>
+                            {activity.contact}
+                          </Text>
+                        </View>
+                      ) : null}
+
+                      {activity.bookingLink ? (
+                        <TouchableOpacity
+                          accessibilityRole="link"
+                          onPress={() => openLink(activity.bookingLink!)}
+                          style={styles.linkRow}
+                        >
+                          <Ionicons
+                            color={Colors.GREEN}
+                            name="open-outline"
+                            size={16}
+                            style={styles.metaIcon}
+                          />
+                          <Text numberOfLines={1} style={styles.linkText}>
+                            {activity.bookingLink}
+                          </Text>
+                        </TouchableOpacity>
+                      ) : null}
+
+                      {activity.additionalDetails &&
+                      activity.additionalDetails.length > 0 ? (
+                        <View style={styles.additionalDetails}>
+                          {activity.additionalDetails.map(
+                            (detail, detailIndex) => (
+                              <Text
+                                key={`${activity.id}-detail-${detailIndex}`}
+                                style={styles.additionalDetailText}
+                              >
+                                • {detail}
+                              </Text>
+                            )
+                          )}
+                        </View>
+                      ) : null}
+                    </View>
+                  );
+                })
+              ) : (
+                <Text style={styles.itinerarySummary}>
+                  No detailed activities available.
+                </Text>
+              )}
+            </View>
+          ))}
+        </>
       ) : errorMessage ? (
         <View style={styles.emptyInnerState}>
           <Ionicons color={Colors.GRAY} name="alert-circle-outline" size={28} />
@@ -146,12 +454,12 @@ const styles = StyleSheet.create({
     color: Colors.GREEN,
   },
   itineraryBlock: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    padding: 14,
+    // borderRadius: 12,
+    // borderWidth: 1,
+    // borderColor: "#E2E8F0",
+    // padding: 14,
     marginBottom: 12,
-    backgroundColor: "#F8FAFC",
+    // backgroundColor: "#F8FAFC",
   },
   itineraryHeaderRow: {
     flexDirection: "row",
@@ -180,11 +488,152 @@ const styles = StyleSheet.create({
     fontFamily: "inter-regular",
     color: Colors.GRAY,
   },
-  itineraryActivity: {
-    marginTop: 6,
+  dayTabsContainer: {
+    marginBottom: 12,
+  },
+  dayTabsContent: {
+    paddingHorizontal: 2,
+  },
+  dayTab: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    marginRight: 10,
+    borderWidth: 1,
+  },
+  dayTabInactive: {
+    borderColor: "#E2E8F0",
+    backgroundColor: Colors.WHITE,
+  },
+  dayTabActive: {
+    borderColor: Colors.GREEN,
+    backgroundColor: "#E0F2F1",
+  },
+  dayTabLabel: {
+    fontSize: 13,
+    fontFamily: "inter-medium",
+  },
+  dayTabLabelInactive: {
+    color: Colors.GRAY,
+  },
+  dayTabLabelActive: {
+    color: Colors.GREEN,
+  },
+  activityCard: {
+    marginTop: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    padding: 14,
+    // backgroundColor: "#FFF",
+    backgroundColor: "#F8FAFC",
+  },
+  activityHeaderRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  activityHeaderText: {
+    flex: 1,
+  },
+  activityTitle: {
+    fontSize: 14,
+    fontFamily: "inter-medium",
+    color: Colors.BLACK,
+  },
+  activityBadgeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 8,
+  },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "#E0F2F1",
+  },
+  badgeText: {
+    fontSize: 11,
+    fontFamily: "inter-medium",
+    color: Colors.GREEN,
+  },
+  categoryChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "#EEF2FF",
+  },
+  categoryChipText: {
+    fontSize: 11,
+    fontFamily: "inter-medium",
+    color: "#6366F1",
+  },
+  activityDescription: {
+    marginTop: 10,
     fontSize: 13,
     fontFamily: "inter-regular",
-    color: Colors.BLACK,
+    color: Colors.GRAY,
+  },
+  metaRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginTop: 12,
+  },
+  metaItem: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 6,
+  },
+  metaIcon: {
+    marginTop: 1,
+  },
+  metaText: {
+    fontSize: 12,
+    fontFamily: "inter-regular",
+    color: Colors.GRAY,
+    maxWidth: 220,
+  },
+  noteContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: "#F1F5F9",
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 12,
+  },
+  noteText: {
+    flex: 1,
+    fontSize: 12,
+    fontFamily: "inter-regular",
+    color: Colors.GRAY,
+  },
+  linkRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 12,
+  },
+  linkText: {
+    fontSize: 12,
+    fontFamily: "inter-medium",
+    color: Colors.GREEN,
+    textDecorationLine: "underline",
+    maxWidth: 240,
+  },
+  additionalDetails: {
+    marginTop: 12,
+    gap: 6,
+  },
+  additionalDetailText: {
+    fontSize: 12,
+    fontFamily: "inter-regular",
+    color: Colors.GRAY,
   },
   emptyInnerState: {
     alignItems: "center",

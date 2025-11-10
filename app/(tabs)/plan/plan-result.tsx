@@ -2,6 +2,7 @@ import { Colors } from "@/constant/Colors";
 import FlightTicketCard from "@/components/Plan/PlanResult/FlightTicketCard";
 import HotelTicketCard from "@/components/Plan/PlanResult/HotelTicketCard";
 import ItineraryCard, {
+  ItineraryActivity,
   ItineraryEntry,
 } from "@/components/Plan/PlanResult/ItineraryCard";
 import { getUserIdFromToken } from "@/utils/tokenUtils";
@@ -235,61 +236,460 @@ const capitalizeKey = (value: string) =>
     .replace(/\b\w/g, (char) => char.toUpperCase())
     .trim();
 
-const extractItineraryActivities = (data: Record<string, unknown> | null) => {
-  if (!data) return [] as string[];
+const timeSlotPriority: Record<string, number> = {
+  morning: 0,
+  breakfast: 1,
+  brunch: 2,
+  lunch: 3,
+  afternoon: 4,
+  evening: 5,
+  dinner: 6,
+  night: 7,
+};
 
-  const activities: string[] = [];
+const timeSlotAlias: Record<string, string> = {
+  am: "morning",
+  pm: "evening",
+  noon: "lunch",
+  midday: "lunch",
+  supper: "dinner",
+  midnight: "night",
+  overnight: "night",
+  "early morning": "morning",
+  "late afternoon": "afternoon",
+  "late evening": "evening",
+  "late night": "night",
+  "early evening": "evening",
+};
+
+const normalizeTimeSlot = (value?: string | null) => {
+  if (!value) return undefined;
+  const normalized = value.toLowerCase().trim();
+  return timeSlotAlias[normalized] ?? normalized;
+};
+
+const formatDurationFromMinutes = (minutes?: number | null) => {
+  if (typeof minutes !== "number" || Number.isNaN(minutes) || minutes <= 0) {
+    return undefined;
+  }
+  const rounded = Math.round(minutes);
+  const hours = Math.floor(rounded / 60);
+  const mins = rounded % 60;
+  const parts: string[] = [];
+  if (hours > 0) {
+    parts.push(`${hours} hr${hours === 1 ? "" : "s"}`);
+  }
+  if (mins > 0) {
+    parts.push(`${mins} min${mins === 1 ? "" : "s"}`);
+  }
+  return parts.join(" ") || undefined;
+};
+
+const extractItineraryActivities = (
+  dayKey: string,
+  data: Record<string, unknown> | null
+) => {
+  if (!data) return [] as ItineraryActivity[];
+
+  const collected: {
+    payload: Omit<ItineraryActivity, "id">;
+    priority: number;
+    index: number;
+  }[] = [];
+
+  const pushActivity = (
+    payload: Omit<ItineraryActivity, "id">,
+    priority: number
+  ) => {
+    collected.push({ payload, priority, index: collected.length });
+  };
+
+  const buildAdditionalDetails = (record: Record<string, unknown>) => {
+    const extras: string[] = [];
+    const ignoredKeys = new Set([
+      "activity",
+      "activities",
+      "title",
+      "summary",
+      "description",
+      "details",
+      "detail",
+      "time",
+      "timeorder",
+      "time_order",
+      "time_of_day",
+      "slot",
+      "period",
+      "start_time",
+      "end_time",
+      "end",
+      "time_range",
+      "hour",
+      "hours",
+      "duration",
+      "duration_text",
+      "duration_minutes",
+      "duration_mins",
+      "duration_in_minutes",
+      "location",
+      "place",
+      "venue",
+      "address",
+      "address_text",
+      "full_address",
+      "category",
+      "type",
+      "classification",
+      "tag",
+      "interest",
+      "cost",
+      "price",
+      "price_text",
+      "price_value",
+      "budget",
+      "estimated_cost",
+      "estimated_cost_value",
+      "rating",
+      "rating_value",
+      "rating_text",
+      "rating_count",
+      "review_count",
+      "reviews",
+      "notes",
+      "tips",
+      "contact",
+      "contact_info",
+      "phone",
+      "phone_number",
+      "website",
+      "link",
+      "booking_link",
+      "url",
+      "reservation_url",
+      "transportation",
+      "getting_there",
+      "transit",
+      "how_to_get_there",
+      "coordinates",
+      "latitude",
+      "longitude",
+      "lat",
+      "lon",
+      "geo",
+      "images",
+      "image",
+      "image_url",
+      "photo",
+      "media",
+    ]);
+
+    Object.entries(record).forEach(([key, value]) => {
+      const normalizedKey = key.toLowerCase();
+      if (ignoredKeys.has(normalizedKey)) {
+        return;
+      }
+      if (value === null || value === undefined) {
+        return;
+      }
+      const flattened = flattenValue(value);
+      if (!flattened) {
+        return;
+      }
+      extras.push(`${capitalizeKey(key)}: ${flattened}`);
+    });
+
+    return Array.from(new Set(extras));
+  };
+
+  const parseRecord = (
+    record: Record<string, unknown>,
+    fallbackSlot?: string
+  ) => {
+    const slotRaw =
+      pickString(record, [
+        ["timeOrder"],
+        ["time_order"],
+        ["time_of_day"],
+        ["slot"],
+        ["period"],
+      ]) ?? fallbackSlot;
+    const normalizedSlot = normalizeTimeSlot(slotRaw);
+    const fallbackNormalized = normalizeTimeSlot(fallbackSlot);
+    const resolvedSlot =
+      normalizedSlot ?? fallbackNormalized ?? fallbackSlot?.toLowerCase();
+    const slotPriority =
+      resolvedSlot && resolvedSlot in timeSlotPriority
+        ? timeSlotPriority[resolvedSlot]
+        : Number.MAX_SAFE_INTEGER;
+    const displaySlot = slotRaw
+      ? capitalizeKey(slotRaw)
+      : fallbackSlot
+      ? capitalizeKey(fallbackSlot)
+      : undefined;
+
+    const timeText = pickString(record, [
+      ["time"],
+      ["start_time"],
+      ["start"],
+      ["hour"],
+      ["start_at"],
+    ])?.trim();
+    const endTime = pickString(record, [
+      ["end_time"],
+      ["end"],
+      ["finish"],
+    ])?.trim();
+    let timeRange = pickString(record, [
+      ["time_range"],
+      ["schedule"],
+      ["hours"],
+      ["timeframe"],
+    ])?.trim();
+    if (!timeRange && timeText && endTime) {
+      timeRange = `${timeText} - ${endTime}`;
+    }
+
+    const durationMinutes = pickNumber(record, [
+      ["duration_minutes"],
+      ["duration_mins"],
+      ["duration_in_minutes"],
+    ]);
+    const durationText =
+      formatDurationFromMinutes(durationMinutes) ??
+      pickString(record, [["duration_text"], ["duration"], ["length"]])?.trim();
+
+    const titleCandidate =
+      pickString(record, [
+        ["activity"],
+        ["title"],
+        ["name"],
+        ["highlight"],
+        ["experience"],
+      ])?.trim() ||
+      pickString(record, [["place"], ["location"], ["venue"]])?.trim();
+
+    let description = pickString(record, [
+      ["description"],
+      ["details"],
+      ["detail"],
+      ["summary"],
+      ["overview"],
+    ])?.trim();
+
+    const location = pickString(record, [
+      ["location"],
+      ["place"],
+      ["venue"],
+      ["where"],
+      ["address_short"],
+    ])?.trim();
+    const address = pickString(record, [
+      ["address"],
+      ["full_address"],
+      ["address_text"],
+      ["address_line"],
+    ])?.trim();
+    const category = pickString(record, [
+      ["category"],
+      ["type"],
+      ["classification"],
+      ["tag"],
+      ["interest"],
+    ])?.trim();
+
+    const ratingValue = pickNumber(record, [
+      ["rating"],
+      ["rating_value"],
+      ["score"],
+      ["stars"],
+    ]);
+    const ratingText = pickString(record, [
+      ["rating_text"],
+      ["rating_label"],
+    ])?.trim();
+    const ratingCount = pickNumber(record, [
+      ["rating_count"],
+      ["review_count"],
+      ["reviews"],
+      ["number_of_reviews"],
+    ]);
+
+    const costTextCandidate = pickString(record, [
+      ["cost"],
+      ["price"],
+      ["price_text"],
+      ["budget"],
+      ["estimated_cost"],
+    ])?.trim();
+    const costNumber =
+      pickNumber(record, [
+        ["price_value"],
+        ["cost_value"],
+        ["estimated_cost_value"],
+      ]) ?? (costTextCandidate ? parseCurrency(costTextCandidate) : undefined);
+    const cost =
+      costNumber && costNumber > 0
+        ? formatCurrency(costNumber)
+        : costTextCandidate || undefined;
+
+    const notes = pickString(record, [
+      ["notes"],
+      ["tips"],
+      ["additional_info"],
+    ])?.trim();
+    const contact = pickString(record, [
+      ["contact"],
+      ["contact_info"],
+      ["phone"],
+      ["phone_number"],
+      ["hotline"],
+    ])?.trim();
+    const bookingLink = pickString(record, [
+      ["booking_link"],
+      ["website"],
+      ["link"],
+      ["url"],
+      ["reservation_url"],
+    ])?.trim();
+    const transportation = pickString(record, [
+      ["transportation"],
+      ["getting_there"],
+      ["transit"],
+      ["how_to_get_there"],
+    ])?.trim();
+
+    if (titleCandidate && description) {
+      const normalizedTitle = titleCandidate.toLowerCase();
+      if (description.toLowerCase() === normalizedTitle) {
+        description = undefined;
+      }
+    }
+
+    const payload: Omit<ItineraryActivity, "id"> = {
+      title:
+        titleCandidate ||
+        description ||
+        (location ? capitalizeKey(location) : undefined) ||
+        (fallbackSlot
+          ? `${capitalizeKey(fallbackSlot)} Activity`
+          : undefined) ||
+        "Activity",
+      description,
+      timeOfDay: displaySlot,
+      time: timeText,
+      endTime,
+      timeRange,
+      durationText,
+      location,
+      address,
+      category,
+      cost,
+      ratingText,
+      ratingValue: ratingValue ?? undefined,
+      ratingCount: ratingCount ?? undefined,
+      notes,
+      contact,
+      bookingLink,
+      transportation,
+    };
+
+    const extras = buildAdditionalDetails(record);
+    if (extras.length > 0) {
+      const deduped = extras.filter(Boolean);
+      if (deduped.length > 0) {
+        const blockers = [
+          payload.description,
+          payload.notes,
+          payload.contact,
+          payload.cost,
+          payload.transportation,
+          payload.location,
+          payload.address,
+          payload.category,
+        ]
+          .filter(Boolean)
+          .map((item) => String(item).toLowerCase());
+        const seen = new Set<string>();
+        const filtered = deduped.filter((detail) => {
+          const normalized = detail.toLowerCase();
+          if (seen.has(normalized)) {
+            return false;
+          }
+          seen.add(normalized);
+          return !blockers.some((block) => normalized.includes(block));
+        });
+        if (filtered.length > 0) {
+          payload.additionalDetails = filtered;
+        }
+      }
+    }
+
+    if (
+      payload.description &&
+      payload.title &&
+      payload.description.toLowerCase() === payload.title.toLowerCase()
+    ) {
+      payload.description = undefined;
+    }
+
+    return { payload, priority: slotPriority };
+  };
+
+  const handleValue = (value: unknown, fallbackSlot?: string) => {
+    if (Array.isArray(value)) {
+      value.forEach((item) => handleValue(item, fallbackSlot));
+      return;
+    }
+
+    if (value && typeof value === "object") {
+      const parsed = parseRecord(
+        value as Record<string, unknown>,
+        fallbackSlot
+      );
+      if (parsed) {
+        pushActivity(parsed.payload, parsed.priority);
+      }
+      return;
+    }
+
+    if (typeof value === "string" || typeof value === "number") {
+      const title = String(value).trim();
+      if (!title) {
+        return;
+      }
+      const normalizedSlot = normalizeTimeSlot(fallbackSlot);
+      const slotPriority =
+        normalizedSlot && normalizedSlot in timeSlotPriority
+          ? timeSlotPriority[normalizedSlot]
+          : Number.MAX_SAFE_INTEGER;
+      pushActivity(
+        {
+          title,
+          timeOfDay: fallbackSlot ? capitalizeKey(fallbackSlot) : undefined,
+        },
+        slotPriority
+      );
+    }
+  };
+
   const direct = data.activities;
   if (Array.isArray(direct)) {
-    const timePriority: Record<string, number> = {
-      morning: 0,
-      lunch: 1,
-      afternoon: 2,
-      dinner: 3,
-    };
-    const decorated = direct
-      .map((item, index) => {
-        const text = flattenValue(item);
-        if (!text) return null;
-        if (item && typeof item === "object") {
-          const slot = pickString(item as Record<string, unknown>, [
-            ["timeOrder"],
-            ["time_order"],
-            ["time"],
-            ["time_of_day"],
-            ["slot"],
-          ])?.toLowerCase();
-          if (slot && slot in timePriority) {
-            return {
-              text,
-              priority: timePriority[slot],
-              index,
-            };
-          }
-        }
-        return { text, priority: Number.MAX_SAFE_INTEGER, index };
-      })
-      .filter(
-        (item): item is { text: string; priority: number; index: number } =>
-          Boolean(item)
-      )
-      .sort((a, b) => {
-        if (a.priority !== b.priority) {
-          return a.priority - b.priority;
-        }
-        return a.index - b.index;
-      });
-
-    decorated.forEach((item) => activities.push(item.text));
+    direct.forEach((item) => handleValue(item));
   }
 
-  const blocks = ["morning", "lunch", "afternoon", "dinner"];
+  const blocks = [
+    "morning",
+    "breakfast",
+    "brunch",
+    "lunch",
+    "afternoon",
+    "evening",
+    "dinner",
+    "night",
+  ];
   blocks.forEach((key) => {
     if (key in data) {
-      const text = flattenValue(data[key]);
-      if (text) {
-        activities.push(`${capitalizeKey(key)}: ${text}`);
-      }
+      handleValue(data[key], key);
     }
   });
 
@@ -300,12 +700,29 @@ const extractItineraryActivities = (data: Record<string, unknown> | null) => {
       return;
     }
     const text = flattenValue(value);
-    if (text) {
-      activities.push(`${capitalizeKey(key)}: ${text}`);
+    if (!text) {
+      return;
     }
+    pushActivity(
+      {
+        title: capitalizeKey(key),
+        description: text,
+      },
+      Number.MAX_SAFE_INTEGER
+    );
   });
 
-  return activities;
+  return collected
+    .sort((a, b) => {
+      if (a.priority !== b.priority) {
+        return a.priority - b.priority;
+      }
+      return a.index - b.index;
+    })
+    .map((item, index) => ({
+      id: `${dayKey}-activity-${index}`,
+      ...item.payload,
+    }));
 };
 
 const buildApiUrl = (path: string) => {
@@ -521,7 +938,7 @@ const PlanResult = () => {
         date: dateText,
         title: titleText,
         summary: summaryText,
-        activities: extractItineraryActivities(data),
+        activities: extractItineraryActivities(key || `day-${index}`, data),
       };
     });
   }, [itineraryDays]);
