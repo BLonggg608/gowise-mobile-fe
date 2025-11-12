@@ -134,7 +134,7 @@ const PaymentMethods = () => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: "#F8FAFC", }}>
       {/* Header row with title and Add button */}
       <View style={styles.headerContainer}>
         <View style={{ flexDirection: "row" }}>

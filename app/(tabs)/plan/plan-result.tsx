@@ -1725,6 +1725,7 @@ export default PlanResult;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#F8FAFC",
   },
   header: {
     flexDirection: "row",

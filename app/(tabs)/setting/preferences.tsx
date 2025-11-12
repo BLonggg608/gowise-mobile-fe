@@ -150,7 +150,7 @@ const Preferences = () => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: "#F8FAFC", }}>
       {/* Header row with title */}
       <View style={styles.header}>
         <TouchableOpacity

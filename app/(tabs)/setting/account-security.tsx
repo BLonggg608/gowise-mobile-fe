@@ -136,7 +136,7 @@ const AccountSecurity = () => {
     });
   };
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: "#F8FAFC", }}>
       {/* Header */}
       <View style={styles.headerContainer}>
         <TouchableOpacity

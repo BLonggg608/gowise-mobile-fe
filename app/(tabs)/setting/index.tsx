@@ -56,7 +56,7 @@ const Setting = () => {
     router.replace("/auth/sign-in");
   };
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: "#F8FAFC", }}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Cài đặt</Text>

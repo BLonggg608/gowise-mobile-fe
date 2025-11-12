@@ -108,8 +108,8 @@ const SignIn = () => {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-      <SafeAreaView style={{ flex: 1 }}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: "#F8FAFC", }} behavior="padding">
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFC", }}>
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"

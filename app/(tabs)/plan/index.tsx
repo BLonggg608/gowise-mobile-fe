@@ -5,14 +5,16 @@ import { getUserIdFromToken } from "@/utils/tokenUtils";
 import { saveData } from "@/utils/localStorage";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
-import { RelativePathString, useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
+  ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -66,6 +68,188 @@ const sortOptions: { value: SortOption; label: string }[] = [
   { value: "budget", label: "Ngân sách" },
   { value: "duration", label: "Thời lượng" },
 ];
+
+type PlanListHeaderProps = {
+  stats: {
+    total: number;
+    active: number;
+    draft: number;
+    completed: number;
+  };
+  searchQuery: string;
+  onSearch: (value: string) => void;
+  onClearSearch: () => void;
+  selectedStatus: StatusFilter;
+  onSelectStatus: (value: StatusFilter) => void;
+  sortBy: SortOption;
+  onSelectSort: (value: SortOption) => void;
+  onCreatePlan: () => void;
+};
+
+const PlanListHeader = React.memo(
+  ({
+    stats,
+    searchQuery,
+    onSearch,
+    onClearSearch,
+    selectedStatus,
+    onSelectStatus,
+    sortBy,
+    onSelectSort,
+    onCreatePlan,
+  }: PlanListHeaderProps) => {
+    const statCardScheme: Record<
+      string,
+      Omit<StatCardProps, "label" | "value" | "icon"> & { icon: IconName }
+    > = {
+      total: {
+        icon: "folder-open-outline",
+        background: Colors.WHITE,
+        iconBackground: "#E2E8F0",
+        iconColor: Colors.GRAY,
+      },
+      active: {
+        icon: "flash-outline",
+        background: "#ECFDF5",
+        iconBackground: "#D1FAE5",
+        iconColor: Colors.GREEN,
+      },
+      draft: {
+        icon: "document-text-outline",
+        background: "#FEF3C7",
+        iconBackground: "#FDE68A",
+        iconColor: Colors.YELLOW,
+      },
+      completed: {
+        icon: "checkmark-circle-outline",
+        background: "#EEF2FF",
+        iconBackground: "#E0E7FF",
+        iconColor: Colors.GREEN,
+      },
+    };
+
+    return (
+      <View style={styles.listHeader}>
+        <Text style={styles.pageSubtitle}>
+          Tổ chức và quản lý tất cả kế hoạch du lịch của bạn ở một nơi ✈️
+        </Text>
+
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={onCreatePlan}
+          style={[
+            styles.primaryButton,
+            {
+              marginVertical: 12,
+              alignItems: "center",
+              justifyContent: "center",
+            },
+          ]}
+        >
+          <Ionicons color={Colors.WHITE} name="add" size={18} />
+          <Text style={styles.primaryButtonText}>Tạo kế hoạch mới</Text>
+        </TouchableOpacity>
+
+        <View style={styles.statsGrid}>
+          {(
+            [
+              { key: "total", label: "Tổng kế hoạch", value: stats.total },
+              { key: "active", label: "Đang hoạt động", value: stats.active },
+              { key: "draft", label: "Bản nháp", value: stats.draft },
+              {
+                key: "completed",
+                label: "Hoàn thành",
+                value: stats.completed,
+              },
+            ] as const
+          ).map(({ key, label, value }) => (
+            <SummaryStatCard
+              key={key}
+              background={statCardScheme[key].background}
+              icon={statCardScheme[key].icon}
+              iconBackground={statCardScheme[key].iconBackground}
+              iconColor={statCardScheme[key].iconColor}
+              label={label}
+              value={value}
+            />
+          ))}
+        </View>
+
+        <View style={styles.searchContainer}>
+          <Ionicons color={Colors.GRAY} name="search-outline" size={18} />
+          <TextInput
+            placeholder="Tìm kế hoạch"
+            placeholderTextColor="#94A3B8"
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={onSearch}
+          />
+          {searchQuery ? (
+            <TouchableOpacity
+              onPress={onClearSearch}
+              style={styles.clearSearchButton}
+            >
+              <Ionicons color={Colors.GRAY} name="close-circle" size={18} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
+        <Text style={styles.sectionTitle}>Trạng thái:</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filtersRow}
+        >
+          {statusFilterOptions.map((option) => {
+            const isActive = selectedStatus === option.value;
+            return (
+              <TouchableOpacity
+                key={option.value}
+                activeOpacity={0.85}
+                onPress={() => onSelectStatus(option.value)}
+                style={[styles.filterChip, isActive && styles.filterChipActive]}
+              >
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    isActive && styles.filterChipTextActive,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        <Text style={styles.sectionTitle}>Sắp xếp theo:</Text>
+        <View style={styles.sortRow}>
+          {sortOptions.map((option) => {
+            const isActive = sortBy === option.value;
+            return (
+              <TouchableOpacity
+                key={option.value}
+                activeOpacity={0.85}
+                onPress={() => onSelectSort(option.value)}
+                style={[styles.sortOption, isActive && styles.sortOptionActive]}
+              >
+                <Text
+                  style={[
+                    styles.sortOptionText,
+                    isActive && styles.sortOptionTextActive,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+    );
+  }
+);
+PlanListHeader.displayName = "PlanListHeader";
 
 const SummaryStatCard = ({
   label,
@@ -259,7 +443,7 @@ const Plan = () => {
 
   const [userId, setUserId] = useState<string | null>(null);
   const [plans, setPlans] = useState<PlanListItem[]>([]);
-  const [searchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("all");
   const [sortBy, setSortBy] = useState<SortOption>("created");
   const [isLoading, setIsLoading] = useState(true);
@@ -513,12 +697,12 @@ const Plan = () => {
     setIsCreatePlanModalVisible(true);
   }, []);
 
-  const handleImportPlan = useCallback(() => {
-    Toast.show({
-      type: "error",
-      text1: "Tính năng đang phát triển",
-      text2: "Chúng tôi sẽ sớm hỗ trợ nhập kế hoạch.",
-    });
+  const handleSearch = useCallback((value: string) => {
+    setSearchQuery(value);
+  }, []);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
   }, []);
 
   const handleSubmitCreateNewPlan = useCallback(
@@ -537,182 +721,30 @@ const Plan = () => {
     [handleRefresh]
   );
 
-  const renderListHeader = useCallback(() => {
-    const statCardScheme: Record<
-      string,
-      Omit<StatCardProps, "label" | "value" | "icon"> & { icon: IconName }
-    > = {
-      total: {
-        icon: "folder-open-outline",
-        // background: "#F8FAFC",
-        background: Colors.WHITE,
-        iconBackground: "#E2E8F0",
-        iconColor: Colors.GRAY,
-      },
-      active: {
-        icon: "flash-outline",
-        background: "#ECFDF5",
-        iconBackground: "#D1FAE5",
-        iconColor: Colors.GREEN,
-      },
-      draft: {
-        icon: "document-text-outline",
-        background: "#FEF3C7",
-        iconBackground: "#FDE68A",
-        iconColor: Colors.YELLOW,
-      },
-      completed: {
-        icon: "checkmark-circle-outline",
-        background: "#EEF2FF",
-        iconBackground: "#E0E7FF",
-        iconColor: Colors.GREEN,
-      },
-    };
-
-    return (
-      <View style={styles.listHeader}>
-        <Text style={styles.pageSubtitle}>
-          Tổ chức và quản lý tất cả kế hoạch du lịch của bạn ở một nơi ✈️
-        </Text>
-
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={handleCreatePlan}
-          style={[
-            styles.primaryButton,
-            {
-              marginVertical: 12,
-              alignItems: "center",
-              justifyContent: "center",
-            },
-          ]}
-        >
-          <Ionicons color={Colors.WHITE} name="add" size={18} />
-          <Text style={styles.primaryButtonText}>Tạo kế hoạch mới</Text>
-        </TouchableOpacity>
-
-        {/* <View style={styles.actionsRow}>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={handleCreatePlan}
-            style={styles.primaryButton}
-          >
-            <Ionicons color={Colors.WHITE} name="add" size={18} />
-            <Text style={styles.primaryButtonText}>Tạo kế hoạch mới</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={handleImportPlan}
-            style={styles.secondaryButton}
-          >
-            <Ionicons
-              color={Colors.BLACK}
-              name="cloud-upload-outline"
-              size={18}
-            />
-            <Text style={styles.secondaryButtonText}>Nhập kế hoạch</Text>
-          </TouchableOpacity>
-        </View> */}
-
-        <View style={styles.statsGrid}>
-          {(
-            [
-              { key: "total", label: "Tổng kế hoạch", value: stats.total },
-              { key: "active", label: "Đang hoạt động", value: stats.active },
-              { key: "draft", label: "Bản nháp", value: stats.draft },
-              { key: "completed", label: "Hoàn thành", value: stats.completed },
-            ] as const
-          ).map(({ key, label, value }) => (
-            <SummaryStatCard
-              key={key}
-              background={statCardScheme[key].background}
-              icon={statCardScheme[key].icon}
-              iconBackground={statCardScheme[key].iconBackground}
-              iconColor={statCardScheme[key].iconColor}
-              label={label}
-              value={value}
-            />
-          ))}
-        </View>
-
-        {/* <View style={styles.searchContainer}>
-          <Ionicons color={Colors.GRAY} name="search-outline" size={18} />
-          <TextInput
-            placeholder="Tìm kế hoạch theo tiêu đề hoặc địa điểm..."
-            placeholderTextColor="#94A3B8"
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery ? (
-            <TouchableOpacity
-              onPress={handleClearSearch}
-              style={styles.clearSearchButton}
-            >
-              <Ionicons color={Colors.GRAY} name="close-circle" size={18} />
-            </TouchableOpacity>
-          ) : null}
-        </View> */}
-
-        <Text style={styles.sectionTitle}>Trạng thái:</Text>
-        <View style={styles.filtersRow}>
-          {statusFilterOptions.map((option) => {
-            const isActive = selectedStatus === option.value;
-            return (
-              <TouchableOpacity
-                key={option.value}
-                activeOpacity={0.85}
-                onPress={() => setSelectedStatus(option.value)}
-                style={[styles.filterChip, isActive && styles.filterChipActive]}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    isActive && styles.filterChipTextActive,
-                  ]}
-                >
-                  {option.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        <Text style={styles.sectionTitle}>Sắp xếp theo:</Text>
-        <View style={styles.sortRow}>
-          {sortOptions.map((option) => {
-            const isActive = sortBy === option.value;
-            return (
-              <TouchableOpacity
-                key={option.value}
-                activeOpacity={0.85}
-                onPress={() => setSortBy(option.value)}
-                style={[styles.sortOption, isActive && styles.sortOptionActive]}
-              >
-                <Text
-                  style={[
-                    styles.sortOptionText,
-                    isActive && styles.sortOptionTextActive,
-                  ]}
-                >
-                  {option.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
-    );
-  }, [
-    handleCreatePlan,
-    handleImportPlan,
-    selectedStatus,
-    sortBy,
-    stats.active,
-    stats.completed,
-    stats.draft,
-    stats.total,
-  ]);
+  const listHeaderComponent = useMemo(
+    () => (
+      <PlanListHeader
+        onClearSearch={handleClearSearch}
+        onCreatePlan={handleCreatePlan}
+        onSearch={handleSearch}
+        onSelectSort={setSortBy}
+        onSelectStatus={setSelectedStatus}
+        searchQuery={searchQuery}
+        selectedStatus={selectedStatus}
+        sortBy={sortBy}
+        stats={stats}
+      />
+    ),
+    [
+      handleClearSearch,
+      handleCreatePlan,
+      handleSearch,
+      searchQuery,
+      selectedStatus,
+      sortBy,
+      stats,
+    ]
+  );
 
   const renderEmptyComponent = useCallback(() => {
     if (isLoading) {
@@ -775,7 +807,7 @@ const Plan = () => {
         key="list"
         keyExtractor={(item) => item.id}
         ListEmptyComponent={renderEmptyComponent}
-        ListHeaderComponent={renderListHeader}
+        ListHeaderComponent={listHeaderComponent}
         numColumns={1}
         onRefresh={handleRefresh}
         refreshing={isRefreshing}
@@ -822,6 +854,7 @@ export default Plan;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#F8FAFC",
   },
   header: {
     paddingTop: statusBarHeight + 12,
@@ -862,7 +895,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     flexDirection: "row",
     alignItems: "center",
-    marginRight: 12,
     marginBottom: 8,
   },
   primaryButtonText: {
@@ -922,21 +954,29 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   searchContainer: {
-    flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F1F5F9",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    backgroundColor: Colors.WHITE,
+    borderColor: "#E2E8F0",
+    borderRadius: 18,
+    borderWidth: 1,
+    flexDirection: "row",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    shadowColor: Colors.BLACK,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
     marginBottom: 12,
     marginTop: 4,
   },
   searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 14,
-    fontFamily: "inter-regular",
     color: Colors.BLACK,
+    flex: 1,
+    fontFamily: "inter-regular",
+    fontSize: 14,
+    marginLeft: 10,
+    paddingVertical: 0,
   },
   clearSearchButton: {
     marginLeft: 8,

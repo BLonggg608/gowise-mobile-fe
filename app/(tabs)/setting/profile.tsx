@@ -141,7 +141,7 @@ const Profile = () => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: "#F8FAFC", }}>
       {/* Header row with title and edit/cancel button */}
       <View style={styles.header}>
         <View style={{ flexDirection: "row" }}>
@@ -313,9 +313,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#eafcf7",
+    // backgroundColor: "#eafcf7",
+    backgroundColor: Colors.GREEN + '40',
     borderRadius: 8,
-    paddingVertical: 4,
+    paddingVertical: 8,
     paddingHorizontal: 10,
     marginBottom: 12,
   },

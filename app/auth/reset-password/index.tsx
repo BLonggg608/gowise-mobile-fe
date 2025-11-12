@@ -112,10 +112,10 @@ const ResetPassword = () => {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: "#F8FAFC", }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFC", }}>
         {/* Back Button */}
         <TouchableOpacity
           activeOpacity={0.7}

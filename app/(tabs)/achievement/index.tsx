@@ -476,7 +476,7 @@ const checkFirstFriend = async (_params: CheckParams) => {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    // backgroundColor: "#F8FAFC",
+    backgroundColor: "#F8FAFC",
   },
   listContent: {
     paddingBottom: 28,

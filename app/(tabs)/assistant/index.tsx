@@ -595,6 +595,7 @@ export default Assistant;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#F8FAFC",
   },
   startChatContainer: {
     paddingHorizontal: 18,

@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   badgeText: {
     marginLeft: 6,
     fontSize: 12,
-    fontFamily: "inter-semibold",
+    fontFamily: "inter-medium",
     color: Colors.WHITE,
   },
   badgeLocked: {
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   badgeLockedText: {
     marginLeft: 6,
     fontSize: 12,
-    fontFamily: "inter-semibold",
+    fontFamily: "inter-medium",
     color: Colors.GRAY,
   },
   cardTitle: {
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     fontSize: 12,
-    fontFamily: "inter-semibold",
+    fontFamily: "inter-medium",
     color: Colors.GRAY,
   },
 });
