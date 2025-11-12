@@ -30,9 +30,7 @@ const RecentPlanCard = ({
       onPress={onPress}
       style={styles.card}
     >
-      <Text numberOfLines={1} style={styles.title}>
-        {title}
-      </Text>
+      <Text style={styles.title}>{title}</Text>
 
       <View style={styles.locationRow}>
         <Ionicons color={Colors.GREEN} name="location-outline" size={16} />
@@ -77,7 +75,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "inter-medium",
     color: Colors.BLACK,
-    marginRight: 8,
   },
   statusBadge: {
     paddingHorizontal: 10,
@@ -100,7 +97,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "inter-regular",
     color: Colors.GRAY,
-    // flex: 1,
+    textTransform: "capitalize",
   },
   durationText: {
     fontSize: 13,

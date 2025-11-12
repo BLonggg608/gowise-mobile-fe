@@ -50,8 +50,8 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     borderRadius: 10,
     // flexDirection: "row",
-    // alignItems: "center",
-    // justifyContent: "flex-start",
+    alignItems: "center",
+    justifyContent: "center",
     width: 150,
   },
   loadAsset: {
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   text: {
-    marginLeft: 26,
+    // marginLeft: 26,
     fontSize: 16,
     color: Colors.GRAY,
     fontFamily: "inter-regular",

@@ -68,6 +68,7 @@ export default {
 
         // api key
         PROVINCE_API_KEY: process.env.PROVINCE_API_KEY,
+        WEATHER_API_KEY: process.env.WEATHER_API_KEY,
       },
     },
   },

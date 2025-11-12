@@ -4,7 +4,11 @@ import { getSecureData } from "@/utils/storage";
 import { getUserIdFromToken } from "@/utils/tokenUtils";
 import Constants from "expo-constants";
 import * as WebBrowser from "expo-web-browser";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import {
+  RelativePathString,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -213,7 +217,7 @@ const PremiumScreen = () => {
   );
 
   const clearStatusParams = useCallback(() => {
-    router.replace("/(tabs)/premium/index");
+    router.replace("/(tabs)/premium/index" as RelativePathString);
   }, [router]);
 
   const finalizeSuccessfulPayment = useCallback(

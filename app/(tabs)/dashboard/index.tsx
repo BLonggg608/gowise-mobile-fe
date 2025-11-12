@@ -4,6 +4,8 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState, useCallback } from "react";
 import {
+  ActivityIndicator,
+  Image,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -50,6 +52,17 @@ type DashboardPlan = {
   image?: any;
   createdValue: number;
   raw: ApiPlan;
+};
+
+type WeatherInfo = {
+  city: string;
+  temp: string;
+  desc: string;
+  rawDesc: string;
+  humidity: string;
+  wind: string;
+  uv: string;
+  icon: string;
 };
 
 const getPlanIdentifier = (plan: ApiPlan) => {
@@ -169,62 +182,92 @@ const transformPlan = (plan: ApiPlan): DashboardPlan | null => {
   };
 };
 
-const initialWeather = [
-  {
-    city: "Tokyo, Nhật Bản",
-    temp: "22°C",
-    desc: "Nắng",
-    humidity: "65%",
-    wind: "12 km/h",
-    uv: "UV 6",
-    icon: "sunny-outline",
-  },
-  {
-    city: "Paris, Pháp",
-    temp: "18°C",
-    desc: "Âm u",
-    humidity: "76%",
-    wind: "8 km/h",
-    uv: "UV 3",
-    icon: "cloud-outline",
-  },
-  {
-    city: "Bali, Indonesia",
-    temp: "28°C",
-    desc: "Mưa",
-    humidity: "85%",
-    wind: "15 km/h",
-    uv: "UV 4",
-    icon: "rainy-outline",
-  },
-];
-
 const planStatusColors: { [key: string]: string } = {
   "Đang hoạt động": Colors.LIGHT_GREEN,
   "Bản nháp": Colors.YELLOW,
   "Hoàn thành": Colors.GREEN,
 };
 
-const weatherStatusColors: { [key: string]: string } = {
-  Nắng: Colors.YELLOW,
-  "Âm u": Colors.GRAY,
-  Mưa: Colors.GREEN,
+const WEATHER_DESCRIPTION_MAP: Record<string, string> = {
+  Sunny: "Nắng",
+  Clear: "Trời quang",
+  "Partly cloudy": "Ít mây",
+  Cloudy: "Nhiều mây",
+  Overcast: "Âm u",
+  Mist: "Sương nhẹ",
+  "Patchy rain possible": "Có thể mưa rải rác",
+  "Patchy snow possible": "Có thể có tuyết",
+  "Patchy sleet possible": "Có thể có mưa tuyết",
+  "Patchy freezing drizzle possible": "Có thể có mưa lạnh nhẹ",
+  "Thundery outbreaks possible": "Có thể có dông",
+  "Blowing snow": "Tuyết bay mạnh",
+  Blizzard: "Bão tuyết",
+  Fog: "Sương mù",
+  "Freezing fog": "Sương lạnh",
+  "Patchy light drizzle": "Mưa phùn nhẹ",
+  "Light drizzle": "Mưa phùn",
+  "Freezing drizzle": "Mưa lạnh",
+  "Heavy freezing drizzle": "Mưa lạnh dày",
+  "Patchy light rain": "Mưa nhẹ",
+  "Light rain": "Mưa nhỏ",
+  "Moderate rain at times": "Mưa vừa",
+  "Moderate rain": "Mưa vừa",
+  "Heavy rain at times": "Mưa to",
+  "Heavy rain": "Mưa lớn",
+  "Light freezing rain": "Mưa lạnh nhẹ",
+  "Moderate or heavy freezing rain": "Mưa lạnh lớn",
+  "Light sleet": "Mưa tuyết nhẹ",
+  "Moderate or heavy sleet": "Mưa tuyết",
+  "Patchy light snow": "Tuyết nhẹ",
+  "Light snow": "Tuyết nhẹ",
+  "Patchy moderate snow": "Tuyết vừa",
+  "Moderate snow": "Tuyết vừa",
+  "Patchy heavy snow": "Tuyết lớn",
+  "Heavy snow": "Tuyết lớn",
+  "Ice pellets": "Mưa đá nhỏ",
+  "Light rain shower": "Mưa rào nhẹ",
+  "Moderate or heavy rain shower": "Mưa rào",
+  "Torrential rain shower": "Mưa xối xả",
+  "Light sleet showers": "Mưa tuyết nhẹ",
+  "Moderate or heavy sleet showers": "Mưa tuyết rào",
+  "Light snow showers": "Mưa tuyết nhẹ",
+  "Moderate or heavy snow showers": "Mưa tuyết rào",
+  "Light showers of ice pellets": "Mưa đá nhỏ nhẹ",
+  "Moderate or heavy showers of ice pellets": "Mưa đá nhỏ",
+  "Patchy light rain with thunder": "Mưa nhẹ có sấm",
+  "Moderate or heavy rain with thunder": "Mưa lớn có sấm",
+  "Patchy light snow with thunder": "Tuyết nhẹ có sấm",
+  "Moderate or heavy snow with thunder": "Tuyết lớn có sấm",
+};
+
+const translateWeatherDescription = (description: string) => {
+  return WEATHER_DESCRIPTION_MAP[description] ?? description;
 };
 
 const Dashboard = () => {
   const router = useRouter();
   const [plans, setPlans] = useState<DashboardPlan[]>([]);
-  const [weather] = useState(initialWeather);
+  const [weather, setWeather] = useState<WeatherInfo[]>([]);
   const [userInfo, setUserInfo] = useState<userInfoType>(null);
   const [updateVisible, setUpdateVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [userInfoLoading, setUserInfoLoading] = useState(true);
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [weatherLoading, setWeatherLoading] = useState(true);
 
   // Fetch user info (giữ nguyên)
   const checkUserInfo = useCallback(async () => {
-    const userId = await getUserIdFromToken();
+    setUserInfoLoading(true);
     try {
+      const userId = await getUserIdFromToken();
+      if (!userId) {
+        setUserInfo(null);
+        setUpdateVisible(true);
+        return;
+      }
+
       const response = await fetch(
-        Constants.expoConfig?.extra?.env.USER_URL + `/${userId}`,
+        `${Constants.expoConfig?.extra?.env.USER_URL}/${userId}`,
         {
           method: "GET",
           headers: {
@@ -233,7 +276,7 @@ const Dashboard = () => {
         }
       );
       const data = await response.json();
-      if (response.ok) {
+      if (response.ok && data?.data) {
         setUserInfo({
           firstName: data.data.firstName,
           lastName: data.data.lastName,
@@ -244,8 +287,10 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error("Failed to fetch user info", error);
-      deleteSecureData("accessToken");
+      await deleteSecureData("accessToken");
       router.replace("/auth/sign-in");
+    } finally {
+      setUserInfoLoading(false);
     }
   }, [router]);
 
@@ -255,6 +300,7 @@ const Dashboard = () => {
 
   // Fetch plans from API (giống plan screen)
   const fetchPlans = useCallback(async () => {
+    setPlansLoading(true);
     try {
       const userId = await getUserIdFromToken();
       if (!userId) {
@@ -283,6 +329,8 @@ const Dashboard = () => {
     } catch (err) {
       setPlans([]);
       throw err;
+    } finally {
+      setPlansLoading(false);
     }
   }, []);
 
@@ -295,6 +343,74 @@ const Dashboard = () => {
       });
     });
   }, [fetchPlans]);
+
+  const fetchWeather = useCallback(async () => {
+    if (plans.length === 0) {
+      setWeather([]);
+      setWeatherLoading(false);
+      return;
+    }
+
+    setWeatherLoading(true);
+    const weatherData: WeatherInfo[] = [];
+
+    try {
+      const latestCities = plans
+        .map((plan) => plan.location)
+        .filter((value) => value && value !== "Không xác định")
+        .filter((value, index, self) => self.indexOf(value) === index)
+        .slice(0, 3);
+
+      if (latestCities.length === 0) {
+        setWeather([]);
+        return;
+      }
+
+      const apiKey = Constants.expoConfig?.extra?.env?.WEATHER_API_KEY ?? "";
+
+      for (const city of latestCities) {
+        const response = await fetch(
+          `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${encodeURIComponent(
+            city
+          )}&aqi=no`
+        );
+        const data = await response.json();
+        if (response.ok && data?.current) {
+          const condition = data.current;
+          const description: string = condition?.condition?.text ?? "";
+          weatherData.push({
+            city,
+            temp: `${Math.round(condition.temp_c)}°C`,
+            desc: translateWeatherDescription(description),
+            rawDesc: description,
+            humidity: `${condition.humidity}%`,
+            wind: `${Math.round(condition.wind_kph)} km/h`,
+            uv: `UV ${Math.round(condition.uv)}`,
+            icon: `https:${condition?.condition.icon}`,
+          });
+        } else {
+          console.error(`Failed to fetch weather for ${city}:`, data);
+        }
+      }
+
+      setWeather(weatherData);
+    } catch (error) {
+      console.error("Failed to fetch weather data", error);
+    } finally {
+      setWeatherLoading(false);
+    }
+  }, [plans]);
+
+  useEffect(() => {
+    fetchWeather().catch(() => {
+      // Toast.show({
+      //   type: "error",
+      //   text1: "Không thể tải thời tiết",
+      //   text2: "Vui lòng kéo để làm mới và thử lại.",
+      // });
+      console.error("Failed to fetch weather data");
+    });
+  }, [fetchWeather]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -378,6 +494,17 @@ const Dashboard = () => {
     },
     [router]
   );
+
+  const isInitialLoading = userInfoLoading || plansLoading || weatherLoading;
+
+  if (isInitialLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator color={Colors.GREEN} size="large" />
+        <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -465,46 +592,58 @@ const Dashboard = () => {
           ))}
         </ScrollView>
 
-        {/* Weather Board */}
         <Text style={styles.sectionTitle}>Thời tiết</Text>
         <View style={styles.weatherRow}>
-          {weather.map((w, idx) => (
-            <View key={idx} style={styles.weatherCard}>
-              <Text style={styles.weatherCity}>{w.city}</Text>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
-              >
-                <Ionicons
-                  name={w.icon as any}
-                  size={22}
-                  color={weatherStatusColors[w.desc]}
-                />
-                <Text style={styles.weatherTemp}>{w.temp}</Text>
-              </View>
-              <Text style={styles.weatherDesc}>{w.desc}</Text>
-              <Text style={styles.weatherStat}>
-                <MaterialCommunityIcons
-                  name="water-outline"
-                  color={Colors.GREEN}
-                />{" "}
-                {w.humidity}
+          {weatherLoading ? (
+            <View style={[styles.weatherCard, styles.weatherStateCard]}>
+              <ActivityIndicator color={Colors.GREEN} size="small" />
+              <Text style={styles.weatherStateText}>Đang tải thời tiết...</Text>
+            </View>
+          ) : weather.length === 0 ? (
+            <View style={[styles.weatherCard, styles.weatherStateCard]}>
+              <Text style={styles.weatherStateText}>
+                Chưa có dữ liệu thời tiết.
               </Text>
-              <Text style={styles.weatherStat}>
-                <MaterialCommunityIcons
-                  name="weather-windy"
-                  color={Colors.GRAY}
-                />{" "}
-                {w.wind}
-              </Text>
-              <Text style={styles.weatherStat}>
-                <MaterialCommunityIcons name="eye-outline" color={Colors.RED} />{" "}
-                {w.uv}
+              <Text style={styles.weatherStateSubText}>
+                Tạo hoặc mở kế hoạch để nhận đề xuất thời tiết cập nhật.
               </Text>
             </View>
-          ))}
+          ) : (
+            weather.map((w, idx) => (
+              <View key={`${w.city}-${idx}`} style={styles.weatherCard}>
+                <Text style={styles.weatherCity}>{w.city}</Text>
+                <View style={styles.weatherHeaderRow}>
+                  <Image
+                    source={{ uri: w.icon }}
+                    style={{ width: 32, height: 32 }}
+                  />
+                  <Text style={styles.weatherTemp}>{w.temp}</Text>
+                </View>
+                <Text style={styles.weatherDesc}>{w.desc}</Text>
+                <Text style={styles.weatherStat}>
+                  <MaterialCommunityIcons
+                    name="water-outline"
+                    color={Colors.GREEN}
+                  />{" "}
+                  {w.humidity}
+                </Text>
+                <Text style={styles.weatherStat}>
+                  <MaterialCommunityIcons
+                    name="weather-windy"
+                    color={Colors.GRAY}
+                  />{" "}
+                  {w.wind}
+                </Text>
+                <Text style={styles.weatherStat}>
+                  <MaterialCommunityIcons
+                    name="eye-outline"
+                    color={Colors.RED}
+                  />{" "}
+                  {w.uv}
+                </Text>
+              </View>
+            ))
+          )}
         </View>
       </ScrollView>
       {/* Update Personal Information */}
@@ -523,6 +662,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F8FAFC",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F8FAFC",
+  },
+  loadingText: {
+    marginTop: 12,
+    color: Colors.GRAY,
+    fontFamily: "inter-regular",
+    fontSize: 14,
   },
   summaryRow: {
     flexDirection: "row",
@@ -587,14 +738,19 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 1,
   },
+  weatherHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   weatherCity: {
-    fontSize: 12,
-    fontFamily: "inter-regular",
+    fontSize: 14,
+    fontFamily: "inter-medium",
     color: Colors.BLACK,
     marginBottom: 2,
+    textTransform: "capitalize",
   },
   weatherTemp: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: "inter-medium",
     color: Colors.BLACK,
     marginLeft: 6,
@@ -614,5 +770,24 @@ const styles = StyleSheet.create({
     fontFamily: "inter-regular",
     color: Colors.GRAY,
     marginRight: 10,
+  },
+  weatherStateCard: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  weatherStateText: {
+    fontSize: 13,
+    fontFamily: "inter-medium",
+    color: Colors.GRAY,
+    textAlign: "center",
+    marginTop: 12,
+  },
+  weatherStateSubText: {
+    fontSize: 12,
+    fontFamily: "inter-regular",
+    color: Colors.GRAY,
+    textAlign: "center",
+    marginTop: 6,
+    lineHeight: 18,
   },
 });
