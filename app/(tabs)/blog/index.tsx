@@ -725,7 +725,7 @@ const BlogScreen = () => {
           };
         });
       } catch (error) {
-        console.error("[BlogScreen] detail fetch error", error);
+        console.log("[BlogScreen] detail fetch error", error);
 
         if (
           error instanceof Error &&

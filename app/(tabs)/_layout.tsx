@@ -88,6 +88,16 @@ const TabLayout = () => {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="premium"
+        options={{
+          tabBarLabel: "Premium",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings-outline" color={color} size={size} />
+          ),
+          href: null,
+        }}
+      />
     </Tabs>
   );
 };

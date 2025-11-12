@@ -549,6 +549,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#e6f4ea",
     borderRadius: 50,
     padding: 4,
+    verticalAlign: "middle",
   },
   headerTitle: {
     fontSize: 22,

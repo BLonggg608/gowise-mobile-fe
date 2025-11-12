@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import React from "react";
 import { Colors } from "@/constant/Colors";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -17,16 +17,20 @@ const DashboardHeader = (userInfo: userInfoType) => {
       <View style={styles.headerContainer}>
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Ionicons
+            {/* <Ionicons
               name="location-outline"
               size={24}
               color={Colors.WHITE}
               style={styles.headerIcon}
+            /> */}
+            <Image
+              source={require("@/assets/images/gowise_logo.png")}
+              style={{ width: 40, height: 40, resizeMode: "contain" }}
             />
             <Text style={styles.headerTitle}>Gowise</Text>
           </View>
           <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.headerActionIcon}>
+            {/* <TouchableOpacity style={styles.headerActionIcon}>
               <Ionicons name="search-outline" size={22} color={Colors.BLACK} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerActionIcon}>
@@ -35,7 +39,8 @@ const DashboardHeader = (userInfo: userInfoType) => {
                 size={22}
                 color={Colors.BLACK}
               />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
+
             <TouchableOpacity
               style={styles.headerActionIcon}
               onPress={() => router.push("/setting" as RelativePathString)}
@@ -51,34 +56,77 @@ const DashboardHeader = (userInfo: userInfoType) => {
 
         {/* User Card */}
         <View style={styles.userCard}>
-          <View style={styles.avatarCircle}>
-            <Ionicons name="person" size={23} color={Colors.GREEN} />
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View style={styles.avatarCircle}>
+              <Ionicons name="person" size={23} color={Colors.GREEN} />
+            </View>
+            <View>
+              <Text style={styles.userName}>
+                {userInfo?.firstName} {userInfo?.lastName}
+              </Text>
+              <Text
+                style={[
+                  styles.userStatus,
+                  !userInfo?.isPremium && {
+                    color: Colors.GREEN,
+                  },
+                ]}
+              >
+                {userInfo?.isPremium
+                  ? "Thành viên Premium"
+                  : "Thành viên miễn phí"}
+                {userInfo?.isPremium && (
+                  <MaterialCommunityIcons
+                    name="crown-outline"
+                    size={13}
+                    color={Colors.YELLOW}
+                  />
+                )}
+              </Text>
+            </View>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.userName}>
-              {userInfo?.firstName} {userInfo?.lastName}
-            </Text>
-            <Text
-              style={[
-                styles.userStatus,
-                !userInfo?.isPremium && {
-                  color: Colors.GREEN,
-                },
-              ]}
+          {/* Upgrade to Premium Button */}
+          {!userInfo?.isPremium && (
+            <TouchableOpacity
+              style={{
+                // backgroundColor: "#eaf7f0",
+                backgroundColor: Colors.WHITE,
+                marginTop: 6,
+                paddingVertical: 3,
+                paddingHorizontal: 12,
+                borderRadius: 12,
+                borderWidth: 2,
+                borderColor: Colors.GREEN,
+              }}
+              onPress={() => router.push("/premium" as RelativePathString)}
             >
-              {userInfo?.isPremium
-                ? "Thành viên Premium"
-                : "Thành viên miễn phí"}
-              {userInfo?.isPremium && (
-                <MaterialCommunityIcons
-                  name="crown-outline"
-                  size={13}
-                  color={Colors.YELLOW}
-                />
-              )}
-            </Text>
-          </View>
-          {/* <Ionicons name="shield-checkmark" size={22} color={Colors.GREEN} /> */}
+              <MaterialCommunityIcons
+                name="chevron-double-up"
+                size={14}
+                color={Colors.GREEN}
+                style={{
+                  alignSelf: "center",
+                  position: "absolute",
+                  borderColor: Colors.GREEN,
+                  borderWidth: 2,
+                  borderRadius: 8,
+                  paddingHorizontal: 8,
+                  top: -14,
+                  // backgroundColor: "#eaf7f0",
+                  backgroundColor: Colors.WHITE,
+                }}
+              />
+              <Text
+                style={{
+                  color: Colors.GREEN,
+                  fontFamily: "inter-medium",
+                  fontSize: 11,
+                }}
+              >
+                Premium
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </>
@@ -104,7 +152,7 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    // gap: 6,
   },
   headerIcon: {
     borderRadius: 12,
@@ -130,6 +178,7 @@ const styles = StyleSheet.create({
   userCard: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: "#F8FAFC",
     borderRadius: 16,
     padding: 12,
