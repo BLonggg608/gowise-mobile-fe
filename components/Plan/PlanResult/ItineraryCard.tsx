@@ -107,28 +107,28 @@ const ItineraryCard: React.FC<ItineraryCardProps> = ({
     }
   }, []);
 
-  const openMapAtCoordinates = useCallback(
-    async (latitude?: number, longitude?: number) => {
-      if (
-        typeof latitude !== "number" ||
-        typeof longitude !== "number" ||
-        Number.isNaN(latitude) ||
-        Number.isNaN(longitude)
-      ) {
-        return;
-      }
-      const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
-      await openLink(url);
-    },
-    [openLink]
-  );
+  // const openMapAtCoordinates = useCallback(
+  //   async (latitude?: number, longitude?: number) => {
+  //     if (
+  //       typeof latitude !== "number" ||
+  //       typeof longitude !== "number" ||
+  //       Number.isNaN(latitude) ||
+  //       Number.isNaN(longitude)
+  //     ) {
+  //       return;
+  //     }
+  //     const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
+  //     await openLink(url);
+  //   },
+  //   [openLink]
+  // );
 
-  const formatCoordinate = useCallback((value?: number) => {
-    if (typeof value !== "number" || Number.isNaN(value)) {
-      return null;
-    }
-    return value.toFixed(4);
-  }, []);
+  // const formatCoordinate = useCallback((value?: number) => {
+  //   if (typeof value !== "number" || Number.isNaN(value)) {
+  //     return null;
+  //   }
+  //   return value.toFixed(4);
+  // }, []);
 
   const formatBadge = (value?: string | null, shouldTitleCase = true) => {
     if (!value) return null;
@@ -174,6 +174,7 @@ const ItineraryCard: React.FC<ItineraryCardProps> = ({
         longitude: activity.longitude as number,
         title: activity.title,
         description: activity.location ?? activity.address,
+        category: formatBadge(activity.category) ?? undefined,
       }));
 
     setMapMarkers(markers);

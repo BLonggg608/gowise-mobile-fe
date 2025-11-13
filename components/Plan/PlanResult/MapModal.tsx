@@ -10,6 +10,7 @@ export type MapModalMarker = {
   longitude: number;
   title?: string;
   description?: string;
+  category?: string;
 };
 
 type MapModalProps = {
@@ -32,6 +33,11 @@ const MapModal: React.FC<MapModalProps> = ({
   markers,
   title,
 }) => {
+  const categoryPalette = useMemo(
+    () => ["#FF3B30", "#34C759", "#007AFF", "#FF9500"],
+    []
+  );
+
   const region = useMemo<Region>(() => {
     if (markers.length === 0) {
       return DEFAULT_REGION;
@@ -45,6 +51,32 @@ const MapModal: React.FC<MapModalProps> = ({
       longitudeDelta: 0.15,
     };
   }, [markers]);
+
+  const categoryColorMap = useMemo(() => {
+    const mapping: Record<string, string> = {};
+    let paletteIndex = 0;
+
+    markers.forEach((marker) => {
+      if (!marker.category) {
+        return;
+      }
+
+      if (!(marker.category in mapping)) {
+        const color = categoryPalette[paletteIndex] ?? categoryPalette[0];
+        mapping[marker.category] = color;
+        paletteIndex = Math.min(paletteIndex + 1, categoryPalette.length - 1);
+      }
+    });
+
+    return mapping;
+  }, [markers, categoryPalette]);
+
+  const legendEntries = useMemo(() => {
+    return Object.keys(categoryColorMap).map((category) => ({
+      category,
+      color: categoryColorMap[category],
+    }));
+  }, [categoryColorMap]);
 
   return (
     <Modal
@@ -72,6 +104,19 @@ const MapModal: React.FC<MapModalProps> = ({
             </TouchableOpacity>
           </View>
 
+          {legendEntries.length > 0 ? (
+            <View style={styles.legendContainer}>
+              {legendEntries.map((entry) => (
+                <View key={entry.category} style={styles.legendItem}>
+                  <View
+                    style={[styles.legendDot, { backgroundColor: entry.color }]}
+                  />
+                  <Text style={styles.legendLabel}>{entry.category}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
           {markers.length > 0 ? (
             <MapView style={styles.map} initialRegion={region}>
               {markers.map((marker) => (
@@ -81,6 +126,10 @@ const MapModal: React.FC<MapModalProps> = ({
                     latitude: marker.latitude,
                     longitude: marker.longitude,
                   }}
+                  pinColor={
+                    categoryColorMap[marker.category ?? ""] ??
+                    categoryPalette[0]
+                  }
                   title={marker.title}
                   description={marker.description}
                 />
@@ -153,6 +202,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#F1F5F9",
+  },
+  legendContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    backgroundColor: "#F8FAFC",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E2E8F0",
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  legendLabel: {
+    fontSize: 12,
+    fontFamily: "inter-medium",
+    color: Colors.BLACK,
   },
   map: {
     width: "100%",

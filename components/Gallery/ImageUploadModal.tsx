@@ -89,6 +89,8 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
+  const [isRequestingCameraPermission, setIsRequestingCameraPermission] =
+    useState(false);
 
   useEffect(() => {
     if (!visible) return;
@@ -186,7 +188,7 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
 
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
+        mediaTypes: ["images"],
         allowsMultipleSelection: true,
         selectionLimit: 0,
         quality: 1,
@@ -204,6 +206,60 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
   const removeImageAt = useCallback((index: number) => {
     setSelectedImages((prev) => prev.filter((_, idx) => idx !== index));
   }, []);
+
+  const ensureCameraPermission = useCallback(async () => {
+    try {
+      const cameraPermission = await ImagePicker.getCameraPermissionsAsync();
+      if (cameraPermission.granted) {
+        return true;
+      }
+
+      const requestResult = await ImagePicker.requestCameraPermissionsAsync();
+      if (requestResult.granted) {
+        return true;
+      }
+
+      setErrorMessage("Ứng dụng cần quyền sử dụng camera để chụp ảnh.");
+      return false;
+    } catch (err) {
+      console.error("[ImageUploadModal] Camera permission error", err);
+      setErrorMessage("Không thể truy cập camera.");
+      return false;
+    }
+  }, []);
+
+  const handleCapturePhoto = useCallback(async () => {
+    if (isUploading || isRequestingCameraPermission) return;
+
+    setIsRequestingCameraPermission(true);
+    try {
+      const hasPermission = await ensureCameraPermission();
+      if (!hasPermission) {
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 1,
+      });
+
+      if (result.canceled) {
+        return;
+      }
+
+      appendImages(result.assets ?? []);
+    } catch (err) {
+      console.error("[ImageUploadModal] Camera capture error", err);
+      setErrorMessage("Không thể chụp ảnh. Vui lòng thử lại.");
+    } finally {
+      setIsRequestingCameraPermission(false);
+    }
+  }, [
+    appendImages,
+    ensureCameraPermission,
+    isRequestingCameraPermission,
+    isUploading,
+  ]);
 
   const uploadEndpoint = useMemo(() => buildApiUrl("/api/gallery/upload"), []);
 
@@ -395,11 +451,8 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
             ) : null}
 
             <View style={styles.dropzone}>
-              <TouchableOpacity
-                activeOpacity={0.85}
-                disabled={isUploading}
-                onPress={handlePickImages}
-                style={[styles.dropzoneAction, isUploading && styles.disabled]}
+              <View
+                style={[styles.dropzoneContent, isUploading && styles.disabled]}
               >
                 <Ionicons
                   color={Colors.GREEN}
@@ -410,10 +463,31 @@ const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
                 <Text style={styles.dropzoneSubtitle}>
                   Hỗ trợ JPG, PNG, GIF (tối đa 100MB mỗi ảnh)
                 </Text>
-                <View style={styles.pickButton}>
-                  <Text style={styles.pickButtonText}>Mở thư viện</Text>
+                <View style={styles.dropzoneActions}>
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    disabled={isUploading}
+                    onPress={handlePickImages}
+                    style={[styles.pickButton, isUploading && styles.disabled]}
+                  >
+                    <Text style={styles.pickButtonText}>Mở thư viện</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    disabled={isUploading || isRequestingCameraPermission}
+                    onPress={handleCapturePhoto}
+                    style={[
+                      styles.captureButton,
+                      (isUploading || isRequestingCameraPermission) &&
+                        styles.disabled,
+                    ]}
+                  >
+                    <Text style={styles.captureButtonText}>
+                      {isRequestingCameraPermission ? "Đang mở..." : "Chụp ảnh"}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
+              </View>
             </View>
 
             {selectedImages.length > 0 ? (
@@ -613,9 +687,16 @@ const styles = StyleSheet.create({
     padding: 22,
     backgroundColor: "#F0FDFA",
   },
-  dropzoneAction: {
+  dropzoneContent: {
     alignItems: "center",
     gap: 10,
+  },
+  dropzoneActions: {
+    flexDirection: "row",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 12,
+    marginTop: 12,
   },
   dropzoneTitle: {
     fontSize: 16,
@@ -629,7 +710,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   pickButton: {
-    marginTop: 8,
     backgroundColor: Colors.GREEN,
     paddingHorizontal: 18,
     paddingVertical: 10,
@@ -637,6 +717,19 @@ const styles = StyleSheet.create({
   },
   pickButtonText: {
     color: Colors.WHITE,
+    fontFamily: "inter-medium",
+    fontSize: 14,
+  },
+  captureButton: {
+    backgroundColor: Colors.WHITE,
+    borderWidth: 1,
+    borderColor: Colors.GREEN,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 14,
+  },
+  captureButtonText: {
+    color: Colors.GREEN,
     fontFamily: "inter-medium",
     fontSize: 14,
   },
