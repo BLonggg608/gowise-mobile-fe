@@ -42,6 +42,12 @@ export default {
       "expo-build-properties",
       "expo-font",
       "expo-web-browser",
+      [
+        "react-native-maps",
+        {
+          androidGoogleMapsApiKey: process.env.GOOGLE_API_KEY
+        }
+      ]
     ],
     experiments: {
       typedRoutes: true,

@@ -558,6 +558,160 @@ const extractItineraryActivities = (
       ["how_to_get_there"],
     ])?.trim();
 
+    const parseCoordinateValue = (value: unknown): number | undefined => {
+      if (typeof value === "number" && !Number.isNaN(value)) {
+        return value;
+      }
+      if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (!trimmed) {
+          return undefined;
+        }
+        let normalized = trimmed.replace(/[^0-9.,-]/g, "");
+        if (!normalized) {
+          return undefined;
+        }
+        const commaCount = (normalized.match(/,/g) || []).length;
+        if (commaCount === 1 && !normalized.includes(".")) {
+          normalized = normalized.replace(",", ".");
+        } else if (commaCount > 1) {
+          normalized = normalized.replace(/,/g, "");
+        }
+        const parsed = Number(normalized);
+        return Number.isNaN(parsed) ? undefined : parsed;
+      }
+      return undefined;
+    };
+
+    let latitude =
+      pickNumber(record, [
+        ["latitude"],
+        ["lat"],
+        ["location", "lat"],
+        ["location", "latitude"],
+        ["geo", "lat"],
+        ["geo", "latitude"],
+        ["coordinates", "lat"],
+        ["coordinates", "latitude"],
+        ["position", "lat"],
+        ["position", "latitude"],
+      ]) ?? undefined;
+
+    let longitude =
+      pickNumber(record, [
+        ["longitude"],
+        ["lon"],
+        ["lng"],
+        ["long"],
+        ["location", "lon"],
+        ["location", "lng"],
+        ["location", "longitude"],
+        ["geo", "lon"],
+        ["geo", "lng"],
+        ["geo", "longitude"],
+        ["coordinates", "lon"],
+        ["coordinates", "lng"],
+        ["coordinates", "longitude"],
+        ["position", "lon"],
+        ["position", "lng"],
+        ["position", "longitude"],
+      ]) ?? undefined;
+
+    const resolveCoordinateSource = (value: unknown) => {
+      if (value === null || value === undefined) {
+        return;
+      }
+      if (latitude !== undefined && longitude !== undefined) {
+        return;
+      }
+
+      if (Array.isArray(value)) {
+        const numbers = value
+          .map((item) => parseCoordinateValue(item))
+          .filter((item): item is number => typeof item === "number");
+        if (numbers.length >= 2) {
+          const first = numbers[0];
+          const second = numbers[1];
+          const looksLikeLat = Math.abs(first) <= 90;
+          const looksLikeLon = Math.abs(second) <= 180;
+          const reversedLooksLikeLat = Math.abs(second) <= 90;
+          if (looksLikeLat && looksLikeLon) {
+            if (latitude === undefined) latitude = first;
+            if (longitude === undefined) longitude = second;
+          } else if (reversedLooksLikeLat && Math.abs(first) <= 180) {
+            if (latitude === undefined) latitude = second;
+            if (longitude === undefined) longitude = first;
+          } else {
+            if (latitude === undefined) latitude = first;
+            if (longitude === undefined && numbers.length > 1) {
+              longitude = second;
+            }
+          }
+        }
+        return;
+      }
+
+      if (typeof value === "string") {
+        const parts = value
+          .split(/[,;\|]/)
+          .map((part) => part.trim())
+          .filter(Boolean);
+        if (parts.length >= 2) {
+          const latCandidate = parseCoordinateValue(parts[0]);
+          const lonCandidate = parseCoordinateValue(parts[1]);
+          if (latCandidate !== undefined && latitude === undefined) {
+            latitude = latCandidate;
+          }
+          if (lonCandidate !== undefined && longitude === undefined) {
+            longitude = lonCandidate;
+          }
+          return;
+        }
+
+        const spaceParts = value
+          .split(/\s+/)
+          .map((part) => part.trim())
+          .filter(Boolean);
+        if (spaceParts.length >= 2) {
+          const latCandidate = parseCoordinateValue(spaceParts[0]);
+          const lonCandidate = parseCoordinateValue(spaceParts[1]);
+          if (latCandidate !== undefined && latitude === undefined) {
+            latitude = latCandidate;
+          }
+          if (lonCandidate !== undefined && longitude === undefined) {
+            longitude = lonCandidate;
+          }
+        }
+      }
+
+      if (value && typeof value === "object") {
+        const obj = value as Record<string, unknown>;
+        if (latitude === undefined) {
+          latitude =
+            pickNumber(obj, [["latitude"], ["lat"], ["y"]]) ?? latitude;
+        }
+        if (longitude === undefined) {
+          longitude =
+            pickNumber(obj, [["longitude"], ["lon"], ["lng"], ["x"]]) ??
+            longitude;
+        }
+        if (latitude === undefined || longitude === undefined) {
+          resolveCoordinateSource((obj as Record<string, unknown>).coordinates);
+        }
+        if (latitude === undefined || longitude === undefined) {
+          resolveCoordinateSource((obj as Record<string, unknown>).location);
+        }
+      }
+    };
+
+    resolveCoordinateSource(record.coordinates as unknown);
+    resolveCoordinateSource(record.geo as unknown);
+    resolveCoordinateSource(record.position as unknown);
+    if (record.location && typeof record.location === "object") {
+      const loc = record.location as Record<string, unknown>;
+      resolveCoordinateSource(loc.coordinates);
+    }
+
     if (titleCandidate && description) {
       const normalizedTitle = titleCandidate.toLowerCase();
       if (description.toLowerCase() === normalizedTitle) {
@@ -592,6 +746,13 @@ const extractItineraryActivities = (
       bookingLink,
       transportation,
     };
+
+    if (typeof latitude === "number" && !Number.isNaN(latitude)) {
+      payload.latitude = latitude;
+    }
+    if (typeof longitude === "number" && !Number.isNaN(longitude)) {
+      payload.longitude = longitude;
+    }
 
     const extras = buildAdditionalDetails(record);
     if (extras.length > 0) {

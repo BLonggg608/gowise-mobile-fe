@@ -1,4 +1,7 @@
 import { Colors } from "@/constant/Colors";
+import MapModal, {
+  MapModalMarker,
+} from "@/components/Plan/PlanResult/MapModal";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -34,6 +37,8 @@ export type ItineraryActivity = {
   bookingLink?: string;
   transportation?: string;
   additionalDetails?: string[];
+  latitude?: number;
+  longitude?: number;
 };
 
 export type ItineraryEntry = {
@@ -102,6 +107,29 @@ const ItineraryCard: React.FC<ItineraryCardProps> = ({
     }
   }, []);
 
+  const openMapAtCoordinates = useCallback(
+    async (latitude?: number, longitude?: number) => {
+      if (
+        typeof latitude !== "number" ||
+        typeof longitude !== "number" ||
+        Number.isNaN(latitude) ||
+        Number.isNaN(longitude)
+      ) {
+        return;
+      }
+      const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      await openLink(url);
+    },
+    [openLink]
+  );
+
+  const formatCoordinate = useCallback((value?: number) => {
+    if (typeof value !== "number" || Number.isNaN(value)) {
+      return null;
+    }
+    return value.toFixed(4);
+  }, []);
+
   const formatBadge = (value?: string | null, shouldTitleCase = true) => {
     if (!value) return null;
     const trimmed = value.trim();
@@ -126,6 +154,36 @@ const ItineraryCard: React.FC<ItineraryCardProps> = ({
     }
     return activity.ratingText ?? null;
   };
+
+  const [isMapVisible, setIsMapVisible] = useState(false);
+  const [mapMarkers, setMapMarkers] = useState<MapModalMarker[]>([]);
+  const [mapTitle, setMapTitle] = useState<string>("Bản đồ hành trình");
+
+  const handleOpenMapForDay = useCallback((entry: ItineraryEntry) => {
+    const markers = entry.activities
+      .filter(
+        (activity) =>
+          typeof activity.latitude === "number" &&
+          typeof activity.longitude === "number" &&
+          !Number.isNaN(activity.latitude) &&
+          !Number.isNaN(activity.longitude)
+      )
+      .map<MapModalMarker>((activity) => ({
+        id: activity.id,
+        latitude: activity.latitude as number,
+        longitude: activity.longitude as number,
+        title: activity.title,
+        description: activity.location ?? activity.address,
+      }));
+
+    setMapMarkers(markers);
+    setMapTitle(`Ngày ${entry.dayNumber}`);
+    setIsMapVisible(true);
+  }, []);
+
+  const handleCloseMap = useCallback(() => {
+    setIsMapVisible(false);
+  }, []);
 
   return (
     <View style={[styles.sectionCard, containerStyle]}>
@@ -178,9 +236,19 @@ const ItineraryCard: React.FC<ItineraryCardProps> = ({
           {filteredItems.map((item) => (
             <View key={item.id} style={styles.itineraryBlock}>
               <View style={styles.itineraryHeaderRow}>
-                <Text style={styles.itineraryDayLabel}>
-                  Day {item.dayNumber}
-                </Text>
+                <View style={styles.itineraryHeaderLeft}>
+                  <Text style={styles.itineraryDayLabel}>
+                    Day {item.dayNumber}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => handleOpenMapForDay(item)}
+                  style={styles.mapButton}
+                >
+                  <Ionicons color={Colors.GREEN} name="map-outline" size={14} />
+                  <Text style={styles.mapButtonText}>Xem Map</Text>
+                </TouchableOpacity>
                 {item.date ? (
                   <Text style={styles.itineraryDateText}>{item.date}</Text>
                 ) : null}
@@ -286,6 +354,33 @@ const ItineraryCard: React.FC<ItineraryCardProps> = ({
                             </Text>
                           </View>
                         ) : null}
+                        {/* {typeof activity.latitude === "number" &&
+                        typeof activity.longitude === "number" ? (
+                          <TouchableOpacity
+                            activeOpacity={0.75}
+                            onPress={() =>
+                              void openMapAtCoordinates(
+                                activity.latitude,
+                                activity.longitude
+                              )
+                            }
+                            style={[
+                              styles.metaItem,
+                              styles.metaItemCoordinates,
+                            ]}
+                          >
+                            <Ionicons
+                              color={Colors.GREEN}
+                              name="map-outline"
+                              size={14}
+                              style={styles.metaIcon}
+                            />
+                            <Text style={styles.metaText}>
+                              {formatCoordinate(activity.latitude)},{" "}
+                              {formatCoordinate(activity.longitude)}
+                            </Text>
+                          </TouchableOpacity>
+                        ) : null} */}
                         {activity.cost ? (
                           <View style={styles.metaItem}>
                             <Ionicons
@@ -407,6 +502,13 @@ const ItineraryCard: React.FC<ItineraryCardProps> = ({
           </Text>
         </View>
       )}
+
+      <MapModal
+        markers={mapMarkers}
+        onClose={handleCloseMap}
+        title={mapTitle}
+        visible={isMapVisible}
+      />
     </View>
   );
 };
@@ -465,10 +567,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    flexWrap: "wrap",
+  },
+  itineraryHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   itineraryDayLabel: {
     fontSize: 14,
     fontFamily: "inter-bold",
+    color: Colors.GREEN,
+  },
+  mapButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: "#E0F2F1",
+  },
+  mapButtonText: {
+    fontSize: 11,
+    fontFamily: "inter-medium",
     color: Colors.GREEN,
   },
   itineraryDateText: {
@@ -588,6 +708,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     gap: 6,
+  },
+  metaItemCoordinates: {
+    justifyContent: "flex-start",
   },
   metaIcon: {
     marginTop: 1,
