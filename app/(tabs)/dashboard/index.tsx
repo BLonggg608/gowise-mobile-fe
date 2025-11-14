@@ -1,8 +1,8 @@
 import UpdateInfo from "@/components/Dashboard/UpdateInfo";
 import { Colors } from "@/constant/Colors";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useEffect, useState, useCallback } from "react";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -254,6 +254,8 @@ const translateWeatherDescription = (description: string) => {
 
 const Dashboard = () => {
   const router = useRouter();
+  const scrollViewRef = useRef<ScrollView>(null);
+  const params = useLocalSearchParams<{ scrollToTop?: string }>();
   const [plans, setPlans] = useState<DashboardPlan[]>([]);
   const [weather, setWeather] = useState<WeatherInfo[]>([]);
   const [userInfo, setUserInfo] = useState<userInfoType>(null);
@@ -467,6 +469,14 @@ const Dashboard = () => {
     });
   }, [fetchWeather]);
 
+  useEffect(() => {
+    if (params.scrollToTop) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+      }, 100);
+    }
+  }, [params.scrollToTop]);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -576,6 +586,7 @@ const Dashboard = () => {
       />
 
       <ScrollView
+        ref={scrollViewRef}
         contentContainerStyle={{ paddingBottom: 24 }}
         refreshControl={
           <RefreshControl

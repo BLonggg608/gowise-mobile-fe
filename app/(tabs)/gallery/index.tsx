@@ -6,8 +6,14 @@ import { getUserIdFromToken } from "@/utils/tokenUtils";
 import { getSecureData } from "@/utils/storage";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
-import { useFocusEffect } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -53,6 +59,8 @@ const buildApiUrl = (path: string) => {
 };
 
 const GalleryScreen = () => {
+  const scrollViewRef = useRef<ScrollView>(null);
+  const params = useLocalSearchParams<{ scrollToTop?: string }>();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedGalleryId, setSelectedGalleryId] = useState<string | null>(
@@ -152,6 +160,14 @@ const GalleryScreen = () => {
       fetchGalleries({ initial: true });
     }, [fetchGalleries])
   );
+
+  useEffect(() => {
+    if (params.scrollToTop) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+      }, 100);
+    }
+  }, [params.scrollToTop]);
 
   const filteredGalleries = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -256,6 +272,7 @@ const GalleryScreen = () => {
 
       {/* Content */}
       <ScrollView
+        ref={scrollViewRef}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl

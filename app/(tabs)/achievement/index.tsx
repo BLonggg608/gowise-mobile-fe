@@ -6,8 +6,14 @@ import { getSecureData } from "@/utils/storage";
 import { getUserIdFromToken } from "@/utils/tokenUtils";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
-import { useFocusEffect } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -100,6 +106,8 @@ const buildApiUrl = (path: string) => {
 };
 
 const AchievementScreen = () => {
+  const flatListRef = useRef<FlatList>(null);
+  const params = useLocalSearchParams<{ scrollToTop?: string }>();
   const [achievements, setAchievements] = useState<AchievementItem[]>(
     ACHIEVEMENT_TEMPLATES.map((item) => ({
       ...item,
@@ -193,6 +201,14 @@ const AchievementScreen = () => {
       loadAchievements("initial");
     }, [loadAchievements])
   );
+
+  useEffect(() => {
+    if (params.scrollToTop) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+      }, 100);
+    }
+  }, [params.scrollToTop]);
 
   const filteredAchievements = useMemo(() => {
     if (selectedCategory === "all") return achievements;
@@ -416,6 +432,7 @@ const AchievementScreen = () => {
       </View>
 
       <FlatList
+        ref={flatListRef}
         contentContainerStyle={styles.listContent}
         data={filteredAchievements}
         keyExtractor={(item) => String(item.id)}

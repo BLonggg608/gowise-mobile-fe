@@ -7,8 +7,14 @@ import { getSecureData } from "@/utils/storage";
 import { decodeToken, getUserIdFromToken } from "@/utils/tokenUtils";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
-import { useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -395,6 +401,8 @@ const mapApiBlogPost = (item: Record<string, unknown>): BlogListItem | null => {
 };
 
 const BlogScreen = () => {
+  const flatListRef = useRef<FlatList>(null);
+  const params = useLocalSearchParams<{ scrollToTop?: string }>();
   const [posts, setPosts] = useState<BlogListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -566,6 +574,14 @@ const BlogScreen = () => {
       fetchPosts({ initial: true });
     }, [fetchPosts])
   );
+
+  useEffect(() => {
+    if (params.scrollToTop) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+      }, 100);
+    }
+  }, [params.scrollToTop]);
 
   const handleRefresh = useCallback(() => {
     fetchPosts({ initial: false });
@@ -1380,6 +1396,7 @@ const BlogScreen = () => {
       </View>
 
       <FlatList
+        ref={flatListRef}
         contentContainerStyle={listContentStyle}
         data={filteredPosts}
         keyExtractor={keyExtractor}

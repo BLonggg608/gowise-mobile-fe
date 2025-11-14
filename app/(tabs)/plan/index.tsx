@@ -5,8 +5,14 @@ import { getUserIdFromToken } from "@/utils/tokenUtils";
 import { saveData } from "@/utils/localStorage";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
-import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -18,6 +24,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Toast } from "toastify-react-native";
 
 const statusBarHeight = Constants.statusBarHeight;
@@ -440,6 +447,7 @@ const transformPlan = (plan: ApiPlan): PlanListItem | null => {
 
 const Plan = () => {
   const router = useRouter();
+  const flatListRef = useRef<FlatList>(null);
 
   const [userId, setUserId] = useState<string | null>(null);
   const [plans, setPlans] = useState<PlanListItem[]>([]);
@@ -451,6 +459,18 @@ const Plan = () => {
   const [error, setError] = useState<string | null>(null);
   const [isCreatePlanModalVisible, setIsCreatePlanModalVisible] =
     useState(false);
+
+  // Lắng nghe params để scroll về đầu khi bấm tab
+  const params = useLocalSearchParams<{ scrollToTop?: string }>();
+
+  useEffect(() => {
+    if (params.scrollToTop) {
+      // Có chút delay để đảm bảo FlatList đã render xong
+      setTimeout(() => {
+        flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+      }, 100);
+    }
+  }, [params.scrollToTop]);
 
   const stats = useMemo(
     () => ({
@@ -802,6 +822,7 @@ const Plan = () => {
       </View>
 
       <FlatList
+        ref={flatListRef}
         contentContainerStyle={styles.listContent}
         data={filteredPlans}
         key="list"

@@ -5,8 +5,14 @@ import { getSecureData } from "@/utils/storage";
 import { getUserIdFromToken } from "@/utils/tokenUtils";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
-import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -90,6 +96,8 @@ const buildApiUrl = (path: string) => {
 
 const FriendScreen = () => {
   const router = useRouter();
+  const flatListRef = useRef<FlatList>(null);
+  const params = useLocalSearchParams<{ scrollToTop?: string }>();
   const [items, setItems] = useState<FeedItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -460,6 +468,14 @@ const FriendScreen = () => {
     }, [fetchFeed, fetchPendingFriendRequests])
   );
 
+  useEffect(() => {
+    if (params.scrollToTop) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+      }, 100);
+    }
+  }, [params.scrollToTop]);
+
   const handleRefresh = useCallback(() => {
     void Promise.all([
       fetchFeed({ initial: false }),
@@ -561,6 +577,7 @@ const FriendScreen = () => {
       </View>
 
       <FlatList
+        ref={flatListRef}
         data={items}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
