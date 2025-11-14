@@ -99,7 +99,7 @@ export default HelpSupport;
 const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: "row",
-    // alignItems: "center",
+    alignItems: "center",
     // justifyContent: "space-between",
     paddingTop: statusBarHeight + 12,
     paddingBottom: 16,

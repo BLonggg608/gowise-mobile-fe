@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    // alignItems: "center",
+    alignItems: "center",
     // justifyContent: "space-between",
     paddingHorizontal: 18,
     paddingTop: statusBarHeight + 12,

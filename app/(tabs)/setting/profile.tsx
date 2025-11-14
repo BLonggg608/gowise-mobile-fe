@@ -141,10 +141,10 @@ const Profile = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F8FAFC", }}>
+    <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
       {/* Header row with title and edit/cancel button */}
       <View style={styles.header}>
-        <View style={{ flexDirection: "row" }}>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
           <TouchableOpacity
             onPress={() => router.back()}
             style={styles.headerBackBtn}
@@ -160,9 +160,17 @@ const Profile = () => {
         showsVerticalScrollIndicator={false}
       >
         <TouchableOpacity onPress={handleToggleEdit}>
-          <View style={[styles.editBtn, editing && { backgroundColor: Colors.RED }]}>
-            <Ionicons name="create-outline" size={18} color={editing ? Colors.WHITE : Colors.GREEN} />
-            <Text style={[styles.editText, editing && { color: Colors.WHITE }]}>{editing ? "Huỷ" : "Chỉnh sửa"}</Text>
+          <View
+            style={[styles.editBtn, editing && { backgroundColor: Colors.RED }]}
+          >
+            <Ionicons
+              name="create-outline"
+              size={18}
+              color={editing ? Colors.WHITE : Colors.GREEN}
+            />
+            <Text style={[styles.editText, editing && { color: Colors.WHITE }]}>
+              {editing ? "Huỷ" : "Chỉnh sửa"}
+            </Text>
           </View>
         </TouchableOpacity>
         {/* Card container for profile info and form */}
@@ -314,7 +322,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     // backgroundColor: "#eafcf7",
-    backgroundColor: Colors.GREEN + '40',
+    backgroundColor: Colors.GREEN + "40",
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 10,

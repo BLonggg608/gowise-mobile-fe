@@ -214,7 +214,7 @@ const CreateBlogModal = ({
 
   return (
     <Modal
-      animationType="slide"
+      animationType="fade"
       transparent
       visible={visible}
       onRequestClose={onClose}

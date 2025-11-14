@@ -11,7 +11,7 @@ const TabLayout = () => {
         headerShown: false,
         tabBarActiveTintColor: Colors.GREEN,
         tabBarActiveBackgroundColor: "#F0FDFA",
-        tabBarLabelStyle: { fontFamily: "inter-medium" },
+        tabBarLabelStyle: { fontFamily: "inter-medium", fontSize: 7 },
       }}
     >
       <Tabs.Screen
@@ -30,6 +30,25 @@ const TabLayout = () => {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="document-text-outline" color={color} size={size} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="friend"
+        options={{
+          tabBarLabel: "Friend",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="people-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="notification"
+        options={{
+          tabBarLabel: "Notification",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="notifications-outline" color={color} size={size} />
+          ),
+          href: null,
         }}
       />
       <Tabs.Screen

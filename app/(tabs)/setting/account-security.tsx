@@ -132,11 +132,11 @@ const AccountSecurity = () => {
 
     router.push({
       pathname: "/auth/verify-otp" as RelativePathString,
-      params: { email, from: "change-password"},
+      params: { email, from: "change-password" },
     });
   };
   return (
-    <View style={{ flex: 1, backgroundColor: "#F8FAFC", }}>
+    <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
       {/* Header */}
       <View style={styles.headerContainer}>
         <TouchableOpacity
@@ -234,8 +234,8 @@ export default AccountSecurity;
 const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: "row",
-    // alignItems: "center",
-    // justifyContent: "space-between",
+    alignItems: "center",
+    // justifyContent: "center",
     paddingTop: statusBarHeight + 12,
     paddingBottom: 16,
     paddingHorizontal: 18,

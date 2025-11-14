@@ -62,6 +62,10 @@ const BlogDetailModal = ({
       <View style={styles.overlay}>
         <View style={styles.modalCard}>
           <View style={styles.header}>
+            <Text numberOfLines={1} style={styles.headerTitle}>
+              {post?.title ?? "Chi tiết bài viết"}
+            </Text>
+            <View style={styles.headerSpacer} />
             <TouchableOpacity
               accessibilityLabel="Đóng chi tiết bài viết"
               accessibilityRole="button"
@@ -71,10 +75,6 @@ const BlogDetailModal = ({
             >
               <Ionicons color={Colors.BLACK} name="close" size={22} />
             </TouchableOpacity>
-            <Text numberOfLines={1} style={styles.headerTitle}>
-              {post?.title ?? "Chi tiết bài viết"}
-            </Text>
-            <View style={styles.headerSpacer} />
           </View>
 
           {post?.thumbnailUrl ? (
@@ -261,7 +261,12 @@ const styles = StyleSheet.create({
     borderBottomColor: "#E2E8F0",
   },
   headerButton: {
-    padding: 6,
+    position: "absolute",
+    alignContent: "center",
+    right: 20,
+    padding: 4,
+    borderRadius: 999,
+    backgroundColor: "#F1F5F9",
   },
   headerTitle: {
     flex: 1,

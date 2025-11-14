@@ -4,11 +4,22 @@ import { Colors } from "@/constant/Colors";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { RelativePathString, useRouter } from "expo-router";
 import Constants from "expo-constants";
-import { userInfoType } from "@/app/(tabs)/dashboard";
 
 const statusBarHeight = Constants.statusBarHeight;
 
-const DashboardHeader = (userInfo: userInfoType) => {
+type DashboardHeaderProps = {
+  firstName?: string;
+  lastName?: string;
+  isPremium?: boolean;
+  hasPendingFriendRequests?: boolean;
+};
+
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({
+  firstName = "",
+  lastName = "",
+  isPremium = false,
+  hasPendingFriendRequests = false,
+}) => {
   const router = useRouter();
 
   return (
@@ -32,15 +43,20 @@ const DashboardHeader = (userInfo: userInfoType) => {
           <View style={styles.headerRight}>
             {/* <TouchableOpacity style={styles.headerActionIcon}>
               <Ionicons name="search-outline" size={22} color={Colors.BLACK} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.headerActionIcon}>
+            </TouchableOpacity> */}
+            <TouchableOpacity
+              style={styles.headerActionIcon}
+              onPress={() => router.push("/notification" as RelativePathString)}
+            >
               <Ionicons
                 name="notifications-outline"
                 size={22}
                 color={Colors.BLACK}
               />
-            </TouchableOpacity> */}
-
+              {hasPendingFriendRequests ? (
+                <View style={styles.notificationDot} />
+              ) : null}
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.headerActionIcon}
               onPress={() => router.push("/setting" as RelativePathString)}
@@ -62,20 +78,18 @@ const DashboardHeader = (userInfo: userInfoType) => {
             </View>
             <View>
               <Text style={styles.userName}>
-                {userInfo?.firstName} {userInfo?.lastName}
+                {firstName} {lastName}
               </Text>
               <Text
                 style={[
                   styles.userStatus,
-                  !userInfo?.isPremium && {
+                  !isPremium && {
                     color: Colors.GREEN,
                   },
                 ]}
               >
-                {userInfo?.isPremium
-                  ? "Thành viên Premium"
-                  : "Thành viên miễn phí"}
-                {userInfo?.isPremium && (
+                {isPremium ? "Thành viên Premium" : "Thành viên miễn phí"}
+                {isPremium && (
                   <MaterialCommunityIcons
                     name="crown-outline"
                     size={13}
@@ -86,7 +100,7 @@ const DashboardHeader = (userInfo: userInfoType) => {
             </View>
           </View>
           {/* Upgrade to Premium Button */}
-          {!userInfo?.isPremium && (
+          {!isPremium && (
             <TouchableOpacity
               style={{
                 // backgroundColor: "#eaf7f0",
@@ -174,6 +188,16 @@ const styles = StyleSheet.create({
     padding: 5,
     backgroundColor: "#9c9c9c1e",
     marginLeft: 4,
+    position: "relative",
+  },
+  notificationDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#F97316",
+    position: "absolute",
+    top: 4,
+    right: 4,
   },
   userCard: {
     flexDirection: "row",

@@ -15,7 +15,7 @@ import {
 import { getUserIdFromToken } from "@/utils/tokenUtils";
 import Constants from "expo-constants";
 import DashboardHeader from "@/components/Dashboard/DashboardHeader";
-import { deleteSecureData } from "@/utils/storage";
+import { deleteSecureData, getSecureData } from "@/utils/storage";
 import RecentPlanCard from "@/components/Dashboard/RecentPlanCard";
 import { saveData } from "@/utils/localStorage";
 import { Toast } from "toastify-react-native";
@@ -63,6 +63,13 @@ type WeatherInfo = {
   wind: string;
   uv: string;
   icon: string;
+};
+
+type FriendRelation = {
+  userId: string;
+  friendId: string;
+  status: boolean;
+  isSender: boolean;
 };
 
 const getPlanIdentifier = (plan: ApiPlan) => {
@@ -189,20 +196,20 @@ const planStatusColors: { [key: string]: string } = {
 };
 
 const WEATHER_DESCRIPTION_MAP: Record<string, string> = {
-  "sunny": "Nắng",
-  "clear": "Trời quang",
+  sunny: "Nắng",
+  clear: "Trời quang",
   "partly cloudy": "Ít mây",
-  "cloudy": "Nhiều mây",
-  "overcast": "Âm u",
-  "mist": "Sương nhẹ",
+  cloudy: "Nhiều mây",
+  overcast: "Âm u",
+  mist: "Sương nhẹ",
   "patchy rain possible": "Có thể mưa rải rác",
   "patchy snow possible": "Có thể có tuyết",
   "patchy sleet possible": "Có thể có mưa tuyết",
   "patchy freezing drizzle possible": "Có thể có mưa lạnh nhẹ",
   "thundery outbreaks possible": "Có thể có dông",
   "blowing snow": "Tuyết bay mạnh",
-  "blizzard": "Bão tuyết",
-  "fog": "Sương mù",
+  blizzard: "Bão tuyết",
+  fog: "Sương mù",
   "freezing fog": "Sương lạnh",
   "patchy light drizzle": "Mưa phùn nhẹ",
   "light drizzle": "Mưa phùn",
@@ -255,6 +262,8 @@ const Dashboard = () => {
   const [userInfoLoading, setUserInfoLoading] = useState(true);
   const [plansLoading, setPlansLoading] = useState(true);
   const [weatherLoading, setWeatherLoading] = useState(true);
+  const [hasPendingFriendRequests, setHasPendingFriendRequests] =
+    useState(false);
 
   // Fetch user info (giữ nguyên)
   const checkUserInfo = useCallback(async () => {
@@ -298,6 +307,51 @@ const Dashboard = () => {
   useEffect(() => {
     checkUserInfo();
   }, [checkUserInfo]);
+
+  const fetchPendingFriendRequests = useCallback(async () => {
+    try {
+      const token = await getSecureData("accessToken");
+      const userId = await getUserIdFromToken();
+
+      if (!token || !userId) {
+        setHasPendingFriendRequests(false);
+        return;
+      }
+
+      const response = await fetch(buildApiUrl("/users/friends/pending"), {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_id: userId }),
+      });
+
+      if (!response.ok) {
+        const reason = await response.text();
+        throw new Error(
+          reason || `Request failed with status ${response.status}`
+        );
+      }
+
+      const payload = await response.json();
+      const relations: FriendRelation[] = Array.isArray(payload?.data)
+        ? payload.data
+        : [];
+
+      const hasIncoming = relations.some((relation) => !relation.isSender);
+      setHasPendingFriendRequests(hasIncoming);
+    } catch (error) {
+      console.error("[dashboard] fetchPendingFriendRequests", error);
+      setHasPendingFriendRequests(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPendingFriendRequests().catch((error) => {
+      console.error("[dashboard] pending indicator effect", error);
+    });
+  }, [fetchPendingFriendRequests]);
 
   // Fetch plans from API (giống plan screen)
   const fetchPlans = useCallback(async () => {
@@ -416,7 +470,11 @@ const Dashboard = () => {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([fetchPlans(), checkUserInfo()]);
+      await Promise.all([
+        fetchPlans(),
+        checkUserInfo(),
+        fetchPendingFriendRequests(),
+      ]);
     } catch {
       Toast.show({
         type: "error",
@@ -514,6 +572,7 @@ const Dashboard = () => {
       {/* Header */}
       <DashboardHeader
         {...(userInfo || { firstName: "", lastName: "", isPremium: false })}
+        hasPendingFriendRequests={hasPendingFriendRequests}
       />
 
       <ScrollView
@@ -575,23 +634,38 @@ const Dashboard = () => {
 
         {/* Recent Plans */}
         <Text style={styles.sectionTitle}>Kế hoạch gần đây</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ marginBottom: 8, padding: 4 }}
-        >
-          {plans.slice(0, 3).map((plan) => (
-            <RecentPlanCard
-              key={plan.id}
-              title={plan.title}
-              location={plan.location}
-              durationInDays={plan.durationInDays}
-              status={plan.status}
-              statusColor={planStatusColors[plan.status] ?? Colors.GRAY}
-              onPress={() => handleOpenPlan(plan)}
-            />
-          ))}
-        </ScrollView>
+        {plans.length === 0 ? (
+          <View
+            style={[
+              styles.weatherCard,
+              styles.weatherStateCard,
+              { marginHorizontal: 18 },
+            ]}
+          >
+            <Text style={styles.weatherStateText}>Chưa có kế hoạch nào.</Text>
+            <Text style={styles.weatherStateSubText}>
+              Tạo kế hoạch mới để bắt đầu.
+            </Text>
+          </View>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ marginBottom: 8, padding: 4 }}
+          >
+            {plans.slice(0, 3).map((plan) => (
+              <RecentPlanCard
+                key={plan.id}
+                title={plan.title}
+                location={plan.location}
+                durationInDays={plan.durationInDays}
+                status={plan.status}
+                statusColor={planStatusColors[plan.status] ?? Colors.GRAY}
+                onPress={() => handleOpenPlan(plan)}
+              />
+            ))}
+          </ScrollView>
+        )}
 
         <Text style={styles.sectionTitle}>Thời tiết</Text>
         <View style={styles.weatherRow}>
