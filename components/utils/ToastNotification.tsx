@@ -17,6 +17,8 @@ const ToastNotification = ({
         return "checkmark-sharp";
       case "error":
         return "close-sharp";
+      case "info":
+        return "information-circle-sharp";
     }
   };
 
@@ -26,6 +28,8 @@ const ToastNotification = ({
         return Colors.LIGHT_GREEN;
       case "error":
         return Colors.RED;
+      case "info":
+        return Colors.YELLOW;
     }
   };
 

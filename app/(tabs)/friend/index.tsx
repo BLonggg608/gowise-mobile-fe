@@ -1,3 +1,4 @@
+import AddFriendModal from "@/components/Friend/AddFriendModal";
 import FriendGalleryCard from "@/components/Friend/FriendGalleryCard";
 import FriendPostCard from "@/components/Friend/FriendPostCard";
 import { Colors } from "@/constant/Colors";
@@ -104,6 +105,7 @@ const FriendScreen = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasPendingFriendRequests, setHasPendingFriendRequests] =
     useState(false);
+  const [isAddFriendModalVisible, setIsAddFriendModalVisible] = useState(false);
 
   const fetchFriendDetails = useCallback(
     async (friendId: string, token: string): Promise<FriendProfile | null> => {
@@ -559,20 +561,33 @@ const FriendScreen = () => {
       <View style={styles.summaryContainer}>
         <View style={styles.summaryHeaderRow}>
           <Text style={styles.summaryTitle}>Bảng tin bạn bè</Text>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => router.push("/notification")}
-            style={styles.summaryActionIcon}
-          >
-            <Ionicons
-              name="notifications-outline"
-              size={22}
-              color={Colors.BLACK}
-            />
-            {hasPendingFriendRequests ? (
-              <View style={styles.notificationDot} />
-            ) : null}
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setIsAddFriendModalVisible(true)}
+              style={styles.summaryActionIcon}
+            >
+              <Ionicons
+                name="person-add-outline"
+                size={22}
+                color={Colors.BLACK}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => router.push("/notification")}
+              style={styles.summaryActionIcon}
+            >
+              <Ionicons
+                name="notifications-outline"
+                size={22}
+                color={Colors.BLACK}
+              />
+              {hasPendingFriendRequests ? (
+                <View style={styles.notificationDot} />
+              ) : null}
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -593,6 +608,11 @@ const FriendScreen = () => {
             tintColor={Colors.GREEN}
           />
         }
+      />
+
+      <AddFriendModal
+        visible={isAddFriendModalVisible}
+        onClose={() => setIsAddFriendModalVisible(false)}
       />
     </View>
   );
@@ -629,11 +649,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   summaryActionIcon: {
     borderRadius: 12,
     padding: 5,
     backgroundColor: "#9c9c9c1e",
-    marginLeft: 4,
     position: "relative",
   },
   summarySubtitle: {

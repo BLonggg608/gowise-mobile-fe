@@ -59,9 +59,6 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const keyboardBehavior = Platform.OS === "ios" ? "padding" : "height";
-  const keyboardVerticalOffset = Platform.OS === "android" ? 24 : 0;
-
   useEffect(() => {
     if (!visible) {
       setIsHavePlan(true);
@@ -415,106 +412,207 @@ const CreateNewPlanModel: React.FC<CreateNewPlanModelProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <KeyboardAvoidingView
-          style={[
-            styles.modalContent,
-            { height: isHavePlan && currentStep === 2 ? 550 : 500 },
-          ]}
-          behavior={keyboardBehavior}
-          keyboardVerticalOffset={keyboardVerticalOffset}
-        >
-          {/* Header */}
-          <View style={styles.headerRow}>
-            <View style={{ flexDirection: "row" }}>
-              <Ionicons
-                name="location-outline"
-                color={Colors.GREEN}
-                size={22}
-                style={styles.headerIcon}
-              />
-              <Text style={styles.headerTitle}>Create New Plan</Text>
-            </View>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={22} color={Colors.GRAY} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Progress Steps */}
-          <ProgressSteps
-            activeStep={currentStep}
-            borderWidth={4}
-            activeStepIconBorderColor={Colors.GREEN}
-            activeLabelColor={Colors.GREEN}
-            activeStepNumColor={Colors.WHITE}
-            activeStepIconColor="transparent"
-            completedStepIconColor={Colors.GREEN}
-            completedProgressBarColor={Colors.GREEN}
-            completedLabelColor="transparent"
-            disabledStepNumColor="#EBEBE4"
-            topOffset={0}
-            marginBottom={-10}
+        {Platform.OS === "ios" ? (
+          <KeyboardAvoidingView
+            style={[
+              styles.modalContent,
+              { height: isHavePlan && currentStep === 2 ? 550 : 500 },
+            ]}
+            behavior="padding"
+            keyboardVerticalOffset={0}
           >
-            {/* Step 1 */}
-            <ProgressStep
-              buttonFillColor={Colors.GREEN}
-              onNext={handleStep1Next}
-              buttonNextDisabled={false}
-              buttonNextText="Next"
-              removeBtnRow={false}
+            {/* Header */}
+            <View style={styles.headerRow}>
+              <View style={{ flexDirection: "row" }}>
+                <Ionicons
+                  name="location-outline"
+                  color={Colors.GREEN}
+                  size={22}
+                  style={styles.headerIcon}
+                />
+                <Text style={styles.headerTitle}>Create New Plan</Text>
+              </View>
+              <TouchableOpacity onPress={onClose}>
+                <Ionicons name="close" size={22} color={Colors.GRAY} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Progress Steps */}
+            <ProgressSteps
+              activeStep={currentStep}
+              borderWidth={4}
+              activeStepIconBorderColor={Colors.GREEN}
+              activeLabelColor={Colors.GREEN}
+              activeStepNumColor={Colors.WHITE}
+              activeStepIconColor="transparent"
+              completedStepIconColor={Colors.GREEN}
+              completedProgressBarColor={Colors.GREEN}
+              completedLabelColor="transparent"
+              disabledStepNumColor="#EBEBE4"
+              topOffset={0}
+              marginBottom={-10}
             >
-              <Step1 isHavePlan={isHavePlan} setIsHavePlan={setIsHavePlan} />
-            </ProgressStep>
-            {/* Step 2 */}
-            <ProgressStep
-              buttonFillColor={Colors.GREEN}
-              buttonPreviousText="Back"
-              onNext={handleStep2Next}
-              onPrevious={handleStepBack}
-              buttonNextText="Next"
+              {/* Step 1 */}
+              <ProgressStep
+                buttonFillColor={Colors.GREEN}
+                onNext={handleStep1Next}
+                buttonNextDisabled={false}
+                buttonNextText="Next"
+                removeBtnRow={false}
+              >
+                <Step1 isHavePlan={isHavePlan} setIsHavePlan={setIsHavePlan} />
+              </ProgressStep>
+              {/* Step 2 */}
+              <ProgressStep
+                buttonFillColor={Colors.GREEN}
+                buttonPreviousText="Back"
+                onNext={handleStep2Next}
+                onPrevious={handleStepBack}
+                buttonNextText="Next"
+              >
+                <Step2 type={type} setType={setType} />
+              </ProgressStep>
+              {/* Step 3 */}
+              <ProgressStep
+                buttonFillColor={Colors.GREEN}
+                buttonPreviousText="Back"
+                onNext={handleStep3Next}
+                onPrevious={handleStep3Back}
+                buttonNextText="Next"
+                buttonNextDisabled={
+                  !startDate || !endDate || !NumberOfParticipants || !Budget
+                }
+              >
+                <Step3
+                  isHavePlan={isHavePlan}
+                  startDate={startDate}
+                  setStartDate={setStartDate}
+                  endDate={endDate}
+                  setEndDate={setEndDate}
+                  numberOfParticipants={NumberOfParticipants}
+                  setNumberOfParticipants={setNumberOfParticipants}
+                  budget={Budget}
+                  setBudget={setBudget}
+                  destination={Destination}
+                  setDestination={setDestination}
+                />
+              </ProgressStep>
+              {/* Step 4 */}
+              <ProgressStep
+                buttonFillColor={Colors.GREEN}
+                buttonPreviousText="Back"
+                onPrevious={handleStepBack}
+                onSubmit={handleSubmit}
+                buttonFinishDisabled={selectedInterests.length === 0}
+                buttonDisabledColor={Colors.GREEN + "80"}
+              >
+                <Step4
+                  interests={selectedInterests}
+                  setInterests={setSelectedInterests}
+                />
+              </ProgressStep>
+            </ProgressSteps>
+          </KeyboardAvoidingView>
+        ) : (
+          <View
+            style={[
+              styles.modalContent,
+              { height: isHavePlan && currentStep === 2 ? 550 : 500 },
+            ]}
+          >
+            {/* Header */}
+            <View style={styles.headerRow}>
+              <View style={{ flexDirection: "row" }}>
+                <Ionicons
+                  name="location-outline"
+                  color={Colors.GREEN}
+                  size={22}
+                  style={styles.headerIcon}
+                />
+                <Text style={styles.headerTitle}>Create New Plan</Text>
+              </View>
+              <TouchableOpacity onPress={onClose}>
+                <Ionicons name="close" size={22} color={Colors.GRAY} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Progress Steps */}
+            <ProgressSteps
+              activeStep={currentStep}
+              borderWidth={4}
+              activeStepIconBorderColor={Colors.GREEN}
+              activeLabelColor={Colors.GREEN}
+              activeStepNumColor={Colors.WHITE}
+              activeStepIconColor="transparent"
+              completedStepIconColor={Colors.GREEN}
+              completedProgressBarColor={Colors.GREEN}
+              completedLabelColor="transparent"
+              disabledStepNumColor="#EBEBE4"
+              topOffset={0}
+              marginBottom={-10}
             >
-              <Step2 type={type} setType={setType} />
-            </ProgressStep>
-            {/* Step 3 */}
-            <ProgressStep
-              buttonFillColor={Colors.GREEN}
-              buttonPreviousText="Back"
-              onNext={handleStep3Next}
-              onPrevious={handleStep3Back}
-              buttonNextText="Next"
-              buttonNextDisabled={
-                !startDate || !endDate || !NumberOfParticipants || !Budget
-              }
-            >
-              <Step3
-                isHavePlan={isHavePlan}
-                startDate={startDate}
-                setStartDate={setStartDate}
-                endDate={endDate}
-                setEndDate={setEndDate}
-                numberOfParticipants={NumberOfParticipants}
-                setNumberOfParticipants={setNumberOfParticipants}
-                budget={Budget}
-                setBudget={setBudget}
-                destination={Destination}
-                setDestination={setDestination}
-              />
-            </ProgressStep>
-            {/* Step 4 */}
-            <ProgressStep
-              buttonFillColor={Colors.GREEN}
-              buttonPreviousText="Back"
-              onPrevious={handleStepBack}
-              onSubmit={handleSubmit}
-              buttonFinishDisabled={selectedInterests.length === 0}
-              buttonDisabledColor={Colors.GREEN + "80"}
-            >
-              <Step4
-                interests={selectedInterests}
-                setInterests={setSelectedInterests}
-              />
-            </ProgressStep>
-          </ProgressSteps>
-        </KeyboardAvoidingView>
+              {/* Step 1 */}
+              <ProgressStep
+                buttonFillColor={Colors.GREEN}
+                onNext={handleStep1Next}
+                buttonNextDisabled={false}
+                buttonNextText="Next"
+                removeBtnRow={false}
+              >
+                <Step1 isHavePlan={isHavePlan} setIsHavePlan={setIsHavePlan} />
+              </ProgressStep>
+              {/* Step 2 */}
+              <ProgressStep
+                buttonFillColor={Colors.GREEN}
+                buttonPreviousText="Back"
+                onNext={handleStep2Next}
+                onPrevious={handleStepBack}
+                buttonNextText="Next"
+              >
+                <Step2 type={type} setType={setType} />
+              </ProgressStep>
+              {/* Step 3 */}
+              <ProgressStep
+                buttonFillColor={Colors.GREEN}
+                buttonPreviousText="Back"
+                onNext={handleStep3Next}
+                onPrevious={handleStep3Back}
+                buttonNextText="Next"
+                buttonNextDisabled={
+                  !startDate || !endDate || !NumberOfParticipants || !Budget
+                }
+              >
+                <Step3
+                  isHavePlan={isHavePlan}
+                  startDate={startDate}
+                  setStartDate={setStartDate}
+                  endDate={endDate}
+                  setEndDate={setEndDate}
+                  numberOfParticipants={NumberOfParticipants}
+                  setNumberOfParticipants={setNumberOfParticipants}
+                  budget={Budget}
+                  setBudget={setBudget}
+                  destination={Destination}
+                  setDestination={setDestination}
+                />
+              </ProgressStep>
+              {/* Step 4 */}
+              <ProgressStep
+                buttonFillColor={Colors.GREEN}
+                buttonPreviousText="Back"
+                onPrevious={handleStepBack}
+                onSubmit={handleSubmit}
+                buttonFinishDisabled={selectedInterests.length === 0}
+                buttonDisabledColor={Colors.GREEN + "80"}
+              >
+                <Step4
+                  interests={selectedInterests}
+                  setInterests={setSelectedInterests}
+                />
+              </ProgressStep>
+            </ProgressSteps>
+          </View>
+        )}
       </View>
       <LoadingModal visible={isSubmitting} />
     </Modal>

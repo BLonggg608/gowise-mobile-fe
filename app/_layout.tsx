@@ -16,6 +16,9 @@ const toastConfig = {
   error: (props: ToastShowParams) => (
     <ToastNotification props={props} type="error" />
   ),
+  info: (props: ToastShowParams) => (
+    <ToastNotification props={props} type="info" />
+  ),
 };
 
 export default function RootLayout() {
