@@ -8,6 +8,7 @@ import {
   RelativePathString,
   useLocalSearchParams,
   useRouter,
+  useFocusEffect,
 } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -21,7 +22,6 @@ import {
 import { Toast } from "toastify-react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-const PLAN_PRICE_VND = 5000;
 const PLAN_NAME = "Gói Premium Gowise";
 const PLAN_DESCRIPTION =
   "Truy cập đầy đủ trợ lý du lịch AI, cảnh báo thời tiết và hỗ trợ ưu tiên trong 30 ngày.";
@@ -33,6 +33,9 @@ type PremiumParams = {
   status?: string | string[];
   orderCode?: string | string[];
   order_code?: string | string[];
+  cancel?: string | string[];
+  code?: string | string[];
+  id?: string | string[];
 };
 
 type PayOSPayload = {
@@ -42,6 +45,14 @@ type PayOSPayload = {
   redirectUrl?: string;
   redirect_url?: string;
   payload?: { checkoutUrl?: string; checkout_url?: string } | null;
+};
+
+type PremiumOption = {
+  duration: number; // số tháng
+  priceUSD: string;
+  priceVND: number;
+  label: string;
+  endpoint?: string;
 };
 
 const FEATURE_LIST = [
@@ -55,6 +66,30 @@ const FEATURE_LIST = [
   "Tối ưu hóa ngân sách",
   "Gợi ý từ người địa phương",
   "Tích hợp bảo hiểm du lịch",
+];
+
+const PREMIUM_OPTIONS: PremiumOption[] = [
+  {
+    duration: 1,
+    priceUSD: "~1.99 USD / tháng",
+    priceVND: 52397,
+    label: "Gói 1 tháng",
+    endpoint: "/api/payos/payment-link",
+  },
+  {
+    duration: 6,
+    priceUSD: "~11.99 USD / 6 tháng",
+    priceVND: 314380,
+    label: "Gói 6 tháng",
+    endpoint: "/api/payos/payment-link/premium",
+  },
+  {
+    duration: 12,
+    priceUSD: "~23.99 USD / năm",
+    priceVND: 628760,
+    label: "Gói 1 năm",
+    endpoint: "/api/payos/payment-link/enterprise",
+  },
 ];
 
 const trimTrailingSlash = (value?: string | null) => {
@@ -124,13 +159,38 @@ const PremiumScreen = () => {
   );
 
   const payOSReturnUrl = useMemo(() => {
-    const scheme = Constants.expoConfig?.scheme ?? "gowise";
-    return `${scheme}://premium?status=success`;
+    // Kiểm tra nếu đang chạy trên Expo Go
+    const isExpoGo = Constants.appOwnership === "expo";
+
+    if (isExpoGo) {
+      // Dùng Expo deep-link cho Expo Go
+      // Format: exp://192.168.x.x:8081/--/premium?status=success
+      const experienceUrl = Constants.expoConfig?.hostUri
+        ? `exp://${Constants.expoConfig.hostUri}`
+        : "exp://";
+      return `${experienceUrl}/--/premium?status=success`;
+    } else {
+      // Dùng custom scheme cho standalone app
+      const scheme = Constants.expoConfig?.scheme ?? "gowise";
+      return `${scheme}://premium?status=success`;
+    }
   }, []);
 
   const payOSCancelUrl = useMemo(() => {
-    const scheme = Constants.expoConfig?.scheme ?? "gowise";
-    return `${scheme}://premium?status=cancel`;
+    // Kiểm tra nếu đang chạy trên Expo Go
+    const isExpoGo = Constants.appOwnership === "expo";
+
+    if (isExpoGo) {
+      // Dùng Expo deep-link cho Expo Go
+      const experienceUrl = Constants.expoConfig?.hostUri
+        ? `exp://${Constants.expoConfig.hostUri}`
+        : "exp://";
+      return `${experienceUrl}/--/premium?status=cancel`;
+    } else {
+      // Dùng custom scheme cho standalone app
+      const scheme = Constants.expoConfig?.scheme ?? "gowise";
+      return `${scheme}://premium?status=cancel`;
+    }
   }, []);
 
   const cacheUserProfile = useCallback(
@@ -304,136 +364,174 @@ const PremiumScreen = () => {
     ]
   );
 
+  // Dùng useFocusEffect để bắt khi màn hình được focus lại từ browser
+  useFocusEffect(
+    useCallback(() => {
+      console.log("------------");
+      console.log("[PremiumScreen] Screen focused - params:", params);
+
+      const status = extractSingleParam(params.status)?.toUpperCase();
+      const cancelFlag = extractSingleParam(params.cancel);
+      const orderCode =
+        extractSingleParam(params.orderCode) ??
+        extractSingleParam(params.order_code);
+      const code = extractSingleParam(params.code);
+
+      console.log("[PremiumScreen] Parsed status:", status);
+      console.log("[PremiumScreen] Cancel flag:", cancelFlag);
+      console.log("[PremiumScreen] Code:", code);
+      console.log("[PremiumScreen] OrderCode:", orderCode);
+
+      // PayOS trả về status=PAID khi thành công, status=CANCELLED khi hủy
+      // Hoặc có thể dùng code: "00" là success
+      if (status === "PAID" || (code === "00" && cancelFlag !== "true")) {
+        console.log(
+          "[PremiumScreen] Payment SUCCESS - calling finalizeSuccessfulPayment"
+        );
+        void finalizeSuccessfulPayment(orderCode ?? null, null);
+      } else if (status === "CANCELLED" || cancelFlag === "true") {
+        console.log("[PremiumScreen] Payment CANCELLED");
+        setStatusMessage("Thanh toán đã bị hủy. Bạn có thể thử lại.");
+      } else {
+        console.log("[PremiumScreen] Unknown payment status");
+      }
+    }, [finalizeSuccessfulPayment, params])
+  );
+
+  // Giữ lại useEffect để log initial params
   useEffect(() => {
-    const status = extractSingleParam(params.status)?.toLowerCase();
-    const orderCode =
-      extractSingleParam(params.orderCode) ??
-      extractSingleParam(params.order_code);
+    console.log("[PremiumScreen] useEffect triggered - params:", params);
+  }, [params]);
 
-    if (status === "success") {
-      void finalizeSuccessfulPayment(orderCode ?? null, null);
-    } else if (status === "cancel") {
-      setStatusMessage("Thanh toán đã bị hủy. Bạn có thể thử lại.");
-    }
-  }, [
-    finalizeSuccessfulPayment,
-    params.orderCode,
-    params.order_code,
-    params.status,
-  ]);
+  const handleStartPremium = useCallback(
+    async (option: PremiumOption) => {
+      setPaymentError(null);
+      if (isProcessingReturn) return;
 
-  const handleStartPremium = useCallback(async () => {
-    setPaymentError(null);
-    if (isProcessingReturn) return;
+      const token = await getSecureData("accessToken");
+      if (!token) {
+        Toast.show({
+          type: "info",
+          text1: "Cần đăng nhập",
+          text2: "Đăng nhập để tiếp tục nâng cấp Premium.",
+        });
+        router.push("/auth/sign-in");
+        return;
+      }
 
-    const token = await getSecureData("accessToken");
-    if (!token) {
-      Toast.show({
-        type: "info",
-        text1: "Cần đăng nhập",
-        text2: "Đăng nhập để tiếp tục nâng cấp Premium.",
-      });
-      router.push("/auth/sign-in");
-      return;
-    }
+      const userId = await getUserIdFromToken();
+      if (!userId) {
+        Toast.show({
+          type: "error",
+          text1: "Không xác định được tài khoản",
+          text2: "Vui lòng đăng nhập lại để tiếp tục.",
+        });
+        router.push("/auth/sign-in");
+        return;
+      }
 
-    const userId = await getUserIdFromToken();
-    if (!userId) {
-      Toast.show({
-        type: "error",
-        text1: "Không xác định được tài khoản",
-        text2: "Vui lòng đăng nhập lại để tiếp tục.",
-      });
-      router.push("/auth/sign-in");
-      return;
-    }
+      if (awaitingUpgradeAfterLogin) {
+        await finalizeSuccessfulPayment(null, token);
+        return;
+      }
 
-    if (awaitingUpgradeAfterLogin) {
-      await finalizeSuccessfulPayment(null, token);
-      return;
-    }
+      if (isCreatingPayment) return;
 
-    if (isCreatingPayment) return;
+      setIsCreatingPayment(true);
 
-    setIsCreatingPayment(true);
+      const payload = {
+        userId,
+        description: sanitizeDescription(PAYOS_DESCRIPTION) || PLAN_NAME,
+        cancelUrl: payOSCancelUrl,
+        returnUrl: payOSReturnUrl,
+        items: [{ name: `${option.label} - ${PLAN_NAME}` }],
+        durationMonths: option.duration,
+        amount: option.priceVND,
+      };
 
-    const payload = {
-      userId,
-      description: sanitizeDescription(PAYOS_DESCRIPTION) || PLAN_NAME,
-      cancelUrl: payOSCancelUrl,
-      returnUrl: payOSReturnUrl,
-      items: [{ name: PLAN_NAME }],
-    };
-
-    try {
-      const response = await fetch(paymentEndpoint, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const rawText = await response.text();
-      let data: PayOSPayload | null = null;
+      // console.log("[PremiumScreen] PayOS Callback URLs:");
+      // console.log("- Return URL:", payOSReturnUrl);
+      // console.log("- Cancel URL:", payOSCancelUrl);
+      // console.log("- App Ownership:", Constants.appOwnership);
+      // console.log("- Host URI:", Constants.expoConfig?.hostUri);
 
       try {
-        data = rawText ? (JSON.parse(rawText) as PayOSPayload) : null;
-      } catch (parseError) {
-        console.warn(
-          "[PremiumScreen] PayOS response is not JSON",
-          rawText,
-          parseError
+        const apiEndpoint = option.endpoint
+          ? `${backendBaseUrl}${option.endpoint}`
+          : paymentEndpoint;
+
+        const response = await fetch(apiEndpoint, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const rawText = await response.text();
+        let data: PayOSPayload | null = null;
+
+        try {
+          data = rawText ? (JSON.parse(rawText) as PayOSPayload) : null;
+        } catch (parseError) {
+          console.warn(
+            "[PremiumScreen] PayOS response is not JSON",
+            rawText,
+            parseError
+          );
+        }
+
+        if (!response.ok) {
+          const message =
+            (data as any)?.error ||
+            (data as any)?.message ||
+            `Không thể tạo thanh toán (HTTP ${response.status})`;
+          throw new Error(message);
+        }
+
+        const checkoutUrl = resolveCheckoutUrl(
+          data?.data ? (data?.data as PayOSPayload) : data
         );
-      }
+        if (!checkoutUrl) {
+          console.error("[PremiumScreen] Unexpected PayOS payload", data);
+          throw new Error("Không nhận được đường dẫn thanh toán.");
+        }
 
-      if (!response.ok) {
+        Toast.show({
+          type: "success",
+          text1: "Đang chuyển đến PayOS",
+          text2: "Hoàn tất thanh toán để kích hoạt Premium.",
+        });
+
+        const result = await WebBrowser.openBrowserAsync(checkoutUrl);
+        console.log("[PremiumScreen] WebBrowser result:", result);
+      } catch (error) {
+        console.error("[PremiumScreen] create payment link error", error);
         const message =
-          (data as any)?.error ||
-          (data as any)?.message ||
-          `Không thể tạo thanh toán (HTTP ${response.status})`;
-        throw new Error(message);
+          error instanceof Error ? error.message : "Không thể tạo thanh toán.";
+        setPaymentError(message);
+        Toast.show({
+          type: "error",
+          text1: "Tạo thanh toán thất bại",
+          text2: message,
+        });
+      } finally {
+        setIsCreatingPayment(false);
       }
-
-      const checkoutUrl = resolveCheckoutUrl(
-        data?.data ? (data?.data as PayOSPayload) : data
-      );
-      if (!checkoutUrl) {
-        console.error("[PremiumScreen] Unexpected PayOS payload", data);
-        throw new Error("Không nhận được đường dẫn thanh toán.");
-      }
-
-      Toast.show({
-        type: "success",
-        text1: "Đang chuyển đến PayOS",
-        text2: "Hoàn tất thanh toán để kích hoạt Premium.",
-      });
-
-      await WebBrowser.openBrowserAsync(checkoutUrl);
-    } catch (error) {
-      console.error("[PremiumScreen] create payment link error", error);
-      const message =
-        error instanceof Error ? error.message : "Không thể tạo thanh toán.";
-      setPaymentError(message);
-      Toast.show({
-        type: "error",
-        text1: "Tạo thanh toán thất bại",
-        text2: message,
-      });
-    } finally {
-      setIsCreatingPayment(false);
-    }
-  }, [
-    awaitingUpgradeAfterLogin,
-    finalizeSuccessfulPayment,
-    isCreatingPayment,
-    isProcessingReturn,
-    paymentEndpoint,
-    payOSCancelUrl,
-    payOSReturnUrl,
-    router,
-  ]);
+    },
+    [
+      awaitingUpgradeAfterLogin,
+      backendBaseUrl,
+      finalizeSuccessfulPayment,
+      isCreatingPayment,
+      isProcessingReturn,
+      paymentEndpoint,
+      payOSCancelUrl,
+      payOSReturnUrl,
+      router,
+    ]
+  );
 
   const renderFeatures = useMemo(
     () =>
@@ -473,19 +571,13 @@ const PremiumScreen = () => {
         </Text>
       </View>
 
-      <View style={styles.badgeWrapper}>
-        <View style={styles.badge}>
-          <Text style={styles.badgeIcon}>★</Text>
-          <Text style={styles.badgeText}>Phổ biến nhất</Text>
-        </View>
-      </View>
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.planTitle}>Gói Premium</Text>
-          <View style={styles.priceRow}>
+          {/* <View style={styles.priceRow}>
             <Text style={styles.priceMain}>~1.99 USD</Text>
             <Text style={styles.priceSuffix}>/ tháng</Text>
-          </View>
+          </View> */}
           {/* <Text style={styles.priceSub}>({PLAN_PRICE_VND.toLocaleString("vi-VN")} VND)</Text> */}
           <Text style={styles.planDescription}>{PLAN_DESCRIPTION}</Text>
         </View>
@@ -502,27 +594,104 @@ const PremiumScreen = () => {
           activeOpacity={0.85}
           disabled={isCreatingPayment}
           onPress={() => {
-            void handleStartPremium();
+            void handleStartPremium(PREMIUM_OPTIONS[0]);
           }}
           style={[
             styles.primaryButton,
             isCreatingPayment && styles.primaryButtonDisabled,
+            {
+              backgroundColor: Colors.WHITE,
+              borderWidth: 3,
+              borderColor: Colors.GREEN,
+            },
+          ]}
+        >
+          {isCreatingPayment ? (
+            <ActivityIndicator color={Colors.GREEN} size="small" />
+          ) : (
+            <View style={{ alignItems: "center" }}>
+              <Text style={[styles.primaryButtonText, { color: Colors.GREEN }]}>
+                {PREMIUM_OPTIONS[0].priceUSD}
+              </Text>
+              <Text style={[styles.primaryButtonSub, { color: Colors.GREEN }]}>
+                ({PREMIUM_OPTIONS[0].priceVND.toLocaleString("vi-VN")} VND)
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.badgeWrapper}>
+          <View style={styles.badge}>
+            <Text style={styles.badgeIcon}>★</Text>
+            <Text style={styles.badgeText}>Phổ biến nhất</Text>
+          </View>
+        </View>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          disabled={isCreatingPayment}
+          onPress={() => {
+            void handleStartPremium(PREMIUM_OPTIONS[1]);
+          }}
+          style={[
+            styles.primaryButton,
+            isCreatingPayment && styles.primaryButtonDisabled,
+            {
+              marginBottom: 18,
+              shadowColor: Colors.GREEN,
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 4,
+            },
           ]}
         >
           {isCreatingPayment ? (
             <ActivityIndicator color={Colors.WHITE} size="small" />
           ) : (
-            <Text style={styles.primaryButtonText}>Bắt đầu Premium </Text>
+            <View style={{ alignItems: "center" }}>
+              <Text style={styles.primaryButtonText}>
+                {PREMIUM_OPTIONS[1].priceUSD}
+              </Text>
+              <Text style={styles.primaryButtonSub}>
+                ({PREMIUM_OPTIONS[1].priceVND.toLocaleString("vi-VN")} VND)
+              </Text>
+            </View>
           )}
-          {/* <Text style={styles.primaryButtonIcon}>⚡</Text> */}
-          <MaterialCommunityIcons
-            name="lightning-bolt"
-            size={24}
-            color={Colors.WHITE}
-          />
         </TouchableOpacity>
 
-        {/* {paymentError ? <Text style={styles.errorText}>{paymentError}</Text> : null} */}
+        <TouchableOpacity
+          activeOpacity={0.85}
+          disabled={isCreatingPayment}
+          onPress={() => {
+            void handleStartPremium(PREMIUM_OPTIONS[2]);
+          }}
+          style={[
+            styles.primaryButton,
+            isCreatingPayment && styles.primaryButtonDisabled,
+            {
+              backgroundColor: Colors.WHITE,
+              borderWidth: 3,
+              borderColor: Colors.GREEN,
+            },
+          ]}
+        >
+          {isCreatingPayment ? (
+            <ActivityIndicator color={Colors.GREEN} size="small" />
+          ) : (
+            <View style={{ alignItems: "center" }}>
+              <Text style={[styles.primaryButtonText, { color: Colors.GREEN }]}>
+                {PREMIUM_OPTIONS[2].priceUSD}
+              </Text>
+              <Text style={[styles.primaryButtonSub, { color: Colors.GREEN }]}>
+                ({PREMIUM_OPTIONS[2].priceVND.toLocaleString("vi-VN")} VND)
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {paymentError ? (
+          <Text style={styles.errorText}>{paymentError}</Text>
+        ) : null}
       </View>
 
       <View style={styles.guaranteeBlock}>
@@ -590,16 +759,19 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   badgeWrapper: {
+    marginTop: 18,
     alignItems: "center",
-    marginBottom: 18,
+    // marginBottom: 18,
   },
   badge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.GREEN,
+    backgroundColor: Colors.WHITE,
     borderRadius: 999,
+    borderWidth: 2,
+    borderColor: Colors.GREEN,
     paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingVertical: 3,
     shadowColor: Colors.GREEN,
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -609,14 +781,15 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   badgeIcon: {
-    color: Colors.WHITE,
+    color: Colors.GREEN,
     fontFamily: "inter-medium",
     marginRight: 8,
+    fontSize: 10,
   },
   badgeText: {
-    color: Colors.WHITE,
+    color: Colors.GREEN,
     fontFamily: "inter-medium",
-    fontSize: 13,
+    fontSize: 10,
   },
   cardHeader: {
     alignItems: "center",
@@ -719,6 +892,11 @@ const styles = StyleSheet.create({
     color: Colors.WHITE,
     fontFamily: "inter-medium",
     fontSize: 15,
+  },
+  primaryButtonSub: {
+    color: Colors.WHITE,
+    fontFamily: "inter-regular",
+    fontSize: 13,
   },
   primaryButtonIcon: {
     color: Colors.WHITE,

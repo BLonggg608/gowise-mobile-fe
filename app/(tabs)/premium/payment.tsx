@@ -10,5 +10,3 @@ const Payment = () => {
 }
 
 export default Payment
-
-const styles = StyleSheet.create({})
