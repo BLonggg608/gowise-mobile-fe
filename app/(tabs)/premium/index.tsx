@@ -403,6 +403,9 @@ const PremiumScreen = () => {
   // Giữ lại useEffect để log initial params
   useEffect(() => {
     console.log("[PremiumScreen] useEffect triggered - params:", params);
+    if (Object.keys(params).length === 0) {
+      setStatusMessage(null);
+    }
   }, [params]);
 
   const handleStartPremium = useCallback(
