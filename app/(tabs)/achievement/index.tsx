@@ -69,6 +69,15 @@ const ACHIEVEMENT_TEMPLATES: AchievementDefinition[] = [
     maxProgress: 1,
     icon: { type: "emoji", value: "👥" },
   },
+  {
+    id: 4,
+    title: "Blog Đầu Tiên",
+    description: "Viết và đăng bài blog đầu tiên của bạn",
+    category: "social",
+    points: 80,
+    maxProgress: 1,
+    icon: { type: "ion", name: "create-outline", color: "#F97316" },
+  },
 ];
 
 const statusBarHeight = Constants.statusBarHeight;
@@ -128,13 +137,13 @@ const AchievementScreen = () => {
           return;
         }
 
-        const [hasFirstPlan, hasFirstPhoto, hasFirstFriend] = await Promise.all(
-          [
+        const [hasFirstPlan, hasFirstPhoto, hasFirstFriend, hasFirstBlog] =
+          await Promise.all([
             checkFirstPlan({ token, userId }),
             checkFirstPhoto({ token, userId }),
             checkFirstFriend({ token, userId }),
-          ]
-        );
+            checkFirstBlog({ token, userId }),
+          ]);
 
         const nowIso = new Date().toISOString();
 
@@ -147,29 +156,18 @@ const AchievementScreen = () => {
               unlockedDate: undefined,
             };
 
-            if (template.id === 1 && hasFirstPlan) {
-              return {
-                ...base,
-                isUnlocked: true,
-                progress: 1,
-                unlockedDate: nowIso,
-              };
-            }
+            const unlockStates: Record<number, boolean> = {
+              1: hasFirstPlan,
+              2: hasFirstPhoto,
+              3: hasFirstFriend,
+              4: hasFirstBlog,
+            };
 
-            if (template.id === 2 && hasFirstPhoto) {
+            if (unlockStates[template.id]) {
               return {
                 ...base,
                 isUnlocked: true,
-                progress: 1,
-                unlockedDate: nowIso,
-              };
-            }
-
-            if (template.id === 3 && hasFirstFriend) {
-              return {
-                ...base,
-                isUnlocked: true,
-                progress: 1,
+                progress: template.maxProgress,
                 unlockedDate: nowIso,
               };
             }
@@ -201,6 +199,11 @@ const AchievementScreen = () => {
     return achievements.filter((item) => item.category === selectedCategory);
   }, [achievements, selectedCategory]);
 
+  const unlockedCount = useMemo(
+    () => achievements.filter((item) => item.isUnlocked).length,
+    [achievements]
+  );
+
   const totalPoints = useMemo(
     () =>
       achievements
@@ -209,12 +212,41 @@ const AchievementScreen = () => {
     [achievements]
   );
 
-  const rankLabel = useMemo(() => {
-    if (totalPoints >= 1000) return "Vàng";
-    if (totalPoints >= 500) return "Bạc";
-    if (totalPoints >= 100) return "Đồng";
-    return "Tân binh";
-  }, [totalPoints]);
+  const rankInfo = useMemo(() => {
+    if (unlockedCount <= 1) {
+      return {
+        label: "Sắt",
+        textColor: "#4B5563",
+        badgeBackground: "rgba(148, 163, 184, 0.18)",
+        iconColor: "#4B5563",
+      };
+    }
+
+    if (unlockedCount === 2) {
+      return {
+        label: "Đồng",
+        textColor: "#D08D4C",
+        badgeBackground: "rgba(208, 141, 76, 0.18)",
+        iconColor: "#D08D4C",
+      };
+    }
+
+    if (unlockedCount === 3) {
+      return {
+        label: "Bạc",
+        textColor: "#9CA3AF",
+        badgeBackground: "rgba(156, 163, 175, 0.18)",
+        iconColor: "#9CA3AF",
+      };
+    }
+
+    return {
+      label: "Vàng",
+      textColor: "#CA8A04",
+      badgeBackground: "rgba(202, 138, 4, 0.18)",
+      iconColor: "#CA8A04",
+    };
+  }, [unlockedCount]);
 
   const renderAchievement = useCallback(
     ({ item }: { item: AchievementItem }) => {
@@ -271,78 +303,88 @@ const AchievementScreen = () => {
 
         <View style={styles.statRow}>
           <View style={styles.statCard}>
-            <View
-              style={[
-                styles.statIcon,
-                { backgroundColor: "rgba(250, 204, 21, 0.18)" },
-              ]}
-            >
+            <View style={[styles.statIcon, styles.statIconHighlight]}>
               <Ionicons color="#CA8A04" name="trophy-outline" size={20} />
             </View>
-            <Text style={styles.statLabel}>Tổng điểm</Text>
-            <Text style={styles.statValue}>{totalPoints}</Text>
+            <View>
+              <Text style={styles.statLabel}>Tổng điểm</Text>
+              <Text style={styles.statValue}>{totalPoints}</Text>
+            </View>
           </View>
           <View style={styles.statCard}>
             <View
               style={[
                 styles.statIcon,
-                { backgroundColor: "rgba(37, 99, 235, 0.18)" },
+                { backgroundColor: rankInfo.badgeBackground },
               ]}
             >
-              <Ionicons color="#2563EB" name="ribbon-outline" size={20} />
+              <Ionicons
+                color={rankInfo.iconColor}
+                name="ribbon-outline"
+                size={20}
+              />
             </View>
-            <Text style={styles.statLabel}>Hạng</Text>
-            <Text style={[styles.statValue, styles.rankText]}>{rankLabel}</Text>
+            <View>
+              <Text style={styles.statLabel}>Hạng</Text>
+              <Text style={[styles.rankValue, { color: rankInfo.textColor }]}>
+                {rankInfo.label}
+              </Text>
+              <Text style={styles.rankSubtitle}>
+                {unlockedCount}/{ACHIEVEMENT_TEMPLATES.length} thành tựu
+              </Text>
+            </View>
           </View>
         </View>
 
-        <View style={styles.filterContainer}>
-          {categories.map((category) => {
-            const isActive = selectedCategory === category.id;
-            return (
-              <TouchableOpacity
-                key={category.id}
-                activeOpacity={0.85}
-                onPress={() => setSelectedCategory(category.id)}
-                style={[
-                  styles.filterButton,
-                  isActive && styles.filterButtonActive,
-                ]}
-              >
-                {category.icon ? (
-                  category.icon.type === "emoji" ? (
-                    <Text
-                      style={[
-                        styles.filterIconText,
-                        isActive && styles.filterIconTextActive,
-                      ]}
-                    >
-                      {category.icon.value}
-                    </Text>
-                  ) : (
-                    <Ionicons
-                      color={isActive ? Colors.WHITE : category.icon.color}
-                      name={category.icon.name}
-                      size={16}
-                      style={styles.filterIcon}
-                    />
-                  )
-                ) : null}
-                <Text
+        <View style={styles.filterCard}>
+          <View style={styles.filterContainer}>
+            {categories.map((category) => {
+              const isActive = selectedCategory === category.id;
+              return (
+                <TouchableOpacity
+                  key={category.id}
+                  activeOpacity={0.85}
+                  onPress={() => setSelectedCategory(category.id)}
                   style={[
-                    styles.filterLabel,
-                    isActive && styles.filterLabelActive,
+                    styles.filterButton,
+                    isActive && styles.filterButtonActive,
                   ]}
                 >
-                  {category.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                  {category.icon ? (
+                    category.icon.type === "emoji" ? (
+                      <Text
+                        style={[
+                          styles.filterIconText,
+                          isActive && styles.filterIconTextActive,
+                        ]}
+                      >
+                        {category.icon.value}
+                      </Text>
+                    ) : (
+                      <Ionicons
+                        color={isActive ? Colors.WHITE : category.icon.color}
+                        name={category.icon.name}
+                        size={16}
+                        style={styles.filterIcon}
+                      />
+                    )
+                  ) : null}
+                  <Text
+                    style={[
+                      styles.filterLabel,
+                      isActive && styles.filterLabelActive,
+                    ]}
+                  >
+                    {category.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
       </View>
     );
-  }, [rankLabel, selectedCategory, setSelectedCategory, totalPoints]);
+  }, [rankInfo, selectedCategory, totalPoints, unlockedCount]);
 
   const listEmptyComponent = useCallback(() => {
     if (isLoading) {
@@ -469,8 +511,77 @@ const checkFirstPhoto = async ({ token, userId }: CheckParams) => {
   }
 };
 
-const checkFirstFriend = async (_params: CheckParams) => {
-  return false;
+const checkFirstFriend = async ({ token, userId }: CheckParams) => {
+  try {
+    const endpoint = buildApiUrl(`/users/friends/accepted`);
+    if (!endpoint) return false;
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ user_id: userId }),
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const payload = await response.json();
+    const friends = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.data)
+      ? payload.data
+      : Array.isArray(payload?.friends)
+      ? payload.friends
+      : [];
+
+    return friends.length > 0;
+  } catch (error) {
+    console.error("[AchievementScreen] checkFirstFriend error", error);
+    return false;
+  }
+};
+
+const checkFirstBlog = async ({ token, userId }: CheckParams) => {
+  try {
+    const endpoint = buildApiUrl(`/api/posts/me?page=0&size=1`);
+    if (!endpoint) return false;
+
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-User-Id": userId,
+      },
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const payload = await response.json();
+    const items = Array.isArray(payload?.data?.items)
+      ? payload.data.items
+      : Array.isArray(payload?.items)
+      ? payload.items
+      : Array.isArray(payload?.data)
+      ? payload.data
+      : [];
+    const approvedPosts = items.filter(
+      (item: { status?: string }) => item?.status === "APPROVED"
+    );
+
+    return approvedPosts.length > 0;
+  } catch (error) {
+    console.error("[AchievementScreen] checkFirstBlog error", error);
+    return false;
+  }
 };
 
 const styles = StyleSheet.create({
@@ -539,8 +650,15 @@ const styles = StyleSheet.create({
     fontFamily: "inter-bold",
     color: Colors.BLACK,
   },
-  rankText: {
-    color: "#2563EB",
+  rankValue: {
+    fontSize: 22,
+    fontFamily: "inter-bold",
+  },
+  rankSubtitle: {
+    marginTop: 4,
+    fontSize: 12,
+    fontFamily: "inter-medium",
+    color: Colors.GRAY,
   },
   statIcon: {
     width: 44,
@@ -548,7 +666,23 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
+    // marginLeft: 16,
+    marginBottom: 12,
+  },
+  statIconHighlight: {
+    backgroundColor: "rgba(250, 204, 21, 0.18)",
+  },
+  filterCard: {
+    backgroundColor: Colors.WHITE,
+    borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    marginTop: 4,
+    shadowColor: Colors.BLACK,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   filterContainer: {
     flexDirection: "row",
@@ -568,6 +702,12 @@ const styles = StyleSheet.create({
   },
   filterButtonActive: {
     backgroundColor: Colors.GREEN,
+    borderColor: Colors.GREEN,
+    shadowColor: Colors.GREEN,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 4,
   },
   filterLabel: {
     fontSize: 13,

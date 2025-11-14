@@ -491,9 +491,9 @@ const ImageDetailModal: React.FC<ImageDetailModalProps> = ({
 
             <View style={styles.divider} />
 
-            <Text style={styles.metaText}>
+            {/* <Text style={styles.metaText}>
               Trạng thái: {currentPhoto.isPublic ? "Công khai" : "Riêng tư"}
-            </Text>
+            </Text> */}
           </View>
         </ScrollView>
       </View>
