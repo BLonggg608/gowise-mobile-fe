@@ -12,6 +12,8 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Toast } from "toastify-react-native";
 
@@ -141,7 +143,11 @@ const Profile = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#F8FAFC" }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+    >
       {/* Header row with title and edit/cancel button */}
       <View style={styles.header}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -270,7 +276,7 @@ const Profile = () => {
           )}
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

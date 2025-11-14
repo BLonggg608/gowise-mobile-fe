@@ -1,12 +1,13 @@
 import { Colors } from "@/constant/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  Keyboard,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -43,6 +44,27 @@ const Step3 = ({
   const [tempEndDate, setTempEndDate] = useState(
     endDate ? new Date(endDate.split("/").reverse().join("-")) : new Date()
   );
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      () => {
+        setKeyboardVisible(true);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   return (
     <View style={{ flex: 1 }}>
@@ -188,7 +210,7 @@ const Step3 = ({
           style={styles.inputField}
         />
 
-        {/* <View style={{ height: 200 }} /> */}
+        {keyboardVisible && <View style={{ height: 200 }} />}
       </View>
     </View>
   );
