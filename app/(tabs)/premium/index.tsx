@@ -22,6 +22,8 @@ import {
 import { Toast } from "toastify-react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
+const statusBarHeight = Constants.statusBarHeight;
+
 const PLAN_NAME = "Gói Premium Gowise";
 const PLAN_DESCRIPTION =
   "Truy cập đầy đủ trợ lý du lịch AI, cảnh báo thời tiết và hỗ trợ ưu tiên trong 30 ngày.";
@@ -718,6 +720,7 @@ export default PremiumScreen;
 const styles = StyleSheet.create({
   container: {
     padding: 20,
+    paddingTop: 20 + statusBarHeight,
     backgroundColor: Colors.WHITE,
   },
   headerBlock: {

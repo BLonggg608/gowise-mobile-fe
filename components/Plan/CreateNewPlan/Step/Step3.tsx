@@ -187,6 +187,8 @@ const Step3 = ({
           keyboardType="numeric"
           style={styles.inputField}
         />
+
+        {/* <View style={{ height: 200 }} /> */}
       </View>
     </View>
   );

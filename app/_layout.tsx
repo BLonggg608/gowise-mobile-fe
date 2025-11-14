@@ -6,8 +6,8 @@ import { StatusBar } from "expo-status-bar";
 import { Platform } from "react-native";
 import ToastManager from "toastify-react-native";
 import { ToastShowParams } from "toastify-react-native/utils/interfaces";
+import { useEffect } from "react";
 
-Platform.OS === "android" && NavigationBar.setButtonStyleAsync("dark"); // màu dark
 // Custom toast configuration
 const toastConfig = {
   success: (props: ToastShowParams) => (
@@ -27,6 +27,12 @@ export default function RootLayout() {
     "inter-medium": require("../assets/fonts/Inter_18pt-Medium.ttf"),
     "inter-regular": require("../assets/fonts/Inter_18pt-Regular.ttf"),
   });
+
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      NavigationBar.setButtonStyleAsync("dark");
+    }
+  }, []);
 
   return (
     <>

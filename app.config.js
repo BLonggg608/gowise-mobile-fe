@@ -22,6 +22,7 @@ export default {
         // backgroundColor: "#ffffff",
       },
       edgeToEdgeEnabled: true,
+      softInputMode: "adjustResize",
       config: {
         googleMaps: {
           apiKey: process.env.GOOGLE_API_KEY,
